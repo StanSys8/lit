@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Design Directions — lit</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', system-ui, sans-serif; background: #1a1a2e; color: #fff; padding: 2rem; }
+
+    h1 { text-align: center; font-size: 1.4rem; font-weight: 700; margin-bottom: 0.4rem; color: #EDD9FB; }
+    .subtitle { text-align: center; color: #888; font-size: 0.85rem; margin-bottom: 2.5rem; }
+
+    /* Tabs */
+    .tabs { display: flex; gap: 0.5rem; justify-content: center; margin-bottom: 2rem; flex-wrap: wrap; }
+    .tab { padding: 0.5rem 1.2rem; border-radius: 20px; border: 1px solid #333; background: transparent;
+           color: #aaa; font-family: inherit; font-size: 0.82rem; cursor: pointer; transition: all 0.2s; }
+    .tab.active { background: #B436F0; border-color: #B436F0; color: white; font-weight: 600; }
+    .tab:hover:not(.active) { border-color: #B436F0; color: #EDD9FB; }
+
+    /* Grid */
+    .grid { display: none; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; max-width: 1300px; margin: 0 auto; }
+    .grid.active { display: grid; }
+
+    /* Phone frame */
+    .phone-wrap { display: flex; flex-direction: column; align-items: center; gap: 0.8rem; }
+    .direction-label { font-size: 0.82rem; font-weight: 600; color: #EDD9FB; text-align: center; }
+    .direction-desc { font-size: 0.72rem; color: #888; text-align: center; max-width: 260px; }
+    .phone {
+      width: 280px; height: 560px; border-radius: 36px; overflow: hidden;
+      border: 6px solid #333; position: relative; background: white;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+    .phone-screen { width: 100%; height: 100%; overflow-y: auto; }
+    .phone-screen::-webkit-scrollbar { width: 3px; }
+    .phone-screen::-webkit-scrollbar-track { background: transparent; }
+    .phone-screen::-webkit-scrollbar-thumb { background: #ddd; border-radius: 3px; }
+
+    /* Desktop frame */
+    .desktop { width: 100%; max-width: 700px; height: 460px; border-radius: 12px; overflow: hidden;
+               border: 4px solid #333; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+
+    /* ── DIRECTION 1: Clean Cards ── */
+    .d1-screen { background: #FAF5FF; min-height: 100%; }
+    .d1-header { background: #471260; padding: 16px; color: white; }
+    .d1-header h2 { font-size: 15px; font-weight: 700; }
+    .d1-header p { font-size: 11px; opacity: 0.7; margin-top: 2px; }
+    .d1-search { margin: 12px; }
+    .d1-search input { width: 100%; padding: 10px 14px; border-radius: 10px;
+                       border: 1.5px solid #EDD9FB; background: white; font-family: inherit;
+                       font-size: 13px; outline: none; color: #333; }
+    .d1-list { padding: 0 12px 20px; display: flex; flex-direction: column; gap: 6px; }
+    .d1-item { background: white; border-radius: 12px; border: 1.5px solid #EDD9FB;
+               padding: 14px; cursor: pointer; transition: border-color 0.2s; }
+    .d1-item:hover { border-color: #B436F0; }
+    .d1-item-header { display: flex; justify-content: space-between; align-items: center; }
+    .d1-item-title { font-size: 13px; font-weight: 600; color: #2b2b2b; }
+    .d1-chevron { color: #B436F0; font-size: 14px; transition: transform 0.2s; }
+    .d1-item.open .d1-chevron { transform: rotate(90deg); }
+    .d1-item-desc { font-size: 12px; color: #666; line-height: 1.5; margin-top: 10px;
+                    display: none; border-top: 1px solid #EDD9FB; padding-top: 10px; }
+    .d1-item.open .d1-item-desc { display: block; }
+    .d1-btn { display: block; width: 100%; margin-top: 10px; padding: 10px;
+              background: #B436F0; color: white; border: none; border-radius: 8px;
+              font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+
+    /* ── DIRECTION 2: Borderless Minimal ── */
+    .d2-screen { background: white; min-height: 100%; }
+    .d2-header { padding: 20px 16px 12px; }
+    .d2-header h2 { font-size: 17px; font-weight: 700; color: #471260; }
+    .d2-search { padding: 0 16px 12px; }
+    .d2-search input { width: 100%; padding: 10px 14px; border-radius: 8px;
+                       background: #FAF5FF; border: none; font-family: inherit;
+                       font-size: 13px; outline: none; color: #333; }
+    .d2-list { padding: 0 16px 20px; }
+    .d2-item { padding: 14px 0; border-bottom: 1px solid #f0e8f8; cursor: pointer; }
+    .d2-item:last-child { border-bottom: none; }
+    .d2-item-header { display: flex; justify-content: space-between; align-items: center; }
+    .d2-item-title { font-size: 14px; font-weight: 500; color: #2b2b2b; }
+    .d2-dot { width: 8px; height: 8px; background: #B436F0; border-radius: 50%; opacity: 0.4; transition: opacity 0.2s; }
+    .d2-item.open .d2-dot { opacity: 1; }
+    .d2-item-desc { font-size: 12px; color: #666; line-height: 1.5; margin-top: 8px; display: none; }
+    .d2-item.open .d2-item-desc { display: block; }
+    .d2-btn { display: inline-block; margin-top: 10px; padding: 8px 18px;
+              background: #471260; color: white; border: none; border-radius: 20px;
+              font-family: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+
+    /* ── DIRECTION 3: Bold Purple ── */
+    .d3-screen { background: #FAF5FF; min-height: 100%; }
+    .d3-hero { background: linear-gradient(135deg, #471260 0%, #B436F0 100%);
+               padding: 20px 16px 24px; }
+    .d3-hero h2 { font-size: 18px; font-weight: 700; color: white; }
+    .d3-hero p { font-size: 12px; color: rgba(255,255,255,0.7); margin-top: 4px; }
+    .d3-search-wrap { padding: 0 12px; margin-top: -16px; }
+    .d3-search-wrap input { width: 100%; padding: 12px 16px; border-radius: 12px;
+                             border: none; box-shadow: 0 4px 16px rgba(71,18,96,0.15);
+                             font-family: inherit; font-size: 13px; outline: none; color: #333; }
+    .d3-list { padding: 12px; display: flex; flex-direction: column; gap: 4px; }
+    .d3-item { background: white; border-radius: 10px; cursor: pointer;
+               border-left: 3px solid transparent; transition: border-color 0.2s; }
+    .d3-item:hover, .d3-item.open { border-left-color: #B436F0; }
+    .d3-item-header { display: flex; justify-content: space-between; align-items: center; padding: 13px 12px; }
+    .d3-item-title { font-size: 13px; font-weight: 500; color: #2b2b2b; }
+    .d3-tag { font-size: 10px; background: #EDD9FB; color: #B436F0; padding: 2px 8px; border-radius: 10px; font-weight: 600; white-space: nowrap; }
+    .d3-item-desc { font-size: 12px; color: #666; line-height: 1.5; display: none;
+                    padding: 0 12px 12px; }
+    .d3-item.open .d3-item-desc { display: block; }
+    .d3-btn { display: block; width: calc(100% - 24px); margin: 0 12px 12px; padding: 10px;
+              background: #B436F0; color: white; border: none; border-radius: 8px;
+              font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; display: none; }
+    .d3-item.open .d3-btn { display: block; }
+
+    /* ── DIRECTION 4: Compact Dense ── */
+    .d4-screen { background: #F2F2F2; min-height: 100%; }
+    .d4-header { background: white; padding: 14px 16px; border-bottom: 1px solid #eee; }
+    .d4-header h2 { font-size: 14px; font-weight: 700; color: #471260; }
+    .d4-search { background: white; padding: 10px 16px; border-bottom: 2px solid #EDD9FB; }
+    .d4-search input { width: 100%; padding: 8px 12px; border-radius: 6px; border: 1px solid #ddd;
+                       font-family: inherit; font-size: 12px; outline: none; color: #333; background: #FAF5FF; }
+    .d4-count { padding: 8px 16px; font-size: 11px; color: #888; }
+    .d4-list { padding: 0 8px 20px; display: flex; flex-direction: column; gap: 2px; }
+    .d4-item { background: white; border-radius: 6px; cursor: pointer; }
+    .d4-item-header { display: flex; justify-content: space-between; align-items: center; padding: 11px 12px; }
+    .d4-item-title { font-size: 12px; font-weight: 500; color: #2b2b2b; }
+    .d4-chevron { color: #B436F0; font-size: 12px; }
+    .d4-item.open .d4-chevron { transform: rotate(90deg); display: inline-block; }
+    .d4-item-desc { font-size: 11px; color: #666; line-height: 1.5; display: none;
+                    padding: 0 12px 10px; }
+    .d4-item.open .d4-item-desc { display: block; }
+    .d4-btn { display: none; margin: 0 12px 10px; padding: 8px;
+              background: #B436F0; color: white; border: none; border-radius: 6px;
+              font-family: inherit; font-size: 11px; font-weight: 600; cursor: pointer; width: calc(100% - 24px); }
+    .d4-item.open .d4-btn { display: block; }
+
+    /* ── DIRECTION 5: Success / Confirmed state ── */
+    .d5-screen { background: #FAF5FF; min-height: 100%; display: flex; flex-direction: column; }
+    .d5-header { background: #471260; padding: 16px; color: white; text-align: center; }
+    .d5-header h2 { font-size: 14px; font-weight: 700; }
+    .d5-confirmed { flex: 1; display: flex; flex-direction: column; align-items: center;
+                    justify-content: center; padding: 32px 24px; text-align: center; }
+    .d5-checkmark { width: 72px; height: 72px; background: #B436F0; border-radius: 50%;
+                    display: flex; align-items: center; justify-content: center;
+                    font-size: 32px; margin-bottom: 20px;
+                    box-shadow: 0 8px 24px rgba(180,54,240,0.3); }
+    .d5-confirmed h3 { font-size: 16px; font-weight: 700; color: #471260; margin-bottom: 8px; }
+    .d5-confirmed .topic-name { font-size: 14px; font-weight: 600; color: #B436F0;
+                                background: #EDD9FB; padding: 8px 16px; border-radius: 8px;
+                                margin-bottom: 16px; }
+    .d5-confirmed p { font-size: 12px; color: #888; line-height: 1.5; max-width: 200px; }
+
+    /* ── DIRECTION 6: Race Condition State ── */
+    .d6-screen { background: #FAF5FF; min-height: 100%; }
+    .d6-header { background: #471260; padding: 16px; color: white; }
+    .d6-header h2 { font-size: 14px; font-weight: 700; }
+    .d6-toast { margin: 12px; background: #FFF3F0; border: 1.5px solid #F24C0A;
+                border-radius: 10px; padding: 12px 14px; display: flex; gap: 10px; align-items: flex-start; }
+    .d6-toast-icon { font-size: 16px; flex-shrink: 0; }
+    .d6-toast-text { font-size: 12px; color: #2b2b2b; line-height: 1.5; }
+    .d6-toast-text strong { color: #F24C0A; }
+    .d6-search { margin: 0 12px 8px; }
+    .d6-search input { width: 100%; padding: 10px 14px; border-radius: 10px;
+                       border: 1.5px solid #EDD9FB; background: white; font-family: inherit;
+                       font-size: 13px; outline: none; color: #333; }
+    .d6-list { padding: 0 12px 20px; display: flex; flex-direction: column; gap: 6px; }
+    .d6-item { background: white; border-radius: 12px; border: 1.5px solid #EDD9FB; padding: 14px; }
+    .d6-item-title { font-size: 13px; font-weight: 600; color: #2b2b2b; }
+
+    /* ── ADMIN DIRECTION 1 ── */
+    .admin-screen { display: flex; height: 100%; background: #F2F2F2; }
+    .admin-sidebar { width: 160px; background: #471260; flex-shrink: 0; display: flex; flex-direction: column; }
+    .admin-logo { padding: 16px 14px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .admin-logo span { font-size: 12px; font-weight: 700; color: white; display: block; line-height: 1.3; }
+    .admin-nav { flex: 1; padding: 8px 0; }
+    .admin-nav-item { padding: 10px 14px; font-size: 12px; color: rgba(255,255,255,0.65);
+                      cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.15s; }
+    .admin-nav-item:hover { color: white; background: rgba(255,255,255,0.08); }
+    .admin-nav-item.active { color: white; background: #B436F0; font-weight: 600; }
+    .admin-content { flex: 1; overflow-y: auto; padding: 20px; }
+    .admin-title { font-size: 16px; font-weight: 700; color: #471260; margin-bottom: 16px; }
+    .admin-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+    .admin-stat { background: white; border-radius: 10px; padding: 14px;
+                  border-left: 3px solid #B436F0; }
+    .admin-stat-num { font-size: 24px; font-weight: 700; color: #471260; }
+    .admin-stat-label { font-size: 11px; color: #888; margin-top: 2px; }
+    .admin-stat.orange { border-left-color: #F24C0A; }
+    .admin-progress { background: white; border-radius: 10px; padding: 14px; margin-bottom: 12px; }
+    .admin-progress-label { font-size: 11px; color: #888; margin-bottom: 8px; display: flex; justify-content: space-between; }
+    .admin-progress-bar { height: 8px; background: #EDD9FB; border-radius: 4px; overflow: hidden; }
+    .admin-progress-fill { height: 100%; background: #B436F0; border-radius: 4px; width: 52%; }
+    .admin-btn { padding: 9px 16px; background: #B436F0; color: white; border: none;
+                 border-radius: 8px; font-family: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+
+    /* Admin Table */
+    .admin-table { background: white; border-radius: 10px; overflow: hidden; }
+    .admin-table-header { padding: 12px 14px; border-bottom: 1px solid #f0e8f8;
+                          display: flex; justify-content: space-between; align-items: center; }
+    .admin-table-title { font-size: 13px; font-weight: 600; color: #471260; }
+    .admin-table table { width: 100%; border-collapse: collapse; }
+    .admin-table th { padding: 8px 14px; text-align: left; font-size: 10px; color: #999;
+                      text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #f5f5f5; }
+    .admin-table td { padding: 10px 14px; font-size: 12px; color: #333; border-bottom: 1px solid #f9f9f9; }
+    .admin-table tr:last-child td { border-bottom: none; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; }
+    .badge-taken { background: #EDD9FB; color: #B436F0; }
+    .badge-free { background: #f0f0f0; color: #888; }
+
+    /* Toggle for accordion */
+    .accordion-toggle { cursor: pointer; }
+  </style>
+</head>
+<body>
+
+<h1>Design Directions — lit</h1>
+<p class="subtitle">Варіанти дизайну на основі корпоративної палітри dnlit.dp.ua · Inter · shadcn/ui</p>
+
+<div class="tabs">
+  <button class="tab active" onclick="showTab('student')">📱 Студент (6 варіантів)</button>
+  <button class="tab" onclick="showTab('admin')">🖥️ Адмін-панель</button>
+</div>
+
+<!-- STUDENT DIRECTIONS -->
+<div class="grid active" id="tab-student">
+
+  <!-- D1: Clean Cards -->
+  <div class="phone-wrap">
+    <div class="direction-label">1 — Clean Cards</div>
+    <div class="direction-desc">Картки з тінями, чіткі межі, класичний accordion</div>
+    <div class="phone">
+      <div class="phone-screen d1-screen">
+        <div class="d1-header">
+          <h2>Вибір теми</h2>
+          <p>Оберіть одну тему зі списку</p>
+        </div>
+        <div class="d1-search"><input type="text" placeholder="🔍 Знайти тему..."></div>
+        <div class="d1-list">
+          <div class="d1-item open accordion-toggle" onclick="toggleAccordion(this, 'd1')">
+            <div class="d1-item-header">
+              <span class="d1-item-title">Алгоритми сортування</span>
+              <span class="d1-chevron">›</span>
+            </div>
+            <div class="d1-item-desc">Дослідження та порівняння основних алгоритмів сортування даних: bubble sort, merge sort, quicksort. Аналіз часової складності.</div>
+            <button class="d1-btn">Вибрати цю тему</button>
+          </div>
+          <div class="d1-item accordion-toggle" onclick="toggleAccordion(this, 'd1')">
+            <div class="d1-item-header">
+              <span class="d1-item-title">Бази даних та SQL</span>
+              <span class="d1-chevron">›</span>
+            </div>
+            <div class="d1-item-desc">Проектування реляційних баз даних, написання SQL-запитів, нормалізація таблиць.</div>
+            <button class="d1-btn">Вибрати цю тему</button>
+          </div>
+          <div class="d1-item accordion-toggle" onclick="toggleAccordion(this, 'd1')">
+            <div class="d1-item-header">
+              <span class="d1-item-title">Машинне навчання</span>
+              <span class="d1-chevron">›</span>
+            </div>
+            <div class="d1-item-desc">Вступ до ML: лінійна регресія, класифікація, нейронні мережі. Практика на Python.</div>
+            <button class="d1-btn">Вибрати цю тему</button>
+          </div>
+          <div class="d1-item accordion-toggle" onclick="toggleAccordion(this, 'd1')">
+            <div class="d1-item-header">
+              <span class="d1-item-title">Веб-розробка на React</span>
+              <span class="d1-chevron">›</span>
+            </div>
+            <div class="d1-item-desc">Створення SPA-додатку з використанням React, компонентна архітектура, стан додатку.</div>
+            <button class="d1-btn">Вибрати цю тему</button>
+          </div>
+          <div class="d1-item accordion-toggle" onclick="toggleAccordion(this, 'd1')">
+            <div class="d1-item-header">
+              <span class="d1-item-title">Кібербезпека</span>
+              <span class="d1-chevron">›</span>
+            </div>
+            <div class="d1-item-desc">Основи інформаційної безпеки, типи атак, методи захисту даних.</div>
+            <button class="d1-btn">Вибрати цю тему</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- D2: Borderless Minimal -->
+  <div class="phone-wrap">
+    <div class="direction-label">2 — Borderless Minimal</div>
+    <div class="direction-desc">Без рамок, тільки розділювачі — максимально чисто</div>
+    <div class="phone">
+      <div class="phone-screen d2-screen">
+        <div class="d2-header"><h2>Вибір теми</h2></div>
+        <div class="d2-search"><input type="text" placeholder="🔍 Знайти..."></div>
+        <div class="d2-list">
+          <div class="d2-item open accordion-toggle" onclick="toggleAccordion(this, 'd2')">
+            <div class="d2-item-header">
+              <span class="d2-item-title">Алгоритми сортування</span>
+              <span class="d2-dot"></span>
+            </div>
+            <div class="d2-item-desc">Дослідження та порівняння алгоритмів сортування: bubble sort, merge sort, quicksort. Аналіз складності.</div>
+            <button class="d2-btn">Вибрати цю тему</button>
+          </div>
+          <div class="d2-item accordion-toggle" onclick="toggleAccordion(this, 'd2')">
+            <div class="d2-item-header">
+              <span class="d2-item-title">Бази даних та SQL</span>
+              <span class="d2-dot"></span>
+            </div>
+            <div class="d2-item-desc">Проектування БД, SQL-запити, нормалізація.</div>
+            <button class="d2-btn">Вибрати цю тему</button>
+          </div>
+          <div class="d2-item accordion-toggle" onclick="toggleAccordion(this, 'd2')">
+            <div class="d2-item-header">
+              <span class="d2-item-title">Машинне навчання</span>
+              <span class="d2-dot"></span>
+            </div>
+            <div class="d2-item-desc">ML вступ: регресія, класифікація, нейронні мережі на Python.</div>
+            <button class="d2-btn">Вибрати цю тему</button>
+          </div>
+          <div class="d2-item accordion-toggle" onclick="toggleAccordion(this, 'd2')">
+            <div class="d2-item-header">
+              <span class="d2-item-title">Веб-розробка на React</span>
+              <span class="d2-dot"></span>
+            </div>
+            <div class="d2-item-desc">SPA, компоненти, стан.</div>
+            <button class="d2-btn">Вибрати цю тему</button>
+          </div>
+          <div class="d2-item accordion-toggle" onclick="toggleAccordion(this, 'd2')">
+            <div class="d2-item-header">
+              <span class="d2-item-title">Кібербезпека</span>
+              <span class="d2-dot"></span>
+            </div>
+            <div class="d2-item-desc">Основи безпеки, типи атак, захист даних.</div>
+            <button class="d2-btn">Вибрати цю тему</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- D3: Bold Purple Gradient -->
+  <div class="phone-wrap">
+    <div class="direction-label">3 — Bold Purple</div>
+    <div class="direction-desc">Градієнтний hero-header, left-border акордеон</div>
+    <div class="phone">
+      <div class="phone-screen d3-screen">
+        <div class="d3-hero">
+          <h2>Вибір теми курсової</h2>
+          <p>116 тем доступно</p>
+        </div>
+        <div class="d3-search-wrap"><input type="text" placeholder="🔍 Знайти тему..."></div>
+        <div class="d3-list">
+          <div class="d3-item open accordion-toggle" onclick="toggleAccordion(this, 'd3')">
+            <div class="d3-item-header">
+              <span class="d3-item-title">Алгоритми сортування</span>
+              <span class="d3-tag">вільна</span>
+            </div>
+            <div class="d3-item-desc">Дослідження та порівняння алгоритмів сортування даних. Аналіз часової складності та практичне застосування.</div>
+            <button class="d3-btn">Вибрати цю тему</button>
+          </div>
+          <div class="d3-item accordion-toggle" onclick="toggleAccordion(this, 'd3')">
+            <div class="d3-item-header">
+              <span class="d3-item-title">Бази даних та SQL</span>
+              <span class="d3-tag">вільна</span>
+            </div>
+            <div class="d3-item-desc">Проектування БД, SQL-запити.</div>
+            <button class="d3-btn">Вибрати цю тему</button>
+          </div>
+          <div class="d3-item accordion-toggle" onclick="toggleAccordion(this, 'd3')">
+            <div class="d3-item-header">
+              <span class="d3-item-title">Машинне навчання</span>
+              <span class="d3-tag">вільна</span>
+            </div>
+            <div class="d3-item-desc">ML вступ на Python.</div>
+            <button class="d3-btn">Вибрати цю тему</button>
+          </div>
+          <div class="d3-item accordion-toggle" onclick="toggleAccordion(this, 'd3')">
+            <div class="d3-item-header">
+              <span class="d3-item-title">Веб-розробка на React</span>
+              <span class="d3-tag">вільна</span>
+            </div>
+            <div class="d3-item-desc">SPA, компоненти, стан.</div>
+            <button class="d3-btn">Вибрати цю тему</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- D4: Compact Dense -->
+  <div class="phone-wrap">
+    <div class="direction-label">4 — Compact Dense</div>
+    <div class="direction-desc">Компактний, більше тем на екрані, менше пробілів</div>
+    <div class="phone">
+      <div class="phone-screen d4-screen">
+        <div class="d4-header"><h2>Вибір теми курсової</h2></div>
+        <div class="d4-search"><input type="text" placeholder="🔍 Знайти..."></div>
+        <div class="d4-count">116 тем доступно</div>
+        <div class="d4-list">
+          <div class="d4-item open accordion-toggle" onclick="toggleAccordion(this, 'd4')">
+            <div class="d4-item-header">
+              <span class="d4-item-title">Алгоритми сортування</span>
+              <span class="d4-chevron" style="display:inline-block;transform:rotate(90deg)">›</span>
+            </div>
+            <div class="d4-item-desc">Bubble sort, merge sort, quicksort. Аналіз часової складності.</div>
+            <button class="d4-btn" style="display:block">Вибрати цю тему</button>
+          </div>
+          <div class="d4-item accordion-toggle" onclick="toggleAccordion(this, 'd4')">
+            <div class="d4-item-header">
+              <span class="d4-item-title">Бази даних та SQL</span>
+              <span class="d4-chevron">›</span>
+            </div>
+            <div class="d4-item-desc">Проектування БД, нормалізація, SQL.</div>
+            <button class="d4-btn">Вибрати цю тему</button>
+          </div>
+          <div class="d4-item accordion-toggle" onclick="toggleAccordion(this, 'd4')">
+            <div class="d4-item-header">
+              <span class="d4-item-title">Машинне навчання</span>
+              <span class="d4-chevron">›</span>
+            </div>
+            <div class="d4-item-desc">Регресія, класифікація, Python.</div>
+            <button class="d4-btn">Вибрати цю тему</button>
+          </div>
+          <div class="d4-item accordion-toggle" onclick="toggleAccordion(this, 'd4')">
+            <div class="d4-item-header">
+              <span class="d4-item-title">Веб-розробка на React</span>
+              <span class="d4-chevron">›</span>
+            </div>
+            <div class="d4-item-desc">SPA, компоненти, стан.</div>
+            <button class="d4-btn">Вибрати цю тему</button>
+          </div>
+          <div class="d4-item accordion-toggle" onclick="toggleAccordion(this, 'd4')">
+            <div class="d4-item-header">
+              <span class="d4-item-title">Кібербезпека</span>
+              <span class="d4-chevron">›</span>
+            </div>
+            <div class="d4-item-desc">Безпека, атаки, захист.</div>
+            <button class="d4-btn">Вибрати цю тему</button>
+          </div>
+          <div class="d4-item accordion-toggle" onclick="toggleAccordion(this, 'd4')">
+            <div class="d4-item-header">
+              <span class="d4-item-title">Мережеві протоколи</span>
+              <span class="d4-chevron">›</span>
+            </div>
+            <div class="d4-item-desc">TCP/IP, HTTP, DNS.</div>
+            <button class="d4-btn">Вибрати цю тему</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- D5: Success State -->
+  <div class="phone-wrap">
+    <div class="direction-label">5 — Success State</div>
+    <div class="direction-desc">Як виглядає екран після успішного вибору теми</div>
+    <div class="phone">
+      <div class="phone-screen d5-screen">
+        <div class="d5-header"><h2>Вибір теми курсової</h2></div>
+        <div class="d5-confirmed">
+          <div class="d5-checkmark">✓</div>
+          <h3>Тему вибрано!</h3>
+          <div class="topic-name">Алгоритми сортування</div>
+          <p>Якщо потрібна зміна — зверніться до вчителя</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- D6: Race Condition -->
+  <div class="phone-wrap">
+    <div class="direction-label">6 — Race Condition State</div>
+    <div class="direction-desc">Повідомлення коли тему щойно забрав інший учень</div>
+    <div class="phone">
+      <div class="phone-screen d6-screen">
+        <div class="d6-header"><h2>Вибір теми курсової</h2></div>
+        <div class="d6-toast">
+          <span class="d6-toast-icon">😔</span>
+          <div class="d6-toast-text">
+            <strong>Цю тему щойно вибрав інший учень.</strong><br>
+            Список оновлено — оберіть іншу тему.
+          </div>
+        </div>
+        <div class="d6-search"><input type="text" placeholder="🔍 Знайти тему..."></div>
+        <div class="d6-list">
+          <div class="d6-item"><div class="d6-item-title">Бази даних та SQL</div></div>
+          <div class="d6-item"><div class="d6-item-title">Машинне навчання</div></div>
+          <div class="d6-item"><div class="d6-item-title">Веб-розробка на React</div></div>
+          <div class="d6-item"><div class="d6-item-title">Кібербезпека</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ADMIN DIRECTIONS -->
+<div class="grid" id="tab-admin">
+
+  <!-- Admin D1: Dashboard -->
+  <div class="phone-wrap" style="align-items:center">
+    <div class="direction-label">Адмін — Дашборд (головна)</div>
+    <div class="direction-desc">Перший екран після логіну адміна</div>
+    <div class="desktop">
+      <div class="admin-screen">
+        <div class="admin-sidebar">
+          <div class="admin-logo"><span>Система вибору тем</span></div>
+          <div class="admin-nav">
+            <div class="admin-nav-item active">📊 Статус</div>
+            <div class="admin-nav-item">👥 Студенти</div>
+            <div class="admin-nav-item">📋 Теми</div>
+            <div class="admin-nav-item">📝 Журнал дій</div>
+          </div>
+        </div>
+        <div class="admin-content">
+          <div class="admin-title">Статус вибору тем</div>
+          <div class="admin-stats">
+            <div class="admin-stat">
+              <div class="admin-stat-num">47</div>
+              <div class="admin-stat-label">студентів вибрали</div>
+            </div>
+            <div class="admin-stat orange">
+              <div class="admin-stat-num">43</div>
+              <div class="admin-stat-label">не вибрали ще</div>
+            </div>
+          </div>
+          <div class="admin-progress">
+            <div class="admin-progress-label">
+              <span>Прогрес</span><span>47 / 90</span>
+            </div>
+            <div class="admin-progress-bar"><div class="admin-progress-fill"></div></div>
+          </div>
+          <button class="admin-btn">⬇ Вивантажити CSV</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin D2: Topics Table -->
+  <div class="phone-wrap" style="align-items:center">
+    <div class="direction-label">Адмін — Список тем</div>
+    <div class="direction-desc">Управління темами, звільнення теми</div>
+    <div class="desktop">
+      <div class="admin-screen">
+        <div class="admin-sidebar">
+          <div class="admin-logo"><span>Система вибору тем</span></div>
+          <div class="admin-nav">
+            <div class="admin-nav-item">📊 Статус</div>
+            <div class="admin-nav-item">👥 Студенти</div>
+            <div class="admin-nav-item active">📋 Теми</div>
+            <div class="admin-nav-item">📝 Журнал дій</div>
+          </div>
+        </div>
+        <div class="admin-content">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+            <div class="admin-title" style="margin:0">Теми</div>
+            <div style="display:flex;gap:8px">
+              <button class="admin-btn" style="background:#F2F2F2;color:#471260;border:1px solid #EDD9FB">⬆ CSV</button>
+              <button class="admin-btn">+ Додати тему</button>
+            </div>
+          </div>
+          <div class="admin-table">
+            <div class="admin-table-header">
+              <span class="admin-table-title">120 тем всього</span>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Назва теми</th>
+                  <th>Статус</th>
+                  <th>Студент</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Алгоритми сортування</td>
+                  <td><span class="badge badge-taken">зайнята</span></td>
+                  <td style="color:#888">Іваненко О.</td>
+                  <td><span style="color:#B436F0;font-size:11px;cursor:pointer">Звільнити</span></td>
+                </tr>
+                <tr>
+                  <td>Бази даних та SQL</td>
+                  <td><span class="badge badge-free">вільна</span></td>
+                  <td style="color:#ccc">—</td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td>Машинне навчання</td>
+                  <td><span class="badge badge-free">вільна</span></td>
+                  <td style="color:#ccc">—</td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td>Веб-розробка на React</td>
+                  <td><span class="badge badge-taken">зайнята</span></td>
+                  <td style="color:#888">Петренко М.</td>
+                  <td><span style="color:#B436F0;font-size:11px;cursor:pointer">Звільнити</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function showTab(tab) {
+  document.querySelectorAll('.grid').forEach(g => g.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  event.target.classList.add('active');
+}
+
+function toggleAccordion(el, prefix) {
+  el.classList.toggle('open');
+}
+</script>
+
+</body>
+</html>

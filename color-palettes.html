@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Палітри — dnlit.dp.ua</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #f0f0f0;
+      padding: 2rem;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 0.4rem;
+      font-size: 1.4rem;
+      color: #222;
+    }
+    .subtitle {
+      text-align: center;
+      color: #888;
+      font-size: 0.85rem;
+      margin-bottom: 2rem;
+    }
+
+    /* Brand source */
+    .brand-section {
+      max-width: 900px;
+      margin: 0 auto 2.5rem;
+      background: white;
+      border-radius: 12px;
+      padding: 1.2rem 1.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .brand-section h2 {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #999;
+      margin-bottom: 0.8rem;
+    }
+    .brand-swatches {
+      display: flex;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+    }
+    .brand-swatch {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.3rem;
+    }
+    .brand-swatch .dot {
+      width: 48px;
+      height: 48px;
+      border-radius: 8px;
+      border: 1px solid rgba(0,0,0,0.08);
+    }
+    .brand-swatch span {
+      font-size: 0.7rem;
+      font-family: monospace;
+      color: #555;
+    }
+
+    /* Palettes */
+    .palettes {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .palette {
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+      background: white;
+    }
+    .palette-title {
+      padding: 0.9rem 1.2rem;
+      font-weight: 600;
+      font-size: 0.9rem;
+      background: white;
+      border-bottom: 1px solid #eee;
+      color: #222;
+    }
+    .palette-desc {
+      font-weight: 400;
+      font-size: 0.75rem;
+      color: #888;
+      margin-top: 0.2rem;
+    }
+    .swatches {
+      display: flex;
+      height: 72px;
+    }
+    .swatch { flex: 1; }
+    .colors {
+      padding: 0.8rem 1.2rem;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .color-row {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.25rem 0;
+      font-size: 0.8rem;
+      color: #555;
+    }
+    .cdot {
+      width: 16px;
+      height: 16px;
+      border-radius: 3px;
+      border: 1px solid rgba(0,0,0,0.08);
+      flex-shrink: 0;
+    }
+    .hex {
+      font-family: monospace;
+      font-weight: 600;
+      color: #333;
+      min-width: 68px;
+    }
+
+    /* Mock preview */
+    .preview {
+      padding: 1rem 1.2rem 1.2rem;
+    }
+    .preview-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #aaa;
+      margin-bottom: 0.6rem;
+    }
+    .mock {
+      border-radius: 10px;
+      padding: 0.9rem;
+      font-size: 0.8rem;
+    }
+    .mock-header {
+      font-weight: 700;
+      margin-bottom: 0.6rem;
+      font-size: 0.85rem;
+    }
+    .mock-search {
+      border-radius: 6px;
+      padding: 0.4rem 0.7rem;
+      margin-bottom: 0.6rem;
+      font-size: 0.78rem;
+    }
+    .mock-item {
+      border-radius: 6px;
+      padding: 0.45rem 0.7rem;
+      margin-bottom: 0.35rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.78rem;
+    }
+    .mock-btn {
+      display: inline-block;
+      padding: 0.45rem 1.1rem;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      margin-top: 0.5rem;
+      color: white;
+      border: none;
+    }
+    .mock-stat {
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-bottom: 0.2rem;
+    }
+    .mock-stat-label {
+      font-size: 0.72rem;
+      opacity: 0.7;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Палітри на основі dnlit.dp.ua</h1>
+<p class="subtitle">Корпоративні кольори закладу → адаптовані для UI системи</p>
+
+<!-- Brand colors extracted -->
+<div class="brand-section">
+  <h2>Корпоративні кольори сайту dnlit.dp.ua</h2>
+  <div class="brand-swatches">
+    <div class="brand-swatch"><div class="dot" style="background:#B436F0"></div><span>#B436F0</span></div>
+    <div class="brand-swatch"><div class="dot" style="background:#471260"></div><span>#471260</span></div>
+    <div class="brand-swatch"><div class="dot" style="background:#442e66"></div><span>#442e66</span></div>
+    <div class="brand-swatch"><div class="dot" style="background:#F24C0A"></div><span>#F24C0A</span></div>
+    <div class="brand-swatch"><div class="dot" style="background:#ffb606"></div><span>#ffb606</span></div>
+    <div class="brand-swatch"><div class="dot" style="background:#2b2b2b"></div><span>#2b2b2b</span></div>
+    <div class="brand-swatch"><div class="dot" style="background:#F2F2F2"></div><span>#F2F2F2</span></div>
+  </div>
+</div>
+
+<div class="palettes">
+
+  <!-- Варіант 1: Light Purple -->
+  <div class="palette">
+    <div class="palette-title">
+      1 — Light Purple
+      <div class="palette-desc">Світлий фон, фіолетовий акцент — чисто і по-корпоративному</div>
+    </div>
+    <div class="swatches">
+      <div class="swatch" style="background:#FAF5FF"></div>
+      <div class="swatch" style="background:#EDD9FB"></div>
+      <div class="swatch" style="background:#B436F0"></div>
+      <div class="swatch" style="background:#471260"></div>
+    </div>
+    <div class="colors">
+      <div class="color-row"><div class="cdot" style="background:#FAF5FF"></div><span class="hex">#FAF5FF</span> фон сторінки</div>
+      <div class="color-row"><div class="cdot" style="background:#EDD9FB"></div><span class="hex">#EDD9FB</span> фон карток</div>
+      <div class="color-row"><div class="cdot" style="background:#B436F0"></div><span class="hex">#B436F0</span> кнопки / акцент</div>
+      <div class="color-row"><div class="cdot" style="background:#471260"></div><span class="hex">#471260</span> hover / заголовки</div>
+    </div>
+    <div class="preview">
+      <div class="preview-label">Preview — студент</div>
+      <div class="mock" style="background:#FAF5FF; border:1px solid #EDD9FB">
+        <div class="mock-header" style="color:#471260">Список тем</div>
+        <div class="mock-search" style="background:white; border:1px solid #EDD9FB; color:#999">🔍 Знайти тему...</div>
+        <div class="mock-item" style="background:#EDD9FB; color:#333">Алгоритми сортування <span style="color:#B436F0">›</span></div>
+        <div class="mock-item" style="background:#EDD9FB; color:#333">Бази даних <span style="color:#B436F0">›</span></div>
+        <div class="mock-btn" style="background:#B436F0">Вибрати тему</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Варіант 2: Dark Purple (Brand) -->
+  <div class="palette">
+    <div class="palette-title">
+      2 — Dark Purple
+      <div class="palette-desc">Темний header, світлий контент — строго і брендово</div>
+    </div>
+    <div class="swatches">
+      <div class="swatch" style="background:#471260"></div>
+      <div class="swatch" style="background:#442e66"></div>
+      <div class="swatch" style="background:#ffffff"></div>
+      <div class="swatch" style="background:#B436F0"></div>
+    </div>
+    <div class="colors">
+      <div class="color-row"><div class="cdot" style="background:#471260"></div><span class="hex">#471260</span> header / sidebar</div>
+      <div class="color-row"><div class="cdot" style="background:#442e66"></div><span class="hex">#442e66</span> навігація</div>
+      <div class="color-row"><div class="cdot" style="background:#ffffff"></div><span class="hex">#FFFFFF</span> контентна зона</div>
+      <div class="color-row"><div class="cdot" style="background:#B436F0"></div><span class="hex">#B436F0</span> CTA кнопки</div>
+    </div>
+    <div class="preview">
+      <div class="preview-label">Preview — студент</div>
+      <div class="mock" style="background:white; border:1px solid #eee; overflow:hidden; padding:0">
+        <div style="background:#471260; padding:0.6rem 0.9rem; color:white; font-weight:600; font-size:0.82rem">Вибір теми курсової</div>
+        <div style="padding:0.7rem 0.9rem">
+          <div class="mock-search" style="background:#F2F2F2; border:1px solid #ddd; color:#999">🔍 Знайти тему...</div>
+          <div class="mock-item" style="background:#F2F2F2; color:#333; margin-bottom:0.3rem">Алгоритми сортування <span style="color:#B436F0">›</span></div>
+          <div class="mock-item" style="background:#F2F2F2; color:#333">Бази даних <span style="color:#B436F0">›</span></div>
+          <div class="mock-btn" style="background:#B436F0">Вибрати тему</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Варіант 3: Purple + Orange accent -->
+  <div class="palette">
+    <div class="palette-title">
+      3 — Purple + Orange
+      <div class="palette-desc">Фіолетова база + помаранчевий акцент для CTA</div>
+    </div>
+    <div class="swatches">
+      <div class="swatch" style="background:#FAF5FF"></div>
+      <div class="swatch" style="background:#EDD9FB"></div>
+      <div class="swatch" style="background:#442e66"></div>
+      <div class="swatch" style="background:#F24C0A"></div>
+    </div>
+    <div class="colors">
+      <div class="color-row"><div class="cdot" style="background:#FAF5FF"></div><span class="hex">#FAF5FF</span> фон сторінки</div>
+      <div class="color-row"><div class="cdot" style="background:#EDD9FB"></div><span class="hex">#EDD9FB</span> картки / items</div>
+      <div class="color-row"><div class="cdot" style="background:#442e66"></div><span class="hex">#442e66</span> заголовки / текст</div>
+      <div class="color-row"><div class="cdot" style="background:#F24C0A"></div><span class="hex">#F24C0A</span> головна CTA кнопка</div>
+    </div>
+    <div class="preview">
+      <div class="preview-label">Preview — студент</div>
+      <div class="mock" style="background:#FAF5FF; border:1px solid #EDD9FB">
+        <div class="mock-header" style="color:#442e66">Список тем</div>
+        <div class="mock-search" style="background:white; border:1px solid #EDD9FB; color:#999">🔍 Знайти тему...</div>
+        <div class="mock-item" style="background:#EDD9FB; color:#333">Алгоритми сортування <span style="color:#442e66">›</span></div>
+        <div class="mock-item" style="background:#EDD9FB; color:#333">Бази даних <span style="color:#442e66">›</span></div>
+        <div class="mock-btn" style="background:#F24C0A">Вибрати тему</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Варіант 4: Neutral + Purple micro-accent -->
+  <div class="palette">
+    <div class="palette-title">
+      4 — Neutral + Purple micro
+      <div class="palette-desc">Майже нейтральний — фіолетовий тільки на акцентах</div>
+    </div>
+    <div class="swatches">
+      <div class="swatch" style="background:#FFFFFF"></div>
+      <div class="swatch" style="background:#F2F2F2"></div>
+      <div class="swatch" style="background:#2b2b2b"></div>
+      <div class="swatch" style="background:#B436F0"></div>
+    </div>
+    <div class="colors">
+      <div class="color-row"><div class="cdot" style="background:#FFFFFF"></div><span class="hex">#FFFFFF</span> фон сторінки</div>
+      <div class="color-row"><div class="cdot" style="background:#F2F2F2"></div><span class="hex">#F2F2F2</span> картки / рядки</div>
+      <div class="color-row"><div class="cdot" style="background:#2b2b2b"></div><span class="hex">#2b2b2b</span> текст</div>
+      <div class="color-row"><div class="cdot" style="background:#B436F0"></div><span class="hex">#B436F0</span> кнопки / посилання</div>
+    </div>
+    <div class="preview">
+      <div class="preview-label">Preview — студент</div>
+      <div class="mock" style="background:#FFFFFF; border:1px solid #e0e0e0">
+        <div class="mock-header" style="color:#2b2b2b">Список тем</div>
+        <div class="mock-search" style="background:#F2F2F2; border:1px solid #ddd; color:#999">🔍 Знайти тему...</div>
+        <div class="mock-item" style="background:#F2F2F2; color:#2b2b2b">Алгоритми сортування <span style="color:#B436F0">›</span></div>
+        <div class="mock-item" style="background:#F2F2F2; color:#2b2b2b">Бази даних <span style="color:#B436F0">›</span></div>
+        <div class="mock-btn" style="background:#B436F0">Вибрати тему</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Варіант 5: Admin dashboard preview -->
+  <div class="palette" style="grid-column: 1 / -1;">
+    <div class="palette-title">
+      Бонус — Admin Dashboard preview (варіант 2: Dark Purple)
+      <div class="palette-desc">Як виглядає адмін-панель з корпоративними кольорами</div>
+    </div>
+    <div class="preview" style="padding: 1.2rem">
+      <div class="mock" style="background:#F2F2F2; border:1px solid #ddd; padding:0; overflow:hidden; border-radius:10px; display:flex; min-height:160px">
+        <!-- Sidebar -->
+        <div style="background:#471260; width:130px; padding:0.8rem 0; flex-shrink:0">
+          <div style="color:#EDD9FB; font-size:0.72rem; font-weight:700; padding:0.3rem 0.9rem 0.6rem; opacity:0.7; text-transform:uppercase; letter-spacing:0.05em">Меню</div>
+          <div style="color:white; font-size:0.78rem; padding:0.4rem 0.9rem; background:#B436F0; margin-bottom:2px">📊 Статус</div>
+          <div style="color:#EDD9FB; font-size:0.78rem; padding:0.4rem 0.9rem; margin-bottom:2px">👥 Студенти</div>
+          <div style="color:#EDD9FB; font-size:0.78rem; padding:0.4rem 0.9rem; margin-bottom:2px">📋 Теми</div>
+          <div style="color:#EDD9FB; font-size:0.78rem; padding:0.4rem 0.9rem">📝 Журнал дій</div>
+        </div>
+        <!-- Content -->
+        <div style="flex:1; padding:1rem">
+          <div style="font-weight:700; color:#471260; margin-bottom:0.8rem; font-size:0.9rem">Статус вибору тем</div>
+          <div style="display:flex; gap:1rem; flex-wrap:wrap">
+            <div style="background:white; border-radius:8px; padding:0.7rem 1rem; border-left:4px solid #B436F0; min-width:100px">
+              <div class="mock-stat" style="color:#471260">47 / 90</div>
+              <div class="mock-stat-label" style="color:#888">студентів вибрали</div>
+            </div>
+            <div style="background:white; border-radius:8px; padding:0.7rem 1rem; border-left:4px solid #F24C0A; min-width:100px">
+              <div class="mock-stat" style="color:#471260">43</div>
+              <div class="mock-stat-label" style="color:#888">теми вільні</div>
+            </div>
+          </div>
+          <div style="margin-top:0.8rem">
+            <div style="background:#B436F0; color:white; display:inline-block; padding:0.4rem 0.9rem; border-radius:6px; font-size:0.78rem; font-weight:600">⬇ Вивантажити CSV</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>
