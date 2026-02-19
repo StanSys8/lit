@@ -4,7 +4,8 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "start": "node src/index.mjs"
+    "start": "node src/index.mjs",
+    "test": "node --test src/*.test.mjs"
   },
   "keywords": [],
   "author": "",
