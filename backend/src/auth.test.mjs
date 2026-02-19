@@ -254,6 +254,91 @@ test('admin users bulk create: partial success with duplicates and audit count',
   assert.equal(auditEntry.count, 2);
 });
 
+test('admin topics CRUD: list, create, delete free topic, reject delete used topic, and audit', async () => {
+  const app = createApp({ jwtSecret: 'test-secret' });
+
+  const adminLogin = await login(app, 'admin@example.com', 'admin123');
+  const adminCookie = adminLogin.headers['Set-Cookie'];
+  assert.ok(adminCookie);
+
+  const studentLogin = await login(app, 'student@example.com', 'student123');
+  const studentCookie = studentLogin.headers['Set-Cookie'];
+  assert.ok(studentCookie);
+
+  const unauthorizedList = await app.inject({ method: 'GET', url: '/admin/topics' });
+  assert.equal(unauthorizedList.status, 401);
+
+  const forbiddenList = await app.inject({
+    method: 'GET',
+    url: '/admin/topics',
+    headers: { cookie: studentCookie },
+  });
+  assert.equal(forbiddenList.status, 403);
+
+  const listBefore = await app.inject({
+    method: 'GET',
+    url: '/admin/topics',
+    headers: { cookie: adminCookie },
+  });
+  assert.equal(listBefore.status, 200);
+  assert.ok(Array.isArray(listBefore.body.topics));
+  assert.ok(listBefore.body.topics.length >= 2);
+  assert.equal(listBefore.body.topics.some((t) => t.selectedBy !== null), true);
+
+  const create = await app.inject({
+    method: 'POST',
+    url: '/admin/topics',
+    headers: { cookie: adminCookie, 'content-type': 'application/json' },
+    body: {
+      title: 'Graph Databases in Research Portals',
+      description: 'Knowledge graph design for topic discovery.',
+      supervisor: 'Dr. Lee',
+      department: 'Software Engineering',
+    },
+  });
+  assert.equal(create.status, 201);
+  assert.equal(create.body.selectedBy, null);
+  assert.equal(create.body.title, 'Graph Databases in Research Portals');
+
+  const deleteFree = await app.inject({
+    method: 'DELETE',
+    url: `/admin/topics/${create.body.id}`,
+    headers: { cookie: adminCookie },
+  });
+  assert.equal(deleteFree.status, 204);
+
+  const usedTopic = listBefore.body.topics.find((t) => t.selectedBy !== null);
+  assert.ok(usedTopic);
+  const deleteUsed = await app.inject({
+    method: 'DELETE',
+    url: `/admin/topics/${usedTopic.id}`,
+    headers: { cookie: adminCookie },
+  });
+  assert.equal(deleteUsed.status, 409);
+  assert.equal(deleteUsed.body.error, 'TOPIC_IN_USE');
+
+  const deleteMissing = await app.inject({
+    method: 'DELETE',
+    url: '/admin/topics/missing',
+    headers: { cookie: adminCookie },
+  });
+  assert.equal(deleteMissing.status, 404);
+
+  const invalidCreate = await app.inject({
+    method: 'POST',
+    url: '/admin/topics',
+    headers: { cookie: adminCookie, 'content-type': 'application/json' },
+    body: { title: '', description: '', supervisor: '', department: '' },
+  });
+  assert.equal(invalidCreate.status, 400);
+
+  const log = app.getAuditLog();
+  const createAudit = log.find((e) => e.action === 'CREATE_TOPIC' && e.targetId === create.body.id);
+  const deleteAudit = log.find((e) => e.action === 'DELETE_TOPIC' && e.targetId === create.body.id);
+  assert.ok(createAudit);
+  assert.ok(deleteAudit);
+});
+
 test('admin reset password: returns one-time password, updates auth, and logs audit without plaintext', async () => {
   const app = createApp({ jwtSecret: 'test-secret' });
 

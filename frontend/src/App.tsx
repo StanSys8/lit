@@ -23,6 +23,17 @@ type BulkCreateResponse = {
   errors: Array<{ row: number; message: string }>;
 };
 
+type TopicRow = {
+  id: string;
+  title: string;
+  description: string;
+  supervisor: string;
+  department: string;
+  selectedBy: { id: string; name: string } | null;
+};
+
+type CreateTopicResponse = TopicRow;
+
 const normalizePath = (path: string) => {
   if (path === '/topics' || path === '/admin') return path;
   return '/login';
@@ -92,6 +103,14 @@ function App() {
   const [bulkCreated, setBulkCreated] = useState(0);
   const [bulkCredentials, setBulkCredentials] = useState<Array<{ name: string; email: string; password: string }>>([]);
   const [resetPasswordValue, setResetPasswordValue] = useState('');
+  const [topics, setTopics] = useState<TopicRow[]>([]);
+  const [topicsLoading, setTopicsLoading] = useState(false);
+  const [topicsError, setTopicsError] = useState('');
+  const [createTopicError, setCreateTopicError] = useState('');
+  const [newTopicTitle, setNewTopicTitle] = useState('');
+  const [newTopicDescription, setNewTopicDescription] = useState('');
+  const [newTopicSupervisor, setNewTopicSupervisor] = useState('');
+  const [newTopicDepartment, setNewTopicDepartment] = useState('');
 
   const heading = useMemo(() => {
     if (route === '/topics') return 'Student Topics';
@@ -129,9 +148,33 @@ function App() {
     }
   };
 
+  const loadTopics = async () => {
+    setTopicsLoading(true);
+    setTopicsError('');
+
+    try {
+      const response = await fetch('/admin/topics', {
+        method: 'GET',
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        setTopicsError('Failed to load topics');
+        return;
+      }
+
+      const payload = (await response.json()) as { topics: TopicRow[] };
+      setTopics(payload.topics || []);
+    } catch {
+      setTopicsError('Failed to load topics');
+    } finally {
+      setTopicsLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (route === '/admin') {
       void loadStudents();
+      void loadTopics();
     }
   }, [route]);
 
@@ -320,6 +363,69 @@ function App() {
     URL.revokeObjectURL(url);
   };
 
+  const onCreateTopic = async (event: FormEvent) => {
+    event.preventDefault();
+    setCreateTopicError('');
+
+    try {
+      const response = await fetch('/admin/topics', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          title: newTopicTitle,
+          description: newTopicDescription,
+          supervisor: newTopicSupervisor,
+          department: newTopicDepartment,
+        }),
+      });
+
+      const payload = (await response.json()) as CreateTopicResponse | { message?: string };
+      if (!response.ok) {
+        setCreateTopicError((payload as { message?: string }).message || 'Failed to create topic');
+        return;
+      }
+
+      const created = payload as CreateTopicResponse;
+      setTopics((prev) => [...prev, created]);
+      setNewTopicTitle('');
+      setNewTopicDescription('');
+      setNewTopicSupervisor('');
+      setNewTopicDepartment('');
+    } catch {
+      setCreateTopicError('Failed to create topic');
+    }
+  };
+
+  const onDeleteTopic = async (topicId: string) => {
+    setCreateTopicError('');
+    try {
+      const response = await fetch(`/admin/topics/${topicId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+
+      if (response.status === 204) {
+        setTopics((prev) => prev.filter((topic) => topic.id !== topicId));
+        return;
+      }
+
+      const payload = (await response.json()) as { error?: string; message?: string };
+      if (response.status === 409 && payload.error === 'TOPIC_IN_USE') {
+        setCreateTopicError(payload.message || 'Topic is already selected');
+        return;
+      }
+      if (response.status === 404) {
+        setCreateTopicError('Topic not found');
+        return;
+      }
+
+      setCreateTopicError('Failed to delete topic');
+    } catch {
+      setCreateTopicError('Failed to delete topic');
+    }
+  };
+
   if (route === '/admin') {
     return (
       <main className="shell">
@@ -444,6 +550,86 @@ function App() {
               </tbody>
             </table>
           )}
+
+          <section className="admin-topics">
+            <h2>Topics</h2>
+
+            <form className="login-form" onSubmit={onCreateTopic}>
+              <label htmlFor="topic-title">Title</label>
+              <input
+                id="topic-title"
+                type="text"
+                value={newTopicTitle}
+                onChange={(e) => setNewTopicTitle(e.target.value)}
+                required
+              />
+
+              <label htmlFor="topic-description">Description</label>
+              <input
+                id="topic-description"
+                type="text"
+                value={newTopicDescription}
+                onChange={(e) => setNewTopicDescription(e.target.value)}
+                required
+              />
+
+              <label htmlFor="topic-supervisor">Supervisor</label>
+              <input
+                id="topic-supervisor"
+                type="text"
+                value={newTopicSupervisor}
+                onChange={(e) => setNewTopicSupervisor(e.target.value)}
+                required
+              />
+
+              <label htmlFor="topic-department">Department</label>
+              <input
+                id="topic-department"
+                type="text"
+                value={newTopicDepartment}
+                onChange={(e) => setNewTopicDepartment(e.target.value)}
+                required
+              />
+
+              <button type="submit">Add topic</button>
+            </form>
+
+            {createTopicError && <p className="error">{createTopicError}</p>}
+            {topicsError && <p className="error">{topicsError}</p>}
+
+            {topicsLoading ? (
+              <p>Loading topics...</p>
+            ) : (
+              <table className="students-table">
+                <thead>
+                  <tr>
+                    <th>Title</th>
+                    <th>Description</th>
+                    <th>Supervisor</th>
+                    <th>Department</th>
+                    <th>Student</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {topics.map((topic) => (
+                    <tr key={topic.id}>
+                      <td>{topic.title}</td>
+                      <td>{topic.description}</td>
+                      <td>{topic.supervisor}</td>
+                      <td>{topic.department}</td>
+                      <td>{topic.selectedBy?.name || 'вільна'}</td>
+                      <td>
+                        <button type="button" onClick={() => onDeleteTopic(topic.id)}>
+                          Delete topic
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </section>
         </section>
       </main>
     );

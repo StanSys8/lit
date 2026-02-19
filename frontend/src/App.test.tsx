@@ -33,13 +33,19 @@ describe('App routes', () => {
     const html = withPath('/admin', () => renderToStaticMarkup(<App />));
     expect(html).toContain('Admin Dashboard');
     expect(html).toContain('Students');
+    expect(html).toContain('Topics');
     expect(html).toContain('Add student');
+    expect(html).toContain('Add topic');
     expect(html).toContain('Actions');
     expect(html).toContain('Bulk upload students');
     expect(html).toContain('type="file"');
     expect(html).toContain('<aside');
     expect(html).toContain('Name');
     expect(html).toContain('Email');
+    expect(html).toContain('Title');
+    expect(html).toContain('Description');
+    expect(html).toContain('Supervisor');
+    expect(html).toContain('Department');
   });
 });
 

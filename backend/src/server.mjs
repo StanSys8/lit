@@ -43,6 +43,7 @@ const randomPassword = () => randomBytes(9).toString('base64url');
 
 export const createApp = ({ jwtSecret = 'dev-jwt-secret' } = {}) => {
   const users = new Map();
+  const topics = new Map();
   const auditLog = [];
 
   const seedUsers = [
@@ -75,6 +76,29 @@ export const createApp = ({ jwtSecret = 'dev-jwt-secret' } = {}) => {
       failedAttempts: 0,
       lockedUntilMs: null,
     });
+  }
+
+  const seedTopics = [
+    {
+      id: randomUUID(),
+      title: 'Distributed Systems for IoT',
+      description: 'Event-driven architecture for constrained devices.',
+      supervisor: 'Dr. Smith',
+      department: 'Computer Science',
+      selectedByUserId: null,
+    },
+    {
+      id: randomUUID(),
+      title: 'Applied Machine Learning in Education',
+      description: 'Adaptive learning and recommendation models.',
+      supervisor: 'Prof. Johnson',
+      department: 'Data Science',
+      selectedByUserId: seedUsers[0].id,
+    },
+  ];
+
+  for (const t of seedTopics) {
+    topics.set(t.id, t);
   }
 
   const logAudit = ({ actor, action, ip, result, targetId = null, count = null }) => {
@@ -153,6 +177,49 @@ export const createApp = ({ jwtSecret = 'dev-jwt-secret' } = {}) => {
         newPassword,
       },
     };
+  };
+
+  const mapSelectedBy = (selectedByUserId) => {
+    if (!selectedByUserId) return null;
+    const selectedUser = [...users.values()].find((u) => u.id === selectedByUserId);
+    if (!selectedUser) return null;
+    return { id: selectedUser.id, name: selectedUser.name };
+  };
+
+  const mapTopic = (topic) => ({
+    id: topic.id,
+    title: topic.title,
+    description: topic.description,
+    supervisor: topic.supervisor,
+    department: topic.department,
+    selectedBy: mapSelectedBy(topic.selectedByUserId),
+  });
+
+  const createTopic = ({ title, description, supervisor, department }) => {
+    const cleanTitle = String(title).trim();
+    const cleanDescription = String(description).trim();
+    const cleanSupervisor = String(supervisor).trim();
+    const cleanDepartment = String(department).trim();
+
+    if (!cleanTitle || !cleanDescription || !cleanSupervisor || !cleanDepartment) {
+      return {
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'title, description, supervisor and department are required',
+        },
+      };
+    }
+
+    const topic = {
+      id: randomUUID(),
+      title: cleanTitle,
+      description: cleanDescription,
+      supervisor: cleanSupervisor,
+      department: cleanDepartment,
+      selectedByUserId: null,
+    };
+    topics.set(topic.id, topic);
+    return { data: topic };
   };
 
   const handleLogin = async (req, res) => {
@@ -249,7 +316,61 @@ export const createApp = ({ jwtSecret = 'dev-jwt-secret' } = {}) => {
         const session = requireAuth(req, res);
         if (!session) return;
         if (!requireRole(session, 'admin', res)) return;
-        return json(res, 200, { topics: [] });
+        return json(res, 200, {
+          topics: [...topics.values()].map((topic) => mapTopic(topic)),
+        });
+      }
+
+      if (req.method === 'POST' && req.url === '/admin/topics') {
+        const session = requireAuth(req, res);
+        if (!session) return;
+        if (!requireRole(session, 'admin', res)) return;
+
+        const { title = '', description = '', supervisor = '', department = '' } = await readJsonBody(req);
+        const created = createTopic({ title, description, supervisor, department });
+        if (created.error) {
+          return json(res, 400, { error: 'VALIDATION_ERROR', message: created.error.message });
+        }
+
+        logAudit({
+          actor: session.sub,
+          action: 'CREATE_TOPIC',
+          ip: getIp(req),
+          result: 'success',
+          targetId: created.data.id,
+        });
+
+        return json(res, 201, mapTopic(created.data));
+      }
+
+      const deleteTopicMatch = req.url?.match(/^\/admin\/topics\/([^/]+)$/);
+      if (req.method === 'DELETE' && deleteTopicMatch) {
+        const session = requireAuth(req, res);
+        if (!session) return;
+        if (!requireRole(session, 'admin', res)) return;
+
+        const targetId = deleteTopicMatch[1];
+        const topic = topics.get(targetId);
+        if (!topic) {
+          return json(res, 404, { error: 'NOT_FOUND', message: 'Topic not found' });
+        }
+
+        if (topic.selectedByUserId) {
+          return json(res, 409, {
+            error: 'TOPIC_IN_USE',
+            message: 'Тема вже вибрана студентом — спочатку звільніть її',
+          });
+        }
+
+        topics.delete(targetId);
+        logAudit({
+          actor: session.sub,
+          action: 'DELETE_TOPIC',
+          ip: getIp(req),
+          result: 'success',
+          targetId,
+        });
+        return noContent(res);
       }
 
       if (req.method === 'GET' && req.url === '/admin/users') {
