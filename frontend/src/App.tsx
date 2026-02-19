@@ -33,6 +33,14 @@ type TopicRow = {
   selectedBy: { id: string; name: string } | null;
 };
 
+type StudentTopic = {
+  id: string;
+  title: string;
+  description: string;
+  supervisor: string;
+  department: string;
+};
+
 type CreateTopicResponse = TopicRow;
 type TopicsBulkResponse = {
   created: number;
@@ -111,6 +119,32 @@ export const ReleaseTopicModal = ({
   );
 };
 
+export const TopicAccordionItem = ({
+  topic,
+  expanded,
+  onToggle,
+}: {
+  topic: StudentTopic;
+  expanded: boolean;
+  onToggle: () => void;
+}) => (
+  <article className="topic-accordion-item">
+    <button type="button" className="topic-accordion-trigger" onClick={onToggle}>
+      {topic.title}
+    </button>
+    {expanded && (
+      <div className="topic-accordion-content">
+        <p>{topic.description}</p>
+        <p>{`Науковий керівник: ${topic.supervisor}`}</p>
+        <p>{`Кафедра: ${topic.department}`}</p>
+        <button type="button" className="topic-select-btn border-l-4 border-[#B436F0]">
+          Вибрати цю тему
+        </button>
+      </div>
+    )}
+  </article>
+);
+
 function App() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -120,6 +154,12 @@ function App() {
     if (typeof window === 'undefined') return '/login';
     return normalizePath(window.location.pathname);
   });
+  const [studentTopics, setStudentTopics] = useState<StudentTopic[]>([]);
+  const [studentTopicsLoading, setStudentTopicsLoading] = useState(false);
+  const [studentTopicsError, setStudentTopicsError] = useState('');
+  const [topicSearch, setTopicSearch] = useState('');
+  const [debouncedTopicSearch, setDebouncedTopicSearch] = useState('');
+  const [expandedTopicId, setExpandedTopicId] = useState('');
 
   const [students, setStudents] = useState<StudentRow[]>([]);
   const [studentsLoading, setStudentsLoading] = useState(false);
@@ -186,6 +226,29 @@ function App() {
     }
   };
 
+  const loadStudentTopics = async () => {
+    setStudentTopicsLoading(true);
+    setStudentTopicsError('');
+
+    try {
+      const response = await fetch('/topics', {
+        method: 'GET',
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        setStudentTopicsError('Failed to load topics');
+        return;
+      }
+
+      const payload = (await response.json()) as StudentTopic[];
+      setStudentTopics(payload || []);
+    } catch {
+      setStudentTopicsError('Failed to load topics');
+    } finally {
+      setStudentTopicsLoading(false);
+    }
+  };
+
   const loadTopics = async () => {
     setTopicsLoading(true);
     setTopicsError('');
@@ -214,7 +277,17 @@ function App() {
       void loadStudents();
       void loadTopics();
     }
+    if (route === '/topics') {
+      void loadStudentTopics();
+    }
   }, [route]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedTopicSearch(topicSearch.trim());
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [topicSearch]);
 
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -551,6 +624,12 @@ function App() {
     }
   };
 
+  const filteredStudentTopics = useMemo(() => {
+    const query = debouncedTopicSearch.toLowerCase();
+    if (!query) return studentTopics;
+    return studentTopics.filter((topic) => topic.title.toLowerCase().includes(query));
+  }, [debouncedTopicSearch, studentTopics]);
+
   if (route === '/admin') {
     return (
       <main className="shell">
@@ -834,6 +913,45 @@ function App() {
             Logout
           </button>
         </header>
+
+        <section className="student-topics">
+          <label htmlFor="topics-search">Пошук теми</label>
+          <input
+            id="topics-search"
+            type="text"
+            value={topicSearch}
+            onChange={(e) => setTopicSearch(e.target.value)}
+            placeholder="Введіть назву теми"
+          />
+
+          {studentTopicsError && <p className="error">{studentTopicsError}</p>}
+
+          {studentTopicsLoading && (
+            <div className="topic-skeletons" aria-label="Loading topics">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={`skeleton-${i}`} className="topic-skeleton-row" />
+              ))}
+            </div>
+          )}
+
+          {!studentTopicsLoading && studentTopics.length === 0 && (
+            <p>Всі теми вже вибрані. Зверніться до вчителя.</p>
+          )}
+
+          {!studentTopicsLoading && studentTopics.length > 0 && filteredStudentTopics.length === 0 && (
+            <p>{`Нічого не знайдено за запитом «${debouncedTopicSearch}»`}</p>
+          )}
+
+          {!studentTopicsLoading &&
+            filteredStudentTopics.map((topic) => (
+              <TopicAccordionItem
+                key={topic.id}
+                topic={topic}
+                expanded={expandedTopicId === topic.id}
+                onToggle={() => setExpandedTopicId((prev) => (prev === topic.id ? '' : topic.id))}
+              />
+            ))}
+        </section>
       </main>
     );
   }

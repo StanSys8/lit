@@ -195,6 +195,14 @@ export const createApp = ({ jwtSecret = 'dev-jwt-secret' } = {}) => {
     selectedBy: mapSelectedBy(topic.selectedByUserId),
   });
 
+  const mapStudentTopic = (topic) => ({
+    id: topic.id,
+    title: topic.title,
+    description: topic.description,
+    supervisor: topic.supervisor,
+    department: topic.department,
+  });
+
   const createTopic = ({ title, description, supervisor, department }) => {
     const cleanTitle = String(title).trim();
     const cleanDescription = String(description).trim();
@@ -309,7 +317,10 @@ export const createApp = ({ jwtSecret = 'dev-jwt-secret' } = {}) => {
         const session = requireAuth(req, res);
         if (!session) return;
         if (!requireRole(session, 'student', res)) return;
-        return json(res, 200, { topics: [] });
+        const available = [...topics.values()]
+          .filter((topic) => !topic.selectedByUserId)
+          .map((topic) => mapStudentTopic(topic));
+        return json(res, 200, available);
       }
 
       if (req.method === 'GET' && req.url === '/admin/topics') {

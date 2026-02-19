@@ -66,6 +66,10 @@ test('role-based guard on /topics and /admin/topics', async () => {
     headers: { cookie: studentCookie },
   });
   assert.equal(topics.status, 200);
+  assert.ok(Array.isArray(topics.body));
+  assert.ok(topics.body.length >= 1);
+  assert.equal(typeof topics.body[0].title, 'string');
+  assert.equal(topics.body[0].selectedBy, undefined);
 
   const adminTopicsForbidden = await app.inject({
     method: 'GET',

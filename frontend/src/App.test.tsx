@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import App, { ReleaseTopicModal, ResetPasswordModal, StudentActions } from './App';
+import App, { ReleaseTopicModal, ResetPasswordModal, StudentActions, TopicAccordionItem } from './App';
 
 const withPath = (pathname: string, render: () => string) => {
   const previous = globalThis.window;
@@ -27,6 +27,8 @@ describe('App routes', () => {
     expect(html).toContain('Student Topics');
     expect(html).toContain('Logout');
     expect(html).toContain('<header');
+    expect(html).toContain('Пошук теми');
+    expect(html).toContain('Всі теми вже вибрані. Зверніться до вчителя.');
   });
 
   it('renders admin students page with add/delete and bulk controls on /admin', () => {
@@ -75,5 +77,27 @@ describe('Admin reset controls', () => {
     expect(html).toContain('Звільнити тему &quot;Topic A&quot;?');
     expect(html).toContain('Підтвердити');
     expect(html).toContain('Скасувати');
+  });
+
+  it('renders topic accordion expanded content and select button classes', () => {
+    const html = renderToStaticMarkup(
+      <TopicAccordionItem
+        topic={{
+          id: 'topic-1',
+          title: 'Distributed Systems',
+          description: 'Event sourcing',
+          supervisor: 'Dr. Smith',
+          department: 'CS',
+        }}
+        expanded
+        onToggle={() => {}}
+      />,
+    );
+    expect(html).toContain('Distributed Systems');
+    expect(html).toContain('Науковий керівник: Dr. Smith');
+    expect(html).toContain('Кафедра: CS');
+    expect(html).toContain('Вибрати цю тему');
+    expect(html).toContain('border-l-4');
+    expect(html).toContain('border-[#B436F0]');
   });
 });
