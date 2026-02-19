@@ -53,6 +53,20 @@
   text-align: left;
 }
 
+.students-table td:last-child {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.modal-like {
+  border: 1px solid #14532d;
+  background: #f0fdf4;
+  border-radius: 8px;
+  padding: 0.75rem;
+  display: grid;
+  gap: 0.5rem;
+}
+
 .error {
   color: #b00020;
   margin: 0;

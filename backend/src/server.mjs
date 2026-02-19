@@ -375,6 +375,34 @@ export const createApp = ({ jwtSecret = 'dev-jwt-secret' } = {}) => {
         return noContent(res);
       }
 
+      const resetPasswordMatch = req.url?.match(/^\/admin\/users\/([^/]+)\/reset-password$/);
+      if (req.method === 'POST' && resetPasswordMatch) {
+        const session = requireAuth(req, res);
+        if (!session) return;
+        if (!requireRole(session, 'admin', res)) return;
+
+        const targetId = resetPasswordMatch[1];
+        const found = findStudentById(targetId);
+        if (!found) {
+          return json(res, 404, { error: 'NOT_FOUND', message: 'Student not found' });
+        }
+
+        const newPassword = randomPassword();
+        found.user.passwordHash = hashPassword(newPassword);
+        found.user.failedAttempts = 0;
+        found.user.lockedUntilMs = null;
+
+        logAudit({
+          actor: session.sub,
+          action: 'RESET_PASSWORD',
+          ip: getIp(req),
+          result: 'success',
+          targetId,
+        });
+
+        return json(res, 200, { newPassword });
+      }
+
       return json(res, 404, { error: 'NOT_FOUND', message: 'Not Found' });
     } catch {
       return json(res, 500, { error: 'INTERNAL_ERROR', message: 'Internal server error' });

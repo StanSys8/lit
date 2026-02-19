@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import App from './App';
+import App, { ResetPasswordModal, StudentActions } from './App';
 
 const withPath = (pathname: string, render: () => string) => {
   const previous = globalThis.window;
@@ -40,5 +40,23 @@ describe('App routes', () => {
     expect(html).toContain('<aside');
     expect(html).toContain('Name');
     expect(html).toContain('Email');
+  });
+});
+
+describe('Admin reset controls', () => {
+  it('renders reset action button for student row actions', () => {
+    const html = renderToStaticMarkup(
+      <StudentActions studentId="student-1" onDelete={() => {}} onResetPassword={() => {}} />,
+    );
+    expect(html).toContain('Delete');
+    expect(html).toContain('Скинути пароль');
+  });
+
+  it('renders one-time password modal content when password exists', () => {
+    const html = renderToStaticMarkup(<ResetPasswordModal password="secret-123" onClose={() => {}} />);
+    expect(html).toContain('role="dialog"');
+    expect(html).toContain('Нове значення пароля');
+    expect(html).toContain('secret-123');
+    expect(html).toContain('Закрити');
   });
 });

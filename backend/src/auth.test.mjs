@@ -253,3 +253,48 @@ test('admin users bulk create: partial success with duplicates and audit count',
   assert.ok(auditEntry);
   assert.equal(auditEntry.count, 2);
 });
+
+test('admin reset password: returns one-time password, updates auth, and logs audit without plaintext', async () => {
+  const app = createApp({ jwtSecret: 'test-secret' });
+
+  const adminLogin = await login(app, 'admin@example.com', 'admin123');
+  const adminCookie = adminLogin.headers['Set-Cookie'];
+  assert.ok(adminCookie);
+
+  const list = await app.inject({
+    method: 'GET',
+    url: '/admin/users',
+    headers: { cookie: adminCookie },
+  });
+  assert.equal(list.status, 200);
+  const target = list.body.find((u) => u.email === 'student@example.com');
+  assert.ok(target);
+
+  const reset = await app.inject({
+    method: 'POST',
+    url: `/admin/users/${target.id}/reset-password`,
+    headers: { cookie: adminCookie },
+  });
+  assert.equal(reset.status, 200);
+  assert.equal(typeof reset.body.newPassword, 'string');
+  assert.ok(reset.body.newPassword.length > 0);
+
+  const oldLogin = await login(app, 'student@example.com', 'student123');
+  assert.equal(oldLogin.status, 401);
+
+  const newLogin = await login(app, 'student@example.com', reset.body.newPassword);
+  assert.equal(newLogin.status, 200);
+
+  const missing = await app.inject({
+    method: 'POST',
+    url: '/admin/users/missing-id/reset-password',
+    headers: { cookie: adminCookie },
+  });
+  assert.equal(missing.status, 404);
+
+  const log = app.getAuditLog();
+  const resetEntry = log.find((e) => e.action === 'RESET_PASSWORD' && e.targetId === target.id);
+  assert.ok(resetEntry);
+  const serialized = JSON.stringify(resetEntry);
+  assert.ok(!serialized.includes(reset.body.newPassword));
+});

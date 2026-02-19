@@ -28,6 +28,46 @@ const normalizePath = (path: string) => {
   return '/login';
 };
 
+export const StudentActions = ({
+  studentId,
+  onDelete,
+  onResetPassword,
+}: {
+  studentId: string;
+  onDelete: (studentId: string) => void;
+  onResetPassword: (studentId: string) => void;
+}) => (
+  <>
+    <button type="button" onClick={() => onDelete(studentId)}>
+      Delete
+    </button>
+    <button type="button" onClick={() => onResetPassword(studentId)}>
+      Скинути пароль
+    </button>
+  </>
+);
+
+export const ResetPasswordModal = ({
+  password,
+  onClose,
+}: {
+  password: string;
+  onClose: () => void;
+}) => {
+  if (!password) return null;
+
+  return (
+    <div className="modal-like" role="dialog" aria-label="Нове значення пароля">
+      <p>Новий пароль (показується один раз):</p>
+      <code>{password}</code>
+      <p>Скопіюйте пароль та передайте студенту безпечно.</p>
+      <button type="button" onClick={onClose}>
+        Закрити
+      </button>
+    </div>
+  );
+};
+
 function App() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -51,6 +91,7 @@ function App() {
   const [bulkErrors, setBulkErrors] = useState<Array<{ row: number; message: string }>>([]);
   const [bulkCreated, setBulkCreated] = useState(0);
   const [bulkCredentials, setBulkCredentials] = useState<Array<{ name: string; email: string; password: string }>>([]);
+  const [resetPasswordValue, setResetPasswordValue] = useState('');
 
   const heading = useMemo(() => {
     if (route === '/topics') return 'Student Topics';
@@ -194,6 +235,26 @@ function App() {
       setCreateError('Failed to delete student');
     } catch {
       setCreateError('Failed to delete student');
+    }
+  };
+
+  const onResetPassword = async (studentId: string) => {
+    setCreateError('');
+    setResetPasswordValue('');
+    try {
+      const response = await fetch(`/admin/users/${studentId}/reset-password`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        setCreateError('Failed to reset password');
+        return;
+      }
+
+      const payload = (await response.json()) as { newPassword?: string };
+      setResetPasswordValue(payload.newPassword ?? '');
+    } catch {
+      setCreateError('Failed to reset password');
     }
   };
 
@@ -349,6 +410,7 @@ function App() {
           </section>
 
           {createError && <p className="error">{createError}</p>}
+          <ResetPasswordModal password={resetPasswordValue} onClose={() => setResetPasswordValue('')} />
           {createPassword && <p className="secret">Generated password: {createPassword}</p>}
           {studentsError && <p className="error">{studentsError}</p>}
 
@@ -371,9 +433,11 @@ function App() {
                     <td>{student.email}</td>
                     <td>{student.hasSelectedTopic ? 'Yes' : 'No'}</td>
                     <td>
-                      <button type="button" onClick={() => onDeleteStudent(student.id)}>
-                        Delete
-                      </button>
+                      <StudentActions
+                        studentId={student.id}
+                        onDelete={onDeleteStudent}
+                        onResetPassword={onResetPassword}
+                      />
                     </td>
                   </tr>
                 ))}
