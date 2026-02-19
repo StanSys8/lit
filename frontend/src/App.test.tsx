@@ -4,7 +4,6 @@ import App from './App';
 
 const withPath = (pathname: string, render: () => string) => {
   const previous = globalThis.window;
-  // Minimal browser-like object for route initialization in SSR tests.
   globalThis.window = { location: { pathname } } as unknown as Window & typeof globalThis;
   try {
     return render();
@@ -30,12 +29,14 @@ describe('App routes', () => {
     expect(html).toContain('<header');
   });
 
-  it('renders admin students page with add/delete controls on /admin', () => {
+  it('renders admin students page with add/delete and bulk controls on /admin', () => {
     const html = withPath('/admin', () => renderToStaticMarkup(<App />));
     expect(html).toContain('Admin Dashboard');
     expect(html).toContain('Students');
     expect(html).toContain('Add student');
     expect(html).toContain('Actions');
+    expect(html).toContain('Bulk upload students');
+    expect(html).toContain('type="file"');
     expect(html).toContain('<aside');
     expect(html).toContain('Name');
     expect(html).toContain('Email');

@@ -33,6 +33,14 @@
   gap: 1rem;
 }
 
+.bulk-box {
+  border: 1px solid #ddd;
+  padding: 0.75rem;
+  border-radius: 8px;
+  display: grid;
+  gap: 0.75rem;
+}
+
 .students-table {
   width: 100%;
   border-collapse: collapse;
@@ -48,6 +56,11 @@
 .error {
   color: #b00020;
   margin: 0;
+}
+
+.error-list {
+  margin: 0;
+  color: #b00020;
 }
 
 .secret {

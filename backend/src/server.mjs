@@ -77,8 +77,8 @@ export const createApp = ({ jwtSecret = 'dev-jwt-secret' } = {}) => {
     });
   }
 
-  const logAudit = ({ actor, action, ip, result, targetId = null }) => {
-    auditLog.push({ actor, action, ip, result, targetId, timestamp: nowIso() });
+  const logAudit = ({ actor, action, ip, result, targetId = null, count = null }) => {
+    auditLog.push({ actor, action, ip, result, targetId, count, timestamp: nowIso() });
   };
 
   const authenticate = (req) => {
@@ -112,6 +112,47 @@ export const createApp = ({ jwtSecret = 'dev-jwt-secret' } = {}) => {
       if (user.id === id && user.role === 'student') return { key, user };
     }
     return null;
+  };
+
+  const createStudent = ({ name, email }) => {
+    const cleanName = String(name).trim();
+    const cleanEmail = String(email).trim();
+    const emailKey = toEmailKey(cleanEmail);
+
+    if (!cleanName || !cleanEmail) {
+      return { error: { code: 'VALIDATION_ERROR', message: 'name and email are required' } };
+    }
+
+    if (users.has(emailKey)) {
+      return {
+        error: {
+          code: 'EMAIL_ALREADY_EXISTS',
+          message: 'Студент з таким email вже існує',
+        },
+      };
+    }
+
+    const id = randomUUID();
+    const newPassword = randomPassword();
+    users.set(emailKey, {
+      id,
+      name: cleanName,
+      email: cleanEmail,
+      role: 'student',
+      selectedTopicId: null,
+      passwordHash: hashPassword(newPassword),
+      failedAttempts: 0,
+      lockedUntilMs: null,
+    });
+
+    return {
+      data: {
+        id,
+        name: cleanName,
+        email: cleanEmail,
+        newPassword,
+      },
+    };
   };
 
   const handleLogin = async (req, res) => {
@@ -234,43 +275,81 @@ export const createApp = ({ jwtSecret = 'dev-jwt-secret' } = {}) => {
         if (!requireRole(session, 'admin', res)) return;
 
         const { name = '', email = '' } = await readJsonBody(req);
-        const cleanName = String(name).trim();
-        const cleanEmail = String(email).trim();
-        const emailKey = toEmailKey(cleanEmail);
-
-        if (!cleanName || !cleanEmail) {
-          return json(res, 400, { error: 'VALIDATION_ERROR', message: 'name and email are required' });
+        const created = createStudent({ name, email });
+        if (created.error) {
+          if (created.error.code === 'EMAIL_ALREADY_EXISTS') {
+            return json(res, 409, {
+              error: 'EMAIL_ALREADY_EXISTS',
+              message: 'Студент з таким email вже існує',
+            });
+          }
+          return json(res, 400, { error: 'VALIDATION_ERROR', message: created.error.message });
         }
-
-        if (users.has(emailKey)) {
-          return json(res, 409, {
-            error: 'EMAIL_ALREADY_EXISTS',
-            message: 'Студент з таким email вже існує',
-          });
-        }
-
-        const id = randomUUID();
-        const newPassword = randomPassword();
-        users.set(emailKey, {
-          id,
-          name: cleanName,
-          email: cleanEmail,
-          role: 'student',
-          selectedTopicId: null,
-          passwordHash: hashPassword(newPassword),
-          failedAttempts: 0,
-          lockedUntilMs: null,
-        });
 
         logAudit({
           actor: session.sub,
           action: 'CREATE_USER',
           ip: getIp(req),
           result: 'success',
-          targetId: id,
+          targetId: created.data.id,
         });
 
-        return json(res, 201, { id, name: cleanName, email: cleanEmail, newPassword });
+        return json(res, 201, {
+          id: created.data.id,
+          name: created.data.name,
+          email: created.data.email,
+          newPassword: created.data.newPassword,
+        });
+      }
+
+      if (req.method === 'POST' && req.url === '/admin/users/bulk') {
+        const session = requireAuth(req, res);
+        if (!session) return;
+        if (!requireRole(session, 'admin', res)) return;
+
+        const body = await readJsonBody(req);
+        const items = Array.isArray(body) ? body : [];
+        const errors = [];
+        const createdUsers = [];
+
+        const seen = new Set();
+        items.forEach((item, index) => {
+          const row = index + 1;
+          const emailKey = toEmailKey(item?.email);
+
+          if (seen.has(emailKey)) {
+            errors.push({ row, message: 'Duplicate email in CSV payload' });
+            return;
+          }
+          seen.add(emailKey);
+
+          const result = createStudent({ name: item?.name ?? '', email: item?.email ?? '' });
+          if (result.error) {
+            errors.push({ row, message: result.error.message });
+            return;
+          }
+
+          createdUsers.push({
+            name: result.data.name,
+            email: result.data.email,
+            password: result.data.newPassword,
+          });
+        });
+
+        logAudit({
+          actor: session.sub,
+          action: 'BULK_CREATE_USERS',
+          ip: getIp(req),
+          result: errors.length > 0 ? 'partial' : 'success',
+          targetId: null,
+          count: createdUsers.length,
+        });
+
+        return json(res, 200, {
+          created: createdUsers.length,
+          users: createdUsers,
+          errors,
+        });
       }
 
       const deleteUserMatch = req.url?.match(/^\/admin\/users\/([^/]+)$/);

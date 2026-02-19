@@ -220,3 +220,36 @@ test('admin users CRUD: list, create, duplicate, delete, not found, auth guards,
   assert.ok(createAudit);
   assert.ok(deleteAudit);
 });
+
+test('admin users bulk create: partial success with duplicates and audit count', async () => {
+  const app = createApp({ jwtSecret: 'test-secret' });
+
+  const adminLogin = await login(app, 'admin@example.com', 'admin123');
+  const adminCookie = adminLogin.headers['Set-Cookie'];
+  assert.ok(adminCookie);
+
+  const bulk = await app.inject({
+    method: 'POST',
+    url: '/admin/users/bulk',
+    headers: { cookie: adminCookie, 'content-type': 'application/json' },
+    body: [
+      { name: 'Bulk One', email: 'bulk1@example.com' },
+      { name: 'Bulk Two', email: 'bulk2@example.com' },
+      { name: 'Dup in payload', email: 'bulk1@example.com' },
+      { name: 'Dup in DB', email: 'student@example.com' },
+      { name: '', email: 'bad@example.com' },
+    ],
+  });
+
+  assert.equal(bulk.status, 200);
+  assert.equal(bulk.body.created, 2);
+  assert.equal(bulk.body.users.length, 2);
+  assert.equal(bulk.body.errors.length, 3);
+  assert.equal(bulk.body.users[0].email, 'bulk1@example.com');
+  assert.equal(typeof bulk.body.users[0].password, 'string');
+
+  const log = app.getAuditLog();
+  const auditEntry = log.find((e) => e.action === 'BULK_CREATE_USERS');
+  assert.ok(auditEntry);
+  assert.equal(auditEntry.count, 2);
+});
