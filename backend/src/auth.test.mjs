@@ -137,3 +137,86 @@ test('logout clears cookie, protected routes reject cleared cookie, and audit lo
   assert.equal(typeof logoutEntries[0].actor, 'string');
   assert.ok(logoutEntries[0].actor.length > 0);
 });
+
+test('admin users CRUD: list, create, duplicate, delete, not found, auth guards, audit', async () => {
+  const app = createApp({ jwtSecret: 'test-secret' });
+
+  const adminLogin = await login(app, 'admin@example.com', 'admin123');
+  const adminCookie = adminLogin.headers['Set-Cookie'];
+  assert.ok(adminCookie);
+
+  const studentLogin = await login(app, 'student@example.com', 'student123');
+  const studentCookie = studentLogin.headers['Set-Cookie'];
+  assert.ok(studentCookie);
+
+  const unauthorizedList = await app.inject({ method: 'GET', url: '/admin/users' });
+  assert.equal(unauthorizedList.status, 401);
+
+  const forbiddenList = await app.inject({
+    method: 'GET',
+    url: '/admin/users',
+    headers: { cookie: studentCookie },
+  });
+  assert.equal(forbiddenList.status, 403);
+
+  const listBefore = await app.inject({
+    method: 'GET',
+    url: '/admin/users',
+    headers: { cookie: adminCookie },
+  });
+  assert.equal(listBefore.status, 200);
+  assert.ok(Array.isArray(listBefore.body));
+
+  const createResponse = await app.inject({
+    method: 'POST',
+    url: '/admin/users',
+    headers: { cookie: adminCookie, 'content-type': 'application/json' },
+    body: { name: 'New Student', email: 'new.student@example.com' },
+  });
+  assert.equal(createResponse.status, 201);
+  assert.equal(createResponse.body.name, 'New Student');
+  assert.equal(createResponse.body.email, 'new.student@example.com');
+  assert.equal(typeof createResponse.body.newPassword, 'string');
+  assert.ok(createResponse.body.newPassword.length > 0);
+
+  const duplicate = await app.inject({
+    method: 'POST',
+    url: '/admin/users',
+    headers: { cookie: adminCookie, 'content-type': 'application/json' },
+    body: { name: 'Dup', email: 'new.student@example.com' },
+  });
+  assert.equal(duplicate.status, 409);
+  assert.equal(duplicate.body.error, 'EMAIL_ALREADY_EXISTS');
+
+  const listAfter = await app.inject({
+    method: 'GET',
+    url: '/admin/users',
+    headers: { cookie: adminCookie },
+  });
+  assert.equal(listAfter.status, 200);
+
+  const createdInList = listAfter.body.find((u) => u.email === 'new.student@example.com');
+  assert.ok(createdInList);
+  assert.equal(createdInList.name, 'New Student');
+  assert.equal(typeof createdInList.hasSelectedTopic, 'boolean');
+
+  const deleteResponse = await app.inject({
+    method: 'DELETE',
+    url: `/admin/users/${createResponse.body.id}`,
+    headers: { cookie: adminCookie },
+  });
+  assert.equal(deleteResponse.status, 204);
+
+  const deleteMissing = await app.inject({
+    method: 'DELETE',
+    url: `/admin/users/${createResponse.body.id}`,
+    headers: { cookie: adminCookie },
+  });
+  assert.equal(deleteMissing.status, 404);
+
+  const log = app.getAuditLog();
+  const createAudit = log.find((e) => e.action === 'CREATE_USER' && e.targetId === createResponse.body.id);
+  const deleteAudit = log.find((e) => e.action === 'DELETE_USER' && e.targetId === createResponse.body.id);
+  assert.ok(createAudit);
+  assert.ok(deleteAudit);
+});

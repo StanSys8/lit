@@ -1,4 +1,4 @@
-import { randomUUID } from 'node:crypto';
+import { randomBytes, randomUUID } from 'node:crypto';
 import { buildClearedSessionCookie, buildSessionCookie, parseCookies } from './cookies.mjs';
 import { bcryptCompare, hashPassword, signToken, verifyToken } from './security.mjs';
 
@@ -24,6 +24,11 @@ const json = (res, status, payload, extraHeaders = {}) => {
   res.end(JSON.stringify(payload));
 };
 
+const noContent = (res) => {
+  res.writeHead(204);
+  res.end();
+};
+
 const getIp = (req) => {
   const fromForwarded = req.headers['x-forwarded-for'];
   if (typeof fromForwarded === 'string' && fromForwarded.length > 0) {
@@ -33,29 +38,47 @@ const getIp = (req) => {
 };
 
 const nowIso = () => new Date().toISOString();
+const toEmailKey = (email) => String(email || '').trim().toLowerCase();
+const randomPassword = () => randomBytes(9).toString('base64url');
 
 export const createApp = ({ jwtSecret = 'dev-jwt-secret' } = {}) => {
   const users = new Map();
   const auditLog = [];
 
   const seedUsers = [
-    { id: randomUUID(), email: 'student@example.com', role: 'student', password: 'student123' },
-    { id: randomUUID(), email: 'admin@example.com', role: 'admin', password: 'admin123' },
+    {
+      id: randomUUID(),
+      name: 'Demo Student',
+      email: 'student@example.com',
+      role: 'student',
+      password: 'student123',
+      selectedTopicId: null,
+    },
+    {
+      id: randomUUID(),
+      name: 'Demo Admin',
+      email: 'admin@example.com',
+      role: 'admin',
+      password: 'admin123',
+      selectedTopicId: null,
+    },
   ];
 
   for (const u of seedUsers) {
-    users.set(u.email, {
+    users.set(toEmailKey(u.email), {
       id: u.id,
+      name: u.name,
       email: u.email,
       role: u.role,
+      selectedTopicId: u.selectedTopicId,
       passwordHash: hashPassword(u.password),
       failedAttempts: 0,
       lockedUntilMs: null,
     });
   }
 
-  const logAudit = ({ actor, action, ip, result }) => {
-    auditLog.push({ actor, action, ip, result, timestamp: nowIso() });
+  const logAudit = ({ actor, action, ip, result, targetId = null }) => {
+    auditLog.push({ actor, action, ip, result, targetId, timestamp: nowIso() });
   };
 
   const authenticate = (req) => {
@@ -84,11 +107,18 @@ export const createApp = ({ jwtSecret = 'dev-jwt-secret' } = {}) => {
     return true;
   };
 
+  const findStudentById = (id) => {
+    for (const [key, user] of users.entries()) {
+      if (user.id === id && user.role === 'student') return { key, user };
+    }
+    return null;
+  };
+
   const handleLogin = async (req, res) => {
     const ip = getIp(req);
     const { email = '', password = '' } = await readJsonBody(req);
     const actor = String(email || 'unknown');
-    const user = users.get(actor);
+    const user = users.get(toEmailKey(actor));
 
     if (user && user.lockedUntilMs && user.lockedUntilMs > Date.now()) {
       logAudit({ actor, action: 'LOGIN', ip, result: 'locked' });
@@ -181,6 +211,91 @@ export const createApp = ({ jwtSecret = 'dev-jwt-secret' } = {}) => {
         return json(res, 200, { topics: [] });
       }
 
+      if (req.method === 'GET' && req.url === '/admin/users') {
+        const session = requireAuth(req, res);
+        if (!session) return;
+        if (!requireRole(session, 'admin', res)) return;
+
+        const students = [...users.values()]
+          .filter((u) => u.role === 'student')
+          .map((u) => ({
+            id: u.id,
+            name: u.name,
+            email: u.email,
+            hasSelectedTopic: Boolean(u.selectedTopicId),
+          }));
+
+        return json(res, 200, students);
+      }
+
+      if (req.method === 'POST' && req.url === '/admin/users') {
+        const session = requireAuth(req, res);
+        if (!session) return;
+        if (!requireRole(session, 'admin', res)) return;
+
+        const { name = '', email = '' } = await readJsonBody(req);
+        const cleanName = String(name).trim();
+        const cleanEmail = String(email).trim();
+        const emailKey = toEmailKey(cleanEmail);
+
+        if (!cleanName || !cleanEmail) {
+          return json(res, 400, { error: 'VALIDATION_ERROR', message: 'name and email are required' });
+        }
+
+        if (users.has(emailKey)) {
+          return json(res, 409, {
+            error: 'EMAIL_ALREADY_EXISTS',
+            message: 'Студент з таким email вже існує',
+          });
+        }
+
+        const id = randomUUID();
+        const newPassword = randomPassword();
+        users.set(emailKey, {
+          id,
+          name: cleanName,
+          email: cleanEmail,
+          role: 'student',
+          selectedTopicId: null,
+          passwordHash: hashPassword(newPassword),
+          failedAttempts: 0,
+          lockedUntilMs: null,
+        });
+
+        logAudit({
+          actor: session.sub,
+          action: 'CREATE_USER',
+          ip: getIp(req),
+          result: 'success',
+          targetId: id,
+        });
+
+        return json(res, 201, { id, name: cleanName, email: cleanEmail, newPassword });
+      }
+
+      const deleteUserMatch = req.url?.match(/^\/admin\/users\/([^/]+)$/);
+      if (req.method === 'DELETE' && deleteUserMatch) {
+        const session = requireAuth(req, res);
+        if (!session) return;
+        if (!requireRole(session, 'admin', res)) return;
+
+        const targetId = deleteUserMatch[1];
+        const found = findStudentById(targetId);
+        if (!found) {
+          return json(res, 404, { error: 'NOT_FOUND', message: 'Student not found' });
+        }
+
+        users.delete(found.key);
+        logAudit({
+          actor: session.sub,
+          action: 'DELETE_USER',
+          ip: getIp(req),
+          result: 'success',
+          targetId,
+        });
+        return noContent(res);
+      }
+
       return json(res, 404, { error: 'NOT_FOUND', message: 'Not Found' });
     } catch {
       return json(res, 500, { error: 'INTERNAL_ERROR', message: 'Internal server error' });
@@ -209,7 +324,7 @@ export const createApp = ({ jwtSecret = 'dev-jwt-secret' } = {}) => {
       };
 
       const res = {
-        writeHead(statusCode, responseHeaders) {
+        writeHead(statusCode, responseHeaders = {}) {
           response.statusCode = statusCode;
           response.headers = { ...responseHeaders };
         },

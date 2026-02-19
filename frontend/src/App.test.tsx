@@ -13,7 +13,7 @@ const withPath = (pathname: string, render: () => string) => {
   }
 };
 
-describe('App login screen', () => {
+describe('App routes', () => {
   it('renders login form', () => {
     const html = renderToStaticMarkup(<App />);
 
@@ -30,10 +30,14 @@ describe('App login screen', () => {
     expect(html).toContain('<header');
   });
 
-  it('renders admin sidebar logout control on /admin', () => {
+  it('renders admin students page with add/delete controls on /admin', () => {
     const html = withPath('/admin', () => renderToStaticMarkup(<App />));
     expect(html).toContain('Admin Dashboard');
-    expect(html).toContain('Logout');
+    expect(html).toContain('Students');
+    expect(html).toContain('Add student');
+    expect(html).toContain('Actions');
     expect(html).toContain('<aside');
+    expect(html).toContain('Name');
+    expect(html).toContain('Email');
   });
 });

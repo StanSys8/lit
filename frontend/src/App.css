@@ -3,7 +3,7 @@
 }
 
 .shell {
-  max-width: 480px;
+  max-width: 860px;
   margin: 3rem auto;
   padding: 1.5rem;
 }
@@ -22,11 +22,35 @@
 }
 
 .login-form input,
-.login-form button {
+.login-form button,
+.students-table button {
   padding: 0.6rem 0.75rem;
+}
+
+.admin-students {
+  margin-top: 1.5rem;
+  display: grid;
+  gap: 1rem;
+}
+
+.students-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.students-table th,
+.students-table td {
+  border: 1px solid #ddd;
+  padding: 0.5rem;
+  text-align: left;
 }
 
 .error {
   color: #b00020;
+  margin: 0;
+}
+
+.secret {
+  color: #14532d;
   margin: 0;
 }
