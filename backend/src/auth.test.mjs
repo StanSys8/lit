@@ -339,6 +339,67 @@ test('admin topics CRUD: list, create, delete free topic, reject delete used top
   assert.ok(deleteAudit);
 });
 
+test('admin topics bulk create: partial success and audit count', async () => {
+  const app = createApp({ jwtSecret: 'test-secret' });
+
+  const adminLogin = await login(app, 'admin@example.com', 'admin123');
+  const adminCookie = adminLogin.headers['Set-Cookie'];
+  assert.ok(adminCookie);
+
+  const bulk = await app.inject({
+    method: 'POST',
+    url: '/admin/topics/bulk',
+    headers: { cookie: adminCookie, 'content-type': 'application/json' },
+    body: [
+      {
+        title: 'Topic One',
+        description: 'Desc One',
+        supervisor: 'Dr. One',
+        department: 'CS',
+      },
+      {
+        title: '',
+        description: 'Desc Two',
+        supervisor: 'Dr. Two',
+        department: 'SE',
+      },
+      {
+        title: 'Topic Three',
+        description: 'Desc Three',
+        supervisor: '',
+        department: 'DS',
+      },
+      {
+        title: 'Topic Four',
+        description: 'Desc Four',
+        supervisor: 'Dr. Four',
+        department: 'Math',
+      },
+    ],
+  });
+
+  assert.equal(bulk.status, 200);
+  assert.equal(bulk.body.created, 2);
+  assert.equal(bulk.body.errors.length, 2);
+  assert.equal(bulk.body.errors[0].row, 2);
+
+  const list = await app.inject({
+    method: 'GET',
+    url: '/admin/topics',
+    headers: { cookie: adminCookie },
+  });
+  assert.equal(list.status, 200);
+  assert.ok(list.body.topics.some((t) => t.title === 'Topic One'));
+  assert.ok(list.body.topics.some((t) => t.title === 'Topic Four'));
+  assert.equal(list.body.topics.some((t) => t.title === 'Topic Three'), false);
+
+  const log = app.getAuditLog();
+  const audit = log.find((e) => e.action === 'BULK_CREATE_TOPICS');
+  assert.ok(audit);
+  assert.equal(audit.count, 2);
+  assert.equal(audit.result, 'partial');
+});
+
 test('admin reset password: returns one-time password, updates auth, and logs audit without plaintext', async () => {
   const app = createApp({ jwtSecret: 'test-secret' });
 

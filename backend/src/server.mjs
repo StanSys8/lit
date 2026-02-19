@@ -343,6 +343,50 @@ export const createApp = ({ jwtSecret = 'dev-jwt-secret' } = {}) => {
         return json(res, 201, mapTopic(created.data));
       }
 
+      if (req.method === 'POST' && req.url === '/admin/topics/bulk') {
+        const session = requireAuth(req, res);
+        if (!session) return;
+        if (!requireRole(session, 'admin', res)) return;
+
+        const body = await readJsonBody(req);
+        const items = Array.isArray(body) ? body : [];
+        const errors = [];
+        let created = 0;
+
+        items.forEach((item, index) => {
+          const row = index + 1;
+          const title = String(item?.title ?? '').trim();
+          const supervisor = String(item?.supervisor ?? '').trim();
+
+          if (!title || !supervisor) {
+            errors.push({ row, message: 'title and supervisor are required' });
+            return;
+          }
+
+          const topic = {
+            id: randomUUID(),
+            title,
+            description: String(item?.description ?? '').trim(),
+            supervisor,
+            department: String(item?.department ?? '').trim(),
+            selectedByUserId: null,
+          };
+          topics.set(topic.id, topic);
+          created += 1;
+        });
+
+        logAudit({
+          actor: session.sub,
+          action: 'BULK_CREATE_TOPICS',
+          ip: getIp(req),
+          result: errors.length > 0 ? 'partial' : 'success',
+          targetId: null,
+          count: created,
+        });
+
+        return json(res, 200, { created, errors });
+      }
+
       const deleteTopicMatch = req.url?.match(/^\/admin\/topics\/([^/]+)$/);
       if (req.method === 'DELETE' && deleteTopicMatch) {
         const session = requireAuth(req, res);

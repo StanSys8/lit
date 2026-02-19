@@ -36,6 +36,7 @@ describe('App routes', () => {
     expect(html).toContain('Topics');
     expect(html).toContain('Add student');
     expect(html).toContain('Add topic');
+    expect(html).toContain('Bulk upload topics');
     expect(html).toContain('Actions');
     expect(html).toContain('Bulk upload students');
     expect(html).toContain('type="file"');

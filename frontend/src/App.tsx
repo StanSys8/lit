@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import type { ChangeEvent, FormEvent } from 'react';
 import { addStudentToList, removeStudentFromList, type StudentRow } from './adminStudents';
 import { credentialsToCsv, parseStudentsCsv, type CsvError, type CsvStudent } from './studentsCsv';
+import { parseTopicsCsv, type CsvTopic } from './topicsCsv';
 import './App.css';
 
 type LoginResponse = {
@@ -33,6 +34,10 @@ type TopicRow = {
 };
 
 type CreateTopicResponse = TopicRow;
+type TopicsBulkResponse = {
+  created: number;
+  errors: Array<{ row: number; message: string }>;
+};
 
 const normalizePath = (path: string) => {
   if (path === '/topics' || path === '/admin') return path;
@@ -111,6 +116,10 @@ function App() {
   const [newTopicDescription, setNewTopicDescription] = useState('');
   const [newTopicSupervisor, setNewTopicSupervisor] = useState('');
   const [newTopicDepartment, setNewTopicDepartment] = useState('');
+  const [topicCsvRows, setTopicCsvRows] = useState<CsvTopic[]>([]);
+  const [topicCsvErrors, setTopicCsvErrors] = useState<CsvError[]>([]);
+  const [topicBulkCreated, setTopicBulkCreated] = useState(0);
+  const [topicBulkErrors, setTopicBulkErrors] = useState<Array<{ row: number; message: string }>>([]);
 
   const heading = useMemo(() => {
     if (route === '/topics') return 'Student Topics';
@@ -426,6 +435,52 @@ function App() {
     }
   };
 
+  const onTopicCsvSelect = async (event: ChangeEvent<HTMLInputElement>) => {
+    setTopicCsvErrors([]);
+    setTopicBulkErrors([]);
+    setTopicBulkCreated(0);
+
+    const file = event.target.files?.[0];
+    if (!file) {
+      setTopicCsvRows([]);
+      return;
+    }
+
+    const text = await file.text();
+    const parsed = parseTopicsCsv(text);
+    setTopicCsvRows(parsed.rows);
+    setTopicCsvErrors(parsed.errors);
+  };
+
+  const onBulkTopicsUpload = async () => {
+    setTopicBulkErrors([]);
+    setTopicBulkCreated(0);
+    setCreateTopicError('');
+
+    try {
+      const response = await fetch('/admin/topics/bulk', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(topicCsvRows),
+      });
+
+      if (!response.ok) {
+        setCreateTopicError('Failed to upload topics CSV');
+        return;
+      }
+
+      const payload = (await response.json()) as TopicsBulkResponse;
+      setTopicBulkCreated(payload.created);
+      setTopicBulkErrors(payload.errors);
+      if (payload.created > 0) {
+        void loadTopics();
+      }
+    } catch {
+      setCreateTopicError('Failed to upload topics CSV');
+    }
+  };
+
   if (route === '/admin') {
     return (
       <main className="shell">
@@ -593,6 +648,58 @@ function App() {
 
               <button type="submit">Add topic</button>
             </form>
+
+            <section className="bulk-box">
+              <h3>Bulk upload topics</h3>
+              <input type="file" accept=".csv,text/csv" onChange={onTopicCsvSelect} />
+
+              {topicCsvRows.length > 0 && (
+                <>
+                  <p>Preview (first 3 rows):</p>
+                  <table className="students-table">
+                    <thead>
+                      <tr>
+                        <th>Title</th>
+                        <th>Description</th>
+                        <th>Supervisor</th>
+                        <th>Department</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {topicCsvRows.slice(0, 3).map((row, idx) => (
+                        <tr key={`${row.title}-${idx}`}>
+                          <td>{row.title}</td>
+                          <td>{row.description}</td>
+                          <td>{row.supervisor}</td>
+                          <td>{row.department}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+
+                  <button type="button" onClick={onBulkTopicsUpload}>
+                    Upload topics CSV
+                  </button>
+                </>
+              )}
+
+              {topicCsvErrors.length > 0 && (
+                <ul className="error-list">
+                  {topicCsvErrors.map((err) => (
+                    <li key={`topic-csv-${err.row}-${err.message}`}>{`Row ${err.row}: ${err.message}`}</li>
+                  ))}
+                </ul>
+              )}
+
+              {topicBulkCreated > 0 && <p>{`Created ${topicBulkCreated} topics`}</p>}
+              {topicBulkErrors.length > 0 && (
+                <ul className="error-list">
+                  {topicBulkErrors.map((err) => (
+                    <li key={`topic-bulk-${err.row}-${err.message}`}>{`Row ${err.row}: ${err.message}`}</li>
+                  ))}
+                </ul>
+              )}
+            </section>
 
             {createTopicError && <p className="error">{createTopicError}</p>}
             {topicsError && <p className="error">{topicsError}</p>}
