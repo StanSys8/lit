@@ -160,6 +160,10 @@ export const createApp = ({ jwtSecret = 'dev-jwt-secret' } = {}) => {
       }
 
       if (req.method === 'POST' && req.url === '/auth/logout') {
+        const session = requireAuth(req, res);
+        if (!session) return;
+
+        logAudit({ actor: session.sub, action: 'LOGOUT', ip: getIp(req), result: 'success' });
         return json(res, 200, { ok: true }, { 'Set-Cookie': buildClearedSessionCookie() });
       }
 

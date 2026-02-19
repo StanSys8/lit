@@ -65,13 +65,36 @@ function App() {
     }
   };
 
+  const onLogout = async () => {
+    try {
+      await fetch('/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
+    } finally {
+      navigate('/login');
+    }
+  };
+
   if (route === '/topics' || route === '/admin') {
+    const isAdmin = route === '/admin';
     return (
       <main className="shell">
-        <h1>{heading}</h1>
-        <button type="button" onClick={() => navigate('/login')}>
-          Back to Login
-        </button>
+        {isAdmin ? (
+          <aside className="sidebar">
+            <h1>{heading}</h1>
+            <button type="button" onClick={onLogout}>
+              Logout
+            </button>
+          </aside>
+        ) : (
+          <header className="header">
+            <h1>{heading}</h1>
+            <button type="button" onClick={onLogout}>
+              Logout
+            </button>
+          </header>
+        )}
       </main>
     );
   }

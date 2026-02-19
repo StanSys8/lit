@@ -106,3 +106,34 @@ test('audit contains login events with success/failed/locked', async () => {
   assert.ok(results.has('failed'));
   assert.ok(results.has('locked'));
 });
+
+test('logout clears cookie, protected routes reject cleared cookie, and audit logs logout', async () => {
+  const app = createApp({ jwtSecret: 'test-secret' });
+
+  const loginResponse = await login(app, 'student@example.com', 'student123');
+  const cookie = loginResponse.headers['Set-Cookie'];
+  assert.ok(cookie);
+
+  const logout = await app.inject({
+    method: 'POST',
+    url: '/auth/logout',
+    headers: { cookie },
+  });
+  assert.equal(logout.status, 200);
+
+  const clearedCookie = logout.headers['Set-Cookie'] || '';
+  assert.match(clearedCookie, /Max-Age=0/);
+
+  const unauthorized = await app.inject({
+    method: 'GET',
+    url: '/topics',
+    headers: { cookie: clearedCookie },
+  });
+  assert.equal(unauthorized.status, 401);
+
+  const log = app.getAuditLog();
+  const logoutEntries = log.filter((e) => e.action === 'LOGOUT' && e.result === 'success');
+  assert.ok(logoutEntries.length >= 1);
+  assert.equal(typeof logoutEntries[0].actor, 'string');
+  assert.ok(logoutEntries[0].actor.length > 0);
+});

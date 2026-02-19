@@ -8,6 +8,14 @@
   padding: 1.5rem;
 }
 
+.header,
+.sidebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
 .login-form {
   display: grid;
   gap: 0.75rem;
