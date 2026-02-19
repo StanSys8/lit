@@ -573,7 +573,7 @@ Secrets читаються один раз при cold start, кешуються
 
 **AI Agents MUST:**
 6. `respond()` — завжди `import { respond } from '../router.mjs'`, ніколи inline
-7. `POST /auth/login` response — завжди `{ id, email, role }` + httpOnly cookie
+7. `POST /auth/login` response — завжди `{ id, email, role, selectedTopic: { id, title, description, supervisor, department } | null }` + httpOnly cookie
 8. `ssm.mjs` — singleton pattern (module-level cache), не читати SSM per invocation
 9. `204 No Content` для DELETE endpoints — без response body
 
