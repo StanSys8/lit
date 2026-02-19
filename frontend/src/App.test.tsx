@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import App, { ResetPasswordModal, StudentActions } from './App';
+import App, { ReleaseTopicModal, ResetPasswordModal, StudentActions } from './App';
 
 const withPath = (pathname: string, render: () => string) => {
   const previous = globalThis.window;
@@ -65,5 +65,15 @@ describe('Admin reset controls', () => {
     expect(html).toContain('Нове значення пароля');
     expect(html).toContain('secret-123');
     expect(html).toContain('Закрити');
+  });
+
+  it('renders release topic confirmation modal', () => {
+    const html = renderToStaticMarkup(
+      <ReleaseTopicModal topicTitle="Topic A" onConfirm={() => {}} onCancel={() => {}} />,
+    );
+    expect(html).toContain('Підтвердження звільнення теми');
+    expect(html).toContain('Звільнити тему &quot;Topic A&quot;?');
+    expect(html).toContain('Підтвердити');
+    expect(html).toContain('Скасувати');
   });
 });

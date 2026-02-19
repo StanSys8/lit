@@ -400,6 +400,53 @@ test('admin topics bulk create: partial success and audit count', async () => {
   assert.equal(audit.result, 'partial');
 });
 
+test('admin releases selected topic and gets errors for already free topic', async () => {
+  const app = createApp({ jwtSecret: 'test-secret' });
+
+  const adminLogin = await login(app, 'admin@example.com', 'admin123');
+  const adminCookie = adminLogin.headers['Set-Cookie'];
+  assert.ok(adminCookie);
+
+  const list = await app.inject({
+    method: 'GET',
+    url: '/admin/topics',
+    headers: { cookie: adminCookie },
+  });
+  assert.equal(list.status, 200);
+  const occupied = list.body.topics.find((t) => t.selectedBy !== null);
+  const free = list.body.topics.find((t) => t.selectedBy === null);
+  assert.ok(occupied);
+  assert.ok(free);
+
+  const release = await app.inject({
+    method: 'POST',
+    url: `/admin/topics/${occupied.id}/release`,
+    headers: { cookie: adminCookie },
+  });
+  assert.equal(release.status, 200);
+  assert.equal(release.body.topic.id, occupied.id);
+  assert.equal(release.body.topic.selectedBy, null);
+
+  const alreadyFree = await app.inject({
+    method: 'POST',
+    url: `/admin/topics/${free.id}/release`,
+    headers: { cookie: adminCookie },
+  });
+  assert.equal(alreadyFree.status, 409);
+  assert.equal(alreadyFree.body.error, 'TOPIC_ALREADY_FREE');
+
+  const missing = await app.inject({
+    method: 'POST',
+    url: '/admin/topics/missing/release',
+    headers: { cookie: adminCookie },
+  });
+  assert.equal(missing.status, 404);
+
+  const log = app.getAuditLog();
+  const releaseAudit = log.find((e) => e.action === 'RELEASE_TOPIC' && e.targetId === occupied.id);
+  assert.ok(releaseAudit);
+});
+
 test('admin reset password: returns one-time password, updates auth, and logs audit without plaintext', async () => {
   const app = createApp({ jwtSecret: 'test-secret' });
 

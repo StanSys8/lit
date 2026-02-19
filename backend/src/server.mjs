@@ -387,6 +387,36 @@ export const createApp = ({ jwtSecret = 'dev-jwt-secret' } = {}) => {
         return json(res, 200, { created, errors });
       }
 
+      const releaseTopicMatch = req.url?.match(/^\/admin\/topics\/([^/]+)\/release$/);
+      if (req.method === 'POST' && releaseTopicMatch) {
+        const session = requireAuth(req, res);
+        if (!session) return;
+        if (!requireRole(session, 'admin', res)) return;
+
+        const targetId = releaseTopicMatch[1];
+        const topic = topics.get(targetId);
+        if (!topic) {
+          return json(res, 404, { error: 'NOT_FOUND', message: 'Topic not found' });
+        }
+
+        if (!topic.selectedByUserId) {
+          return json(res, 409, {
+            error: 'TOPIC_ALREADY_FREE',
+            message: 'Тема вже вільна',
+          });
+        }
+
+        topic.selectedByUserId = null;
+        logAudit({
+          actor: session.sub,
+          action: 'RELEASE_TOPIC',
+          ip: getIp(req),
+          result: 'success',
+          targetId,
+        });
+        return json(res, 200, { topic: mapTopic(topic) });
+      }
+
       const deleteTopicMatch = req.url?.match(/^\/admin\/topics\/([^/]+)$/);
       if (req.method === 'DELETE' && deleteTopicMatch) {
         const session = requireAuth(req, res);

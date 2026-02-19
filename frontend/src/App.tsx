@@ -84,6 +84,33 @@ export const ResetPasswordModal = ({
   );
 };
 
+export const ReleaseTopicModal = ({
+  topicTitle,
+  onConfirm,
+  onCancel,
+}: {
+  topicTitle: string;
+  onConfirm: () => void;
+  onCancel: () => void;
+}) => {
+  if (!topicTitle) return null;
+
+  return (
+    <div className="modal-like" role="dialog" aria-label="Підтвердження звільнення теми">
+      <p>{`Звільнити тему "${topicTitle}"?`}</p>
+      <p>Після цього тема знову стане доступною для вибору студентом.</p>
+      <div className="modal-actions">
+        <button type="button" onClick={onConfirm}>
+          Підтвердити
+        </button>
+        <button type="button" onClick={onCancel}>
+          Скасувати
+        </button>
+      </div>
+    </div>
+  );
+};
+
 function App() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -120,6 +147,8 @@ function App() {
   const [topicCsvErrors, setTopicCsvErrors] = useState<CsvError[]>([]);
   const [topicBulkCreated, setTopicBulkCreated] = useState(0);
   const [topicBulkErrors, setTopicBulkErrors] = useState<Array<{ row: number; message: string }>>([]);
+  const [releaseTopicTargetId, setReleaseTopicTargetId] = useState('');
+  const [releaseTopicTitle, setReleaseTopicTitle] = useState('');
 
   const heading = useMemo(() => {
     if (route === '/topics') return 'Student Topics';
@@ -435,6 +464,47 @@ function App() {
     }
   };
 
+  const onOpenReleaseTopicModal = (topic: TopicRow) => {
+    setCreateTopicError('');
+    setReleaseTopicTargetId(topic.id);
+    setReleaseTopicTitle(topic.title);
+  };
+
+  const onConfirmReleaseTopic = async () => {
+    if (!releaseTopicTargetId) return;
+    setCreateTopicError('');
+
+    try {
+      const response = await fetch(`/admin/topics/${releaseTopicTargetId}/release`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+
+      if (response.ok) {
+        const payload = (await response.json()) as { topic: TopicRow };
+        setTopics((prev) => prev.map((topic) => (topic.id === payload.topic.id ? payload.topic : topic)));
+        setReleaseTopicTargetId('');
+        setReleaseTopicTitle('');
+        return;
+      }
+
+      const payload = (await response.json()) as { error?: string; message?: string };
+      if (response.status === 409 && payload.error === 'TOPIC_ALREADY_FREE') {
+        setCreateTopicError(payload.message || 'Тема вже вільна');
+      } else if (response.status === 404) {
+        setCreateTopicError('Topic not found');
+      } else {
+        setCreateTopicError('Failed to release topic');
+      }
+      setReleaseTopicTargetId('');
+      setReleaseTopicTitle('');
+    } catch {
+      setCreateTopicError('Failed to release topic');
+      setReleaseTopicTargetId('');
+      setReleaseTopicTitle('');
+    }
+  };
+
   const onTopicCsvSelect = async (event: ChangeEvent<HTMLInputElement>) => {
     setTopicCsvErrors([]);
     setTopicBulkErrors([]);
@@ -703,6 +773,14 @@ function App() {
 
             {createTopicError && <p className="error">{createTopicError}</p>}
             {topicsError && <p className="error">{topicsError}</p>}
+            <ReleaseTopicModal
+              topicTitle={releaseTopicTitle}
+              onConfirm={onConfirmReleaseTopic}
+              onCancel={() => {
+                setReleaseTopicTargetId('');
+                setReleaseTopicTitle('');
+              }}
+            />
 
             {topicsLoading ? (
               <p>Loading topics...</p>
@@ -730,6 +808,11 @@ function App() {
                         <button type="button" onClick={() => onDeleteTopic(topic.id)}>
                           Delete topic
                         </button>
+                        {topic.selectedBy && (
+                          <button type="button" onClick={() => onOpenReleaseTopicModal(topic)}>
+                            Звільнити тему
+                          </button>
+                        )}
                       </td>
                     </tr>
                   ))}

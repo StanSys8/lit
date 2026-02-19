@@ -73,6 +73,11 @@
   gap: 0.5rem;
 }
 
+.modal-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
 .error {
   color: #b00020;
   margin: 0;
