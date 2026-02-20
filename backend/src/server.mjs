@@ -72,6 +72,14 @@ export const createApp = ({ jwtSecret = 'dev-jwt-secret' } = {}) => {
       password: 'admin123',
       selectedTopicId: null,
     },
+    {
+      id: randomUUID(),
+      name: 'Selected Student',
+      email: 'selected.student@example.com',
+      role: 'student',
+      password: 'selected123',
+      selectedTopicId: null,
+    },
   ];
 
   for (const u of seedUsers) {
@@ -102,9 +110,17 @@ export const createApp = ({ jwtSecret = 'dev-jwt-secret' } = {}) => {
       description: 'Adaptive learning and recommendation models.',
       supervisor: 'Prof. Johnson',
       department: 'Data Science',
-      selectedByUserId: seedUsers[1].id,
+      selectedByUserId: seedUsers[2].id,
     },
   ];
+
+  const selectedSeedTopic = seedTopics.find((topic) => topic.selectedByUserId === seedUsers[2].id);
+  if (selectedSeedTopic) {
+    const studentSeed = users.get(toEmailKey(seedUsers[2].email));
+    if (studentSeed) {
+      studentSeed.selectedTopicId = selectedSeedTopic.id;
+    }
+  }
 
   for (const t of seedTopics) {
     topics.set(t.id, t);
