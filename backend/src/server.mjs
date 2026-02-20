@@ -29,6 +29,14 @@ const noContent = (res) => {
   res.end();
 };
 
+const csv = (res, status, content, filename) => {
+  res.writeHead(status, {
+    'Content-Type': 'text/csv; charset=utf-8',
+    'Content-Disposition': `attachment; filename="${filename}"`,
+  });
+  res.end(content);
+};
+
 const getIp = (req) => {
   const fromForwarded = req.headers['x-forwarded-for'];
   if (typeof fromForwarded === 'string' && fromForwarded.length > 0) {
@@ -40,6 +48,7 @@ const getIp = (req) => {
 const nowIso = () => new Date().toISOString();
 const toEmailKey = (email) => String(email || '').trim().toLowerCase();
 const randomPassword = () => randomBytes(9).toString('base64url');
+const csvSafe = (value) => `"${String(value ?? '').replaceAll('"', '""')}"`;
 
 export const createApp = ({ jwtSecret = 'dev-jwt-secret' } = {}) => {
   const users = new Map();
@@ -551,6 +560,39 @@ export const createApp = ({ jwtSecret = 'dev-jwt-secret' } = {}) => {
         return json(res, 200, students);
       }
 
+      if (req.method === 'GET' && req.url === '/admin/export/status') {
+        const session = requireAuth(req, res);
+        if (!session) return;
+        if (!requireRole(session, 'admin', res)) return;
+
+        const header = ['title', 'description', 'supervisor', 'department', 'studentName', 'studentEmail', 'status'].join(
+          ',',
+        );
+        const rows = [...topics.values()].map((topic) => {
+          const selectedUser = topic.selectedByUserId ? [...users.values()].find((u) => u.id === topic.selectedByUserId) : null;
+          return [
+            csvSafe(topic.title),
+            csvSafe(topic.description),
+            csvSafe(topic.supervisor),
+            csvSafe(topic.department),
+            csvSafe(selectedUser?.name ?? ''),
+            csvSafe(selectedUser?.email ?? ''),
+            csvSafe(selectedUser ? 'зайнята' : 'вільна'),
+          ].join(',');
+        });
+
+        logAudit({
+          actor: session.sub,
+          action: 'EXPORT_STATUS',
+          ip: getIp(req),
+          result: 'success',
+          targetId: null,
+        });
+
+        const datePart = new Date().toISOString().slice(0, 10);
+        return csv(res, 200, [header, ...rows].join('\n'), `topics-status-${datePart}.csv`);
+      }
+
       if (req.method === 'POST' && req.url === '/admin/users') {
         const session = requireAuth(req, res);
         if (!session) return;
@@ -735,6 +777,7 @@ export const createApp = ({ jwtSecret = 'dev-jwt-secret' } = {}) => {
         status: response.statusCode,
         headers: response.headers,
         body: jsonBody,
+        text: response.rawBody,
       };
     },
   };

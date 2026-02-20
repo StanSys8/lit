@@ -39,6 +39,11 @@
   gap: 0.75rem;
 }
 
+.admin-dashboard-actions {
+  display: grid;
+  gap: 0.5rem;
+}
+
 .admin-stat-card {
   border: 1px solid #ddd;
   border-radius: 10px;

@@ -45,6 +45,7 @@ describe('App routes', () => {
     expect(html).toContain('Статус вибору тем');
     expect(html).toContain('0 / 0 студентів вибрали тему');
     expect(html).toContain('0 вільних тем з 0 загалом');
+    expect(html).toContain('Завантажити CSV статусу');
     expect(html).toContain('Students');
     expect(html).toContain('Topics');
     expect(html).toContain('Add student');

@@ -505,6 +505,32 @@ test('admin topics CRUD: list, create, delete free topic, reject delete used top
   assert.ok(deleteAudit);
 });
 
+test('admin exports topic status CSV with headers and audit', async () => {
+  const app = createApp({ jwtSecret: 'test-secret' });
+
+  const adminLogin = await login(app, 'admin@example.com', 'admin123');
+  const adminCookie = adminLogin.headers['Set-Cookie'];
+  assert.ok(adminCookie);
+
+  const exportResponse = await app.inject({
+    method: 'GET',
+    url: '/admin/export/status',
+    headers: { cookie: adminCookie },
+  });
+  assert.equal(exportResponse.status, 200);
+  assert.match(exportResponse.headers['Content-Type'] || '', /^text\/csv/);
+  assert.match(exportResponse.headers['Content-Disposition'] || '', /^attachment; filename="topics-status-\d{4}-\d{2}-\d{2}\.csv"$/);
+  assert.match(
+    exportResponse.text,
+    /title,description,supervisor,department,studentName,studentEmail,status/,
+  );
+  assert.match(exportResponse.text, /"вільна"|"зайнята"/);
+
+  const log = app.getAuditLog();
+  const exportAudit = log.find((e) => e.action === 'EXPORT_STATUS' && e.result === 'success');
+  assert.ok(exportAudit);
+});
+
 test('admin topics bulk create: partial success and audit count', async () => {
   const app = createApp({ jwtSecret: 'test-secret' });
 

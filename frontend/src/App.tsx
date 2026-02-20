@@ -266,6 +266,8 @@ function App() {
   const [topics, setTopics] = useState<TopicRow[]>([]);
   const [topicsLoading, setTopicsLoading] = useState(false);
   const [topicsError, setTopicsError] = useState('');
+  const [exportStatusError, setExportStatusError] = useState('');
+  const [exportStatusLoading, setExportStatusLoading] = useState(false);
   const [createTopicError, setCreateTopicError] = useState('');
   const [newTopicTitle, setNewTopicTitle] = useState('');
   const [newTopicDescription, setNewTopicDescription] = useState('');
@@ -576,6 +578,37 @@ function App() {
     URL.revokeObjectURL(url);
   };
 
+  const onExportTopicsStatus = async () => {
+    setExportStatusError('');
+    setExportStatusLoading(true);
+
+    try {
+      const response = await fetch('/admin/export/status', {
+        method: 'GET',
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        setExportStatusError('Не вдалося завантажити CSV статусу');
+        return;
+      }
+
+      const blob = await response.blob();
+      const disposition = response.headers.get('content-disposition') || '';
+      const fileNameMatch = disposition.match(/filename="([^"]+)"/);
+      const fileName = fileNameMatch?.[1] || 'topics-status.csv';
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      setExportStatusError('Не вдалося завантажити CSV статусу');
+    } finally {
+      setExportStatusLoading(false);
+    }
+  };
+
   const onCreateTopic = async (event: FormEvent) => {
     event.preventDefault();
     setCreateTopicError('');
@@ -821,6 +854,12 @@ function App() {
             progressPercent={totalTopicsCount > 0 ? Math.round((freeTopicsCount / totalTopicsCount) * 100) : 0}
             variant={freeTopicsCount > 0 ? 'warning' : 'primary'}
           />
+          <div className="admin-dashboard-actions">
+            <button type="button" onClick={onExportTopicsStatus} disabled={exportStatusLoading}>
+              {exportStatusLoading ? 'Експорт...' : 'Завантажити CSV статусу'}
+            </button>
+            {exportStatusError && <p className="error">{exportStatusError}</p>}
+          </div>
         </section>
 
         <section className="admin-students">
