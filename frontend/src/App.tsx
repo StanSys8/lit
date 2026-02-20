@@ -80,7 +80,7 @@ export const StudentActions = ({
 }) => (
   <>
     <button type="button" onClick={() => onDelete(studentId)}>
-      Delete
+      Видалити
     </button>
     <button type="button" onClick={() => onResetPassword(studentId)}>
       Скинути пароль
@@ -147,9 +147,10 @@ export const TopicAccordionItem = ({
   onToggle: () => void;
   onSelectTopic: (topic: StudentTopic) => void;
 }) => (
-  <article className="topic-accordion-item">
+  <article className={`topic-accordion-item ${expanded ? 'topic-accordion-item--open' : ''}`} data-testid="topic-accordion-item">
     <button type="button" className="topic-accordion-trigger" onClick={onToggle}>
-      {topic.title}
+      <span>{topic.title}</span>
+      <span className="topic-availability-badge">вільна</span>
     </button>
     {expanded && (
       <div className="topic-accordion-content">
@@ -294,9 +295,9 @@ function App() {
   const [releaseTopicTitle, setReleaseTopicTitle] = useState('');
 
   const heading = useMemo(() => {
-    if (route === '/topics') return 'Student Topics';
-    if (route === '/admin') return 'Admin Dashboard';
-    return 'Login';
+    if (route === '/topics') return 'Вибір теми';
+    if (route === '/admin') return 'Панель адміністратора';
+    return 'Вхід';
   }, [route]);
 
   const navigate = (next: '/topics' | '/admin' | '/login') => {
@@ -316,14 +317,14 @@ function App() {
         credentials: 'include',
       });
       if (!response.ok) {
-        setStudentsError('Failed to load students');
+        setStudentsError('Не вдалося завантажити список студентів');
         return;
       }
 
       const payload = (await response.json()) as StudentRow[];
       setStudents(payload);
     } catch {
-      setStudentsError('Failed to load students');
+      setStudentsError('Не вдалося завантажити список студентів');
     } finally {
       setStudentsLoading(false);
     }
@@ -339,14 +340,14 @@ function App() {
         credentials: 'include',
       });
       if (!response.ok) {
-        setStudentTopicsError('Failed to load topics');
+        setStudentTopicsError('Не вдалося завантажити список тем');
         return;
       }
 
       const payload = (await response.json()) as StudentTopic[];
       setStudentTopics(payload || []);
     } catch {
-      setStudentTopicsError('Failed to load topics');
+      setStudentTopicsError('Не вдалося завантажити список тем');
     } finally {
       setStudentTopicsLoading(false);
     }
@@ -362,14 +363,14 @@ function App() {
         credentials: 'include',
       });
       if (!response.ok) {
-        setTopicsError('Failed to load topics');
+        setTopicsError('Не вдалося завантажити список тем');
         return;
       }
 
       const payload = (await response.json()) as { topics: TopicRow[] };
       setTopics(payload.topics || []);
     } catch {
-      setTopicsError('Failed to load topics');
+      setTopicsError('Не вдалося завантажити список тем');
     } finally {
       setTopicsLoading(false);
     }
@@ -384,13 +385,13 @@ function App() {
         credentials: 'include',
       });
       if (!response.ok) {
-        setAuditError('Failed to load audit log');
+        setAuditError('Не вдалося завантажити журнал дій');
         return;
       }
       const payload = (await response.json()) as AuditRow[];
       setAuditRows(payload || []);
     } catch {
-      setAuditError('Failed to load audit log');
+      setAuditError('Не вдалося завантажити журнал дій');
     } finally {
       setAuditLoading(false);
     }
@@ -440,7 +441,7 @@ function App() {
 
       const payload = (await response.json()) as LoginResponse | { message?: string };
       if (!response.ok) {
-        setError((payload as { message?: string }).message || 'Login failed');
+        setError((payload as { message?: string }).message || 'Не вдалося увійти');
         return;
       }
 
@@ -452,7 +453,7 @@ function App() {
         navigate('/topics');
       }
     } catch {
-      setError('Network error');
+      setError('Помилка мережі');
     } finally {
       setLoading(false);
     }
@@ -485,7 +486,7 @@ function App() {
 
       const payload = (await response.json()) as CreateStudentResponse | { message?: string };
       if (!response.ok) {
-        setCreateError((payload as { message?: string }).message || 'Failed to create student');
+        setCreateError((payload as { message?: string }).message || 'Не вдалося додати студента');
         return;
       }
 
@@ -502,7 +503,7 @@ function App() {
       setNewStudentName('');
       setNewStudentEmail('');
     } catch {
-      setCreateError('Failed to create student');
+      setCreateError('Не вдалося додати студента');
     }
   };
 
@@ -521,13 +522,13 @@ function App() {
       }
 
       if (response.status === 404) {
-        setCreateError('Student not found');
+        setCreateError('Студента не знайдено');
         return;
       }
 
-      setCreateError('Failed to delete student');
+      setCreateError('Не вдалося видалити студента');
     } catch {
-      setCreateError('Failed to delete student');
+      setCreateError('Не вдалося видалити студента');
     }
   };
 
@@ -540,14 +541,14 @@ function App() {
         credentials: 'include',
       });
       if (!response.ok) {
-        setCreateError('Failed to reset password');
+        setCreateError('Не вдалося скинути пароль');
         return;
       }
 
       const payload = (await response.json()) as { newPassword?: string };
       setResetPasswordValue(payload.newPassword ?? '');
     } catch {
-      setCreateError('Failed to reset password');
+      setCreateError('Не вдалося скинути пароль');
     }
   };
 
@@ -583,7 +584,7 @@ function App() {
       });
 
       if (!response.ok) {
-        setCreateError('Failed to upload CSV');
+        setCreateError('Не вдалося завантажити CSV');
         return;
       }
 
@@ -596,7 +597,7 @@ function App() {
         void loadStudents();
       }
     } catch {
-      setCreateError('Failed to upload CSV');
+      setCreateError('Не вдалося завантажити CSV');
     }
   };
 
@@ -694,7 +695,7 @@ function App() {
 
       const payload = (await response.json()) as CreateTopicResponse | { message?: string };
       if (!response.ok) {
-        setCreateTopicError((payload as { message?: string }).message || 'Failed to create topic');
+        setCreateTopicError((payload as { message?: string }).message || 'Не вдалося додати тему');
         return;
       }
 
@@ -705,7 +706,7 @@ function App() {
       setNewTopicSupervisor('');
       setNewTopicDepartment('');
     } catch {
-      setCreateTopicError('Failed to create topic');
+      setCreateTopicError('Не вдалося додати тему');
     }
   };
 
@@ -724,17 +725,17 @@ function App() {
 
       const payload = (await response.json()) as { error?: string; message?: string };
       if (response.status === 409 && payload.error === 'TOPIC_IN_USE') {
-        setCreateTopicError(payload.message || 'Topic is already selected');
+        setCreateTopicError(payload.message || 'Тема вже вибрана');
         return;
       }
       if (response.status === 404) {
-        setCreateTopicError('Topic not found');
+        setCreateTopicError('Тему не знайдено');
         return;
       }
 
-      setCreateTopicError('Failed to delete topic');
+      setCreateTopicError('Не вдалося видалити тему');
     } catch {
-      setCreateTopicError('Failed to delete topic');
+      setCreateTopicError('Не вдалося видалити тему');
     }
   };
 
@@ -759,9 +760,9 @@ function App() {
     if (result.status === 409 && result.error === 'TOPIC_ALREADY_FREE') {
       setCreateTopicError(result.message || 'Тема вже вільна');
     } else if (result.status === 404) {
-      setCreateTopicError('Topic not found');
+      setCreateTopicError('Тему не знайдено');
     } else {
-      setCreateTopicError(result.message || 'Failed to release topic');
+      setCreateTopicError(result.message || 'Не вдалося звільнити тему');
     }
     setReleaseTopicTargetId('');
     setReleaseTopicTitle('');
@@ -877,11 +878,11 @@ function App() {
 
   if (route === '/admin') {
     return (
-      <main className="shell">
+      <main className="shell shell--admin">
         <aside className="sidebar">
           <h1>{heading}</h1>
           <button type="button" onClick={onLogout}>
-            Logout
+            Вийти
           </button>
         </aside>
 
@@ -909,10 +910,10 @@ function App() {
         </section>
 
         <section className="admin-students">
-          <h2>Students</h2>
+          <h2>Студенти</h2>
 
           <form className="login-form" onSubmit={onCreateStudent}>
-            <label htmlFor="student-name">Name</label>
+            <label htmlFor="student-name">Ім'я</label>
             <input
               id="student-name"
               type="text"
@@ -930,20 +931,20 @@ function App() {
               required
             />
 
-            <button type="submit">Add student</button>
+            <button type="submit">Додати студента</button>
           </form>
 
           <section className="bulk-box">
-            <h3>Bulk upload students</h3>
+            <h3>Масове завантаження студентів</h3>
             <input type="file" accept=".csv,text/csv" onChange={onCsvSelect} />
 
             {csvRows.length > 0 && (
               <>
-                <p>Preview (first 3 rows):</p>
+                <p>Попередній перегляд (перші 3 рядки):</p>
                 <table className="students-table">
                   <thead>
                     <tr>
-                      <th>Name</th>
+                      <th>Ім'я</th>
                       <th>Email</th>
                     </tr>
                   </thead>
@@ -958,7 +959,7 @@ function App() {
                 </table>
 
                 <button type="button" onClick={onBulkUpload}>
-                  Upload CSV
+                  Завантажити CSV
                 </button>
               </>
             )}
@@ -971,7 +972,7 @@ function App() {
               </ul>
             )}
 
-            {bulkCreated > 0 && <p>{`Created ${bulkCreated} users`}</p>}
+            {bulkCreated > 0 && <p>{`Створено ${bulkCreated} користувачів`}</p>}
             {bulkErrors.length > 0 && (
               <ul className="error-list">
                 {bulkErrors.map((err) => (
@@ -982,26 +983,26 @@ function App() {
 
             {bulkCredentials.length > 0 && (
               <button type="button" onClick={onDownloadCredentials}>
-                Download credentials CSV
+                Завантажити CSV з паролями
               </button>
             )}
           </section>
 
           {createError && <p className="error">{createError}</p>}
           <ResetPasswordModal password={resetPasswordValue} onClose={() => setResetPasswordValue('')} />
-          {createPassword && <p className="secret">Generated password: {createPassword}</p>}
+          {createPassword && <p className="secret">Згенерований пароль: {createPassword}</p>}
           {studentsError && <p className="error">{studentsError}</p>}
 
           {studentsLoading ? (
-            <p>Loading students...</p>
+            <p>Завантаження студентів...</p>
           ) : (
             <table className="students-table">
               <thead>
                 <tr>
-                  <th>Name</th>
+                  <th>Ім'я</th>
                   <th>Email</th>
-                  <th>Selected</th>
-                  <th>Actions</th>
+                  <th>Тему обрано</th>
+                  <th>Дії</th>
                 </tr>
               </thead>
               <tbody>
@@ -1009,7 +1010,7 @@ function App() {
                   <tr key={student.id}>
                     <td>{student.name}</td>
                     <td>{student.email}</td>
-                    <td>{student.hasSelectedTopic ? 'Yes' : 'No'}</td>
+                    <td>{student.hasSelectedTopic ? 'Так' : 'Ні'}</td>
                     <td>
                       <StudentActions
                         studentId={student.id}
@@ -1024,10 +1025,10 @@ function App() {
           )}
 
           <section className="admin-topics">
-            <h2>Topics</h2>
+            <h2>Теми</h2>
 
             <form className="login-form" onSubmit={onCreateTopic}>
-              <label htmlFor="topic-title">Title</label>
+              <label htmlFor="topic-title">Назва</label>
               <input
                 id="topic-title"
                 type="text"
@@ -1036,7 +1037,7 @@ function App() {
                 required
               />
 
-              <label htmlFor="topic-description">Description</label>
+              <label htmlFor="topic-description">Опис</label>
               <input
                 id="topic-description"
                 type="text"
@@ -1045,7 +1046,7 @@ function App() {
                 required
               />
 
-              <label htmlFor="topic-supervisor">Supervisor</label>
+              <label htmlFor="topic-supervisor">Керівник</label>
               <input
                 id="topic-supervisor"
                 type="text"
@@ -1054,7 +1055,7 @@ function App() {
                 required
               />
 
-              <label htmlFor="topic-department">Department</label>
+              <label htmlFor="topic-department">Кафедра</label>
               <input
                 id="topic-department"
                 type="text"
@@ -1063,23 +1064,23 @@ function App() {
                 required
               />
 
-              <button type="submit">Add topic</button>
+              <button type="submit">Додати тему</button>
             </form>
 
             <section className="bulk-box">
-              <h3>Bulk upload topics</h3>
+              <h3>Масове завантаження тем</h3>
               <input type="file" accept=".csv,text/csv" onChange={onTopicCsvSelect} />
 
               {topicCsvRows.length > 0 && (
                 <>
-                  <p>Preview (first 3 rows):</p>
+                  <p>Попередній перегляд (перші 3 рядки):</p>
                   <table className="students-table">
                     <thead>
                       <tr>
-                        <th>Title</th>
-                        <th>Description</th>
-                        <th>Supervisor</th>
-                        <th>Department</th>
+                        <th>Назва</th>
+                        <th>Опис</th>
+                        <th>Керівник</th>
+                        <th>Кафедра</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1095,7 +1096,7 @@ function App() {
                   </table>
 
                   <button type="button" onClick={onBulkTopicsUpload}>
-                    Upload topics CSV
+                    Завантажити CSV тем
                   </button>
                 </>
               )}
@@ -1108,7 +1109,7 @@ function App() {
                 </ul>
               )}
 
-              {topicBulkCreated > 0 && <p>{`Created ${topicBulkCreated} topics`}</p>}
+              {topicBulkCreated > 0 && <p>{`Створено ${topicBulkCreated} тем`}</p>}
               {topicBulkErrors.length > 0 && (
                 <ul className="error-list">
                   {topicBulkErrors.map((err) => (
@@ -1130,17 +1131,17 @@ function App() {
             />
 
             {topicsLoading ? (
-              <p>Loading topics...</p>
+              <p>Завантаження тем...</p>
             ) : (
               <table className="students-table">
                 <thead>
                   <tr>
-                    <th>Title</th>
-                    <th>Description</th>
-                    <th>Supervisor</th>
-                    <th>Department</th>
-                    <th>Student</th>
-                    <th>Actions</th>
+                    <th>Назва</th>
+                    <th>Опис</th>
+                    <th>Керівник</th>
+                    <th>Кафедра</th>
+                    <th>Студент</th>
+                    <th>Дії</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1153,7 +1154,7 @@ function App() {
                       <td>{topic.selectedBy?.name || 'вільна'}</td>
                       <td>
                         <button type="button" onClick={() => onDeleteTopic(topic.id)}>
-                          Delete topic
+                          Видалити тему
                         </button>
                         {topic.selectedBy && (
                           <button type="button" onClick={() => onOpenReleaseTopicModal(topic)}>
@@ -1178,7 +1179,7 @@ function App() {
             </div>
             {auditError && <p className="error">{auditError}</p>}
             {auditLoading ? (
-              <p>Loading audit...</p>
+              <p>Завантаження журналу...</p>
             ) : (
               <table className="students-table">
                 <thead>
@@ -1217,11 +1218,11 @@ function App() {
 
   if (route === '/topics') {
     return (
-      <main className="shell">
+      <main className="shell shell--student">
         <header className="header">
           <h1>{heading}</h1>
           <button type="button" onClick={onLogout}>
-            Logout
+            Вийти
           </button>
         </header>
 
@@ -1244,7 +1245,7 @@ function App() {
           {raceConditionAlert && <p className="topic-race-alert">{raceConditionAlert}</p>}
 
           {studentTopicsLoading && (
-            <div className="topic-skeletons" aria-label="Loading topics">
+            <div className="topic-skeletons" aria-label="Завантаження тем">
               {Array.from({ length: 4 }).map((_, i) => (
                 <div key={`skeleton-${i}`} className="topic-skeleton-row" />
               ))}
@@ -1285,7 +1286,7 @@ function App() {
   }
 
   return (
-    <main className="shell">
+    <main className="shell shell--login">
       <h1>{heading}</h1>
       <form className="login-form" onSubmit={onSubmit}>
         <label htmlFor="email">Email</label>
@@ -1297,7 +1298,7 @@ function App() {
           required
         />
 
-        <label htmlFor="password">Password</label>
+        <label htmlFor="password">Пароль</label>
         <input
           id="password"
           type="password"
@@ -1309,7 +1310,7 @@ function App() {
         {error && <p className="error">{error}</p>}
 
         <button type="submit" disabled={loading}>
-          {loading ? 'Signing in...' : 'Sign in'}
+          {loading ? 'Вхід...' : 'Увійти'}
         </button>
       </form>
     </main>
