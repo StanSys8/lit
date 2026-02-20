@@ -32,4 +32,12 @@ describe('topicsCsv', () => {
     expect(result.rows[0].title).toBe('Topic C');
     expect(result.errors).toHaveLength(2);
   });
+
+  it('skips completely empty rows', () => {
+    const input =
+      'title,description,supervisor,department\nTopic A,Desc A,Dr. A,CS\n,,,\nTopic B,Desc B,Dr. B,SE';
+    const result = parseTopicsCsv(input);
+    expect(result.errors).toHaveLength(0);
+    expect(result.rows).toHaveLength(2);
+  });
 });

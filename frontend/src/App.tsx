@@ -18,12 +18,13 @@ type CreateStudentResponse = {
   id: string;
   name: string;
   email: string;
+  class: string;
   newPassword: string;
 };
 
 type BulkCreateResponse = {
   created: number;
-  users: Array<{ name: string; email: string; password: string }>;
+  users: Array<{ name: string; email: string; class: string; password: string }>;
   errors: Array<{ row: number; message: string }>;
 };
 
@@ -265,12 +266,13 @@ function App() {
   const [createPassword, setCreatePassword] = useState('');
   const [newStudentName, setNewStudentName] = useState('');
   const [newStudentEmail, setNewStudentEmail] = useState('');
+  const [newStudentClass, setNewStudentClass] = useState('');
 
   const [csvRows, setCsvRows] = useState<CsvStudent[]>([]);
   const [csvErrors, setCsvErrors] = useState<CsvError[]>([]);
   const [bulkErrors, setBulkErrors] = useState<Array<{ row: number; message: string }>>([]);
   const [bulkCreated, setBulkCreated] = useState(0);
-  const [bulkCredentials, setBulkCredentials] = useState<Array<{ name: string; email: string; password: string }>>([]);
+  const [bulkCredentials, setBulkCredentials] = useState<Array<{ name: string; email: string; class: string; password: string }>>([]);
   const [resetPasswordValue, setResetPasswordValue] = useState('');
   const [topics, setTopics] = useState<TopicRow[]>([]);
   const [topicsLoading, setTopicsLoading] = useState(false);
@@ -482,7 +484,7 @@ function App() {
         method: 'POST',
         credentials: 'include',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ name: newStudentName, email: newStudentEmail }),
+        body: JSON.stringify({ name: newStudentName, email: newStudentEmail, class: newStudentClass }),
       });
 
       const payload = (await response.json()) as CreateStudentResponse | { message?: string };
@@ -497,12 +499,14 @@ function App() {
           id: created.id,
           name: created.name,
           email: created.email,
+          class: created.class,
           hasSelectedTopic: false,
         }),
       );
       setCreatePassword(created.newPassword);
       setNewStudentName('');
       setNewStudentEmail('');
+      setNewStudentClass('');
     } catch {
       setCreateError('Не вдалося додати студента');
     }
@@ -977,6 +981,15 @@ function App() {
                   required
                 />
 
+                <label htmlFor="student-class">Клас</label>
+                <input
+                  id="student-class"
+                  type="text"
+                  value={newStudentClass}
+                  onChange={(e) => setNewStudentClass(e.target.value)}
+                  required
+                />
+
                 <button type="submit">Додати студента</button>
               </form>
 
@@ -992,6 +1005,7 @@ function App() {
                         <tr>
                           <th>Ім'я</th>
                           <th>Email</th>
+                          <th>Клас</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -999,6 +1013,7 @@ function App() {
                           <tr key={`${row.email}-${idx}`}>
                             <td>{row.name}</td>
                             <td>{row.email}</td>
+                            <td>{row.class}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -1047,6 +1062,7 @@ function App() {
                     <tr>
                       <th>Ім'я</th>
                       <th>Email</th>
+                      <th>Клас</th>
                       <th>Тему обрано</th>
                       <th>Дії</th>
                     </tr>
@@ -1056,6 +1072,7 @@ function App() {
                       <tr key={student.id}>
                         <td>{student.name}</td>
                         <td>{student.email}</td>
+                        <td>{student.class}</td>
                         <td>{student.hasSelectedTopic ? 'Так' : 'Ні'}</td>
                         <td className="table-actions">
                           <StudentActions

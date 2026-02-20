@@ -203,13 +203,14 @@ export const createApp = ({
     };
   };
 
-  const createStudent = async ({ name, email }) => {
+  const createStudent = async ({ name, email, class: className }) => {
     const { users } = await getDb();
     const cleanName = String(name).trim();
     const cleanEmail = toEmailKey(email);
+    const cleanClass = String(className ?? '').trim();
 
-    if (!cleanName || !cleanEmail) {
-      return { error: { code: 'VALIDATION_ERROR', message: 'name and email are required' } };
+    if (!cleanName || !cleanEmail || !cleanClass) {
+      return { error: { code: 'VALIDATION_ERROR', message: 'name, email and class are required' } };
     }
 
     const existing = await users.findOne({
@@ -230,6 +231,7 @@ export const createApp = ({
       id,
       name: cleanName,
       email: cleanEmail,
+      class: cleanClass,
       emailLower: cleanEmail,
       role: 'student',
       selectedTopicId: null,
@@ -243,6 +245,7 @@ export const createApp = ({
         id,
         name: cleanName,
         email: cleanEmail,
+        class: cleanClass,
         newPassword,
       },
     };
@@ -619,7 +622,7 @@ export const createApp = ({
         const { users } = await getDb();
         const students = await users
           .find({ role: 'student' })
-          .project({ id: 1, _id: 1, name: 1, email: 1, selectedTopicId: 1 })
+          .project({ id: 1, _id: 1, name: 1, email: 1, class: 1, selectedTopicId: 1 })
           .toArray();
         return json(
           res,
@@ -628,6 +631,7 @@ export const createApp = ({
             id: idFromDoc(u),
             name: u.name,
             email: u.email,
+            class: String(u.class ?? ''),
             hasSelectedTopic: Boolean(u.selectedTopicId),
           })),
         );
@@ -736,8 +740,8 @@ export const createApp = ({
         if (!session) return;
         if (!requireRole(session, 'admin', res)) return;
 
-        const { name = '', email = '' } = await readJsonBody(req);
-        const created = await createStudent({ name, email });
+        const { name = '', email = '', class: className = '' } = await readJsonBody(req);
+        const created = await createStudent({ name, email, class: className });
         if (created.error) {
           if (created.error.code === 'EMAIL_ALREADY_EXISTS') {
             return json(res, 409, {
@@ -760,6 +764,7 @@ export const createApp = ({
           id: created.data.id,
           name: created.data.name,
           email: created.data.email,
+          class: created.data.class,
           newPassword: created.data.newPassword,
         });
       }
@@ -785,7 +790,11 @@ export const createApp = ({
           }
           seen.add(emailKey);
 
-          const created = await createStudent({ name: item?.name ?? '', email: item?.email ?? '' });
+          const created = await createStudent({
+            name: item?.name ?? '',
+            email: item?.email ?? '',
+            class: item?.class ?? '',
+          });
           if (created.error) {
             errors.push({ row, message: created.error.message });
             continue;
@@ -793,6 +802,7 @@ export const createApp = ({
           createdUsers.push({
             name: created.data.name,
             email: created.data.email,
+            class: created.data.class,
             password: created.data.newPassword,
           });
         }

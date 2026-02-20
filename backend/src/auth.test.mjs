@@ -210,7 +210,7 @@ test('student topic selection success, conflicts, and audit events', async () =>
     method: 'POST',
     url: '/admin/users',
     headers: { cookie: adminCookie, 'content-type': 'application/json' },
-    body: { name: 'Second Student', email: 'second.student@example.com' },
+    body: { name: 'Second Student', email: 'second.student@example.com', class: '9-B' },
   });
   assert.equal(secondStudentCreate.status, 201);
 
@@ -337,11 +337,12 @@ test('admin users CRUD: list, create, duplicate, delete, not found, auth guards,
     method: 'POST',
     url: '/admin/users',
     headers: { cookie: adminCookie, 'content-type': 'application/json' },
-    body: { name: 'New Student', email: 'new.student@example.com' },
+    body: { name: 'New Student', email: 'new.student@example.com', class: '9-A' },
   });
   assert.equal(createResponse.status, 201);
   assert.equal(createResponse.body.name, 'New Student');
   assert.equal(createResponse.body.email, 'new.student@example.com');
+  assert.equal(createResponse.body.class, '9-A');
   assert.equal(typeof createResponse.body.newPassword, 'string');
   assert.ok(createResponse.body.newPassword.length > 0);
 
@@ -349,7 +350,7 @@ test('admin users CRUD: list, create, duplicate, delete, not found, auth guards,
     method: 'POST',
     url: '/admin/users',
     headers: { cookie: adminCookie, 'content-type': 'application/json' },
-    body: { name: 'Dup', email: 'new.student@example.com' },
+    body: { name: 'Dup', email: 'new.student@example.com', class: '9-A' },
   });
   assert.equal(duplicate.status, 409);
   assert.equal(duplicate.body.error, 'EMAIL_ALREADY_EXISTS');
@@ -364,6 +365,7 @@ test('admin users CRUD: list, create, duplicate, delete, not found, auth guards,
   const createdInList = listAfter.body.find((u) => u.email === 'new.student@example.com');
   assert.ok(createdInList);
   assert.equal(createdInList.name, 'New Student');
+  assert.equal(createdInList.class, '9-A');
   assert.equal(typeof createdInList.hasSelectedTopic, 'boolean');
 
   const deleteResponse = await app.inject({
@@ -399,11 +401,11 @@ test('admin users bulk create: partial success with duplicates and audit count',
     url: '/admin/users/bulk',
     headers: { cookie: adminCookie, 'content-type': 'application/json' },
     body: [
-      { name: 'Bulk One', email: 'bulk1@example.com' },
-      { name: 'Bulk Two', email: 'bulk2@example.com' },
-      { name: 'Dup in payload', email: 'bulk1@example.com' },
-      { name: 'Dup in DB', email: 'student@example.com' },
-      { name: '', email: 'bad@example.com' },
+      { name: 'Bulk One', email: 'bulk1@example.com', class: '9-A' },
+      { name: 'Bulk Two', email: 'bulk2@example.com', class: '9-B' },
+      { name: 'Dup in payload', email: 'bulk1@example.com', class: '9-A' },
+      { name: 'Dup in DB', email: 'student@example.com', class: '9-A' },
+      { name: '', email: 'bad@example.com', class: '9-A' },
     ],
   });
 
@@ -412,6 +414,7 @@ test('admin users bulk create: partial success with duplicates and audit count',
   assert.equal(bulk.body.users.length, 2);
   assert.equal(bulk.body.errors.length, 3);
   assert.equal(bulk.body.users[0].email, 'bulk1@example.com');
+  assert.equal(bulk.body.users[0].class, '9-A');
   assert.equal(typeof bulk.body.users[0].password, 'string');
 
   const log = app.getAuditLog();

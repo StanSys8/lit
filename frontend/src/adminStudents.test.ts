@@ -4,12 +4,13 @@ import { addStudentToList, removeStudentFromList, type StudentRow } from './admi
 describe('admin students helpers', () => {
   it('adds student to list', () => {
     const initial: StudentRow[] = [
-      { id: '1', name: 'A', email: 'a@example.com', hasSelectedTopic: false },
+      { id: '1', name: 'A', email: 'a@example.com', class: '9-A', hasSelectedTopic: false },
     ];
     const result = addStudentToList(initial, {
       id: '2',
       name: 'B',
       email: 'b@example.com',
+      class: '9-B',
       hasSelectedTopic: true,
     });
 
@@ -19,8 +20,8 @@ describe('admin students helpers', () => {
 
   it('removes student by id', () => {
     const initial: StudentRow[] = [
-      { id: '1', name: 'A', email: 'a@example.com', hasSelectedTopic: false },
-      { id: '2', name: 'B', email: 'b@example.com', hasSelectedTopic: false },
+      { id: '1', name: 'A', email: 'a@example.com', class: '9-A', hasSelectedTopic: false },
+      { id: '2', name: 'B', email: 'b@example.com', class: '9-B', hasSelectedTopic: false },
     ];
 
     const result = removeStudentFromList(initial, '1');

@@ -305,6 +305,7 @@ button:disabled {
   background: #f2f2f2;
   display: grid;
   gap: 0;
+  min-height: auto;
   border: 1px solid #e3d7ec;
   border-radius: 18px;
   overflow: hidden;
@@ -316,6 +317,8 @@ button:disabled {
   color: #fff;
   display: flex;
   flex-direction: column;
+  border-radius: 14px;
+  overflow: hidden;
 }
 
 .admin-logo {
@@ -333,10 +336,13 @@ button:disabled {
   flex: 1;
   padding: 10px 8px;
   display: grid;
+  grid-auto-rows: max-content;
+  align-content: start;
   gap: 4px;
 }
 
 .admin-nav-item {
+  width: 100%;
   border: 0;
   background: transparent;
   border-radius: 10px;
@@ -597,7 +603,7 @@ button:disabled {
 
   .shell--admin {
     grid-template-columns: 160px 1fr;
-    min-height: 760px;
+    min-height: auto;
   }
 
   .admin-sidebar {

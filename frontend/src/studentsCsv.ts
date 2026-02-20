@@ -1,6 +1,6 @@
 import Papa from 'papaparse';
 
-export type CsvStudent = { name: string; email: string };
+export type CsvStudent = { name: string; email: string; class: string };
 export type CsvError = { row: number; message: string };
 
 export const parseStudentsCsv = (text: string): { rows: CsvStudent[]; errors: CsvError[] } => {
@@ -11,10 +11,10 @@ export const parseStudentsCsv = (text: string): { rows: CsvStudent[]; errors: Cs
   });
 
   const headerFields = parsed.meta.fields ?? [];
-  if (!headerFields.includes('name') || !headerFields.includes('email')) {
+  if (!headerFields.includes('name') || !headerFields.includes('email') || !headerFields.includes('class')) {
     return {
       rows: [],
-      errors: [{ row: 1, message: 'CSV must contain name,email header' }],
+      errors: [{ row: 1, message: 'CSV must contain name,email,class header' }],
     };
   }
 
@@ -24,11 +24,16 @@ export const parseStudentsCsv = (text: string): { rows: CsvStudent[]; errors: Cs
   parsed.data.forEach((item, index) => {
     const name = String(item.name ?? '').trim();
     const email = String(item.email ?? '').trim();
-    if (!name || !email) {
-      errors.push({ row: index + 2, message: 'name and email are required' });
+    const className = String(item.class ?? '').trim();
+    if (!name && !email && !className) {
       return;
     }
-    rows.push({ name, email });
+
+    if (!name || !email || !className) {
+      errors.push({ row: index + 2, message: 'name, email and class are required' });
+      return;
+    }
+    rows.push({ name, email, class: className });
   });
 
   if (parsed.errors.length > 0) {
@@ -43,8 +48,8 @@ export const parseStudentsCsv = (text: string): { rows: CsvStudent[]; errors: Cs
   return { rows, errors };
 };
 
-export const credentialsToCsv = (items: Array<{ name: string; email: string; password: string }>): string => {
+export const credentialsToCsv = (items: Array<{ name: string; email: string; class: string; password: string }>): string => {
   return Papa.unparse(items, {
-    columns: ['name', 'email', 'password'],
+    columns: ['name', 'email', 'class', 'password'],
   });
 };

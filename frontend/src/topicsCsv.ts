@@ -34,6 +34,10 @@ export const parseTopicsCsv = (text: string): { rows: CsvTopic[]; errors: CsvErr
     const supervisor = String(item.supervisor ?? '').trim();
     const department = String(item.department ?? '').trim();
 
+    if (!title && !description && !supervisor && !department) {
+      return;
+    }
+
     if (!title || !supervisor) {
       errors.push({ row: index + 2, message: 'title and supervisor are required' });
       return;

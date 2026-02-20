@@ -2,6 +2,7 @@ export type StudentRow = {
   id: string;
   name: string;
   email: string;
+  class: string;
   hasSelectedTopic: boolean;
 };
 
