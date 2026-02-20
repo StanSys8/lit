@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import App, {
+  AdminStatCard,
   ReleaseTopicModal,
   ResetPasswordModal,
   StudentActions,
@@ -41,6 +42,9 @@ describe('App routes', () => {
   it('renders admin students page with add/delete and bulk controls on /admin', () => {
     const html = withPath('/admin', () => renderToStaticMarkup(<App />));
     expect(html).toContain('Admin Dashboard');
+    expect(html).toContain('Статус вибору тем');
+    expect(html).toContain('0 / 0 студентів вибрали тему');
+    expect(html).toContain('0 вільних тем з 0 загалом');
     expect(html).toContain('Students');
     expect(html).toContain('Topics');
     expect(html).toContain('Add student');
@@ -146,5 +150,21 @@ describe('Admin reset controls', () => {
     expect(html).toContain('Тему вибрано!');
     expect(html).toContain('Distributed Systems');
     expect(html).toContain('звернись до вчителя');
+  });
+
+  it('renders admin stat card in primary variant', () => {
+    const html = renderToStaticMarkup(
+      <AdminStatCard
+        title="Статус вибору тем"
+        value="10 / 10 студентів вибрали тему"
+        subtitle="Прогрес вибору тем"
+        progressPercent={100}
+        variant="primary"
+      />,
+    );
+    expect(html).toContain('Статус вибору тем');
+    expect(html).toContain('10 / 10 студентів вибрали тему');
+    expect(html).toContain('border-[#B436F0]');
+    expect(html).toContain('progressbar');
   });
 });

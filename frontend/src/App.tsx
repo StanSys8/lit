@@ -201,6 +201,32 @@ export const TopicConfirmedScreen = ({ topic }: { topic: StudentTopic }) => (
   </section>
 );
 
+export const AdminStatCard = ({
+  title,
+  value,
+  subtitle,
+  progressPercent,
+  variant = 'warning',
+}: {
+  title: string;
+  value: string;
+  subtitle: string;
+  progressPercent: number;
+  variant?: 'primary' | 'warning';
+}) => (
+  <article
+    className={`admin-stat-card ${variant === 'primary' ? 'border-[#B436F0]' : 'border-[#F24C0A]'}`}
+    data-testid="admin-stat-card"
+  >
+    <p className="admin-stat-card-title">{title}</p>
+    <p className="admin-stat-card-value">{value}</p>
+    <div className="admin-stat-progress" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progressPercent}>
+      <span style={{ width: `${progressPercent}%` }} />
+    </div>
+    <p className="admin-stat-card-subtitle">{subtitle}</p>
+  </article>
+);
+
 function App() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -764,6 +790,11 @@ function App() {
     if (!query) return studentTopics;
     return studentTopics.filter((topic) => topic.title.toLowerCase().includes(query));
   }, [debouncedTopicSearch, studentTopics]);
+  const selectedStudentsCount = useMemo(() => students.filter((student) => student.hasSelectedTopic).length, [students]);
+  const totalStudentsCount = students.length;
+  const selectionProgress = totalStudentsCount > 0 ? Math.round((selectedStudentsCount / totalStudentsCount) * 100) : 0;
+  const freeTopicsCount = useMemo(() => topics.filter((topic) => !topic.selectedBy).length, [topics]);
+  const totalTopicsCount = topics.length;
 
   if (route === '/admin') {
     return (
@@ -774,6 +805,23 @@ function App() {
             Logout
           </button>
         </aside>
+
+        <section className="admin-dashboard-stats" data-testid="admin-dashboard-stats">
+          <AdminStatCard
+            title="Статус вибору тем"
+            value={`${selectedStudentsCount} / ${totalStudentsCount} студентів вибрали тему`}
+            subtitle="Прогрес вибору тем"
+            progressPercent={selectionProgress}
+            variant={totalStudentsCount > 0 && selectedStudentsCount === totalStudentsCount ? 'primary' : 'warning'}
+          />
+          <AdminStatCard
+            title="Вільні теми"
+            value={`${freeTopicsCount} вільних тем з ${totalTopicsCount} загалом`}
+            subtitle="Актуальний стан пулу тем"
+            progressPercent={totalTopicsCount > 0 ? Math.round((freeTopicsCount / totalTopicsCount) * 100) : 0}
+            variant={freeTopicsCount > 0 ? 'warning' : 'primary'}
+          />
+        </section>
 
         <section className="admin-students">
           <h2>Students</h2>
