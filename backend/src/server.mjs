@@ -581,6 +581,38 @@ export const createApp = ({ jwtSecret = 'dev-jwt-secret' } = {}) => {
         return json(res, 200, items);
       }
 
+      if (req.method === 'GET' && req.url === '/admin/export/audit') {
+        const session = requireAuth(req, res);
+        if (!session) return;
+        if (!requireRole(session, 'admin', res)) return;
+
+        const header = ['createdAt', 'actor', 'action', 'targetId', 'ip', 'result'].join(',');
+        const rows = [...auditLog]
+          .slice()
+          .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)))
+          .map((entry) =>
+            [
+              csvSafe(entry.createdAt),
+              csvSafe(entry.actor),
+              csvSafe(entry.action),
+              csvSafe(entry.targetId),
+              csvSafe(entry.ip),
+              csvSafe(entry.result),
+            ].join(','),
+          );
+
+        logAudit({
+          actor: session.sub,
+          action: 'EXPORT_AUDIT',
+          ip: getIp(req),
+          result: 'success',
+          targetId: null,
+        });
+
+        const datePart = new Date().toISOString().slice(0, 10);
+        return csv(res, 200, [header, ...rows].join('\n'), `audit-log-${datePart}.csv`);
+      }
+
       if (req.method === 'GET' && req.url === '/admin/export/status') {
         const session = requireAuth(req, res);
         if (!session) return;

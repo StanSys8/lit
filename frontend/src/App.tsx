@@ -281,6 +281,8 @@ function App() {
   const [auditError, setAuditError] = useState('');
   const [exportStatusError, setExportStatusError] = useState('');
   const [exportStatusLoading, setExportStatusLoading] = useState(false);
+  const [exportAuditError, setExportAuditError] = useState('');
+  const [exportAuditLoading, setExportAuditLoading] = useState(false);
   const [createTopicError, setCreateTopicError] = useState('');
   const [newTopicTitle, setNewTopicTitle] = useState('');
   const [newTopicDescription, setNewTopicDescription] = useState('');
@@ -641,6 +643,37 @@ function App() {
       setExportStatusError('Не вдалося завантажити CSV статусу');
     } finally {
       setExportStatusLoading(false);
+    }
+  };
+
+  const onExportAuditLog = async () => {
+    setExportAuditError('');
+    setExportAuditLoading(true);
+
+    try {
+      const response = await fetch('/admin/export/audit', {
+        method: 'GET',
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        setExportAuditError('Не вдалося завантажити CSV аудиту');
+        return;
+      }
+
+      const blob = await response.blob();
+      const disposition = response.headers.get('content-disposition') || '';
+      const fileNameMatch = disposition.match(/filename="([^"]+)"/);
+      const fileName = fileNameMatch?.[1] || 'audit-log.csv';
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      setExportAuditError('Не вдалося завантажити CSV аудиту');
+    } finally {
+      setExportAuditLoading(false);
     }
   };
 
@@ -1159,6 +1192,12 @@ function App() {
 
           <section className="admin-audit">
             <h2>Журнал дій</h2>
+            <div className="admin-dashboard-actions">
+              <button type="button" onClick={onExportAuditLog} disabled={exportAuditLoading}>
+                {exportAuditLoading ? 'Експорт...' : 'Завантажити CSV аудиту'}
+              </button>
+              {exportAuditError && <p className="error">{exportAuditError}</p>}
+            </div>
             {auditError && <p className="error">{auditError}</p>}
             {auditLoading ? (
               <p>Loading audit...</p>

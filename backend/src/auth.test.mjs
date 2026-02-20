@@ -570,6 +570,39 @@ test('admin gets audit log sorted newest first and read-only endpoint does not s
   assert.equal(afterReadCount, beforeReadCount);
 });
 
+test('admin exports audit log CSV with headers and export audit event', async () => {
+  const app = createApp({ jwtSecret: 'test-secret' });
+
+  const studentLogin = await login(app, 'student@example.com', 'student123');
+  const studentCookie = studentLogin.headers['Set-Cookie'];
+  assert.ok(studentCookie);
+  await app.inject({
+    method: 'POST',
+    url: '/auth/logout',
+    headers: { cookie: studentCookie },
+  });
+
+  const adminLogin = await login(app, 'admin@example.com', 'admin123');
+  const adminCookie = adminLogin.headers['Set-Cookie'];
+  assert.ok(adminCookie);
+
+  const response = await app.inject({
+    method: 'GET',
+    url: '/admin/export/audit',
+    headers: { cookie: adminCookie },
+  });
+  assert.equal(response.status, 200);
+  assert.match(response.headers['Content-Type'] || '', /^text\/csv/);
+  assert.match(response.headers['Content-Disposition'] || '', /^attachment; filename="audit-log-\d{4}-\d{2}-\d{2}\.csv"$/);
+  assert.match(response.text, /createdAt,actor,action,targetId,ip,result/);
+  assert.match(response.text, /"LOGIN"/);
+  assert.match(response.text, /"LOGOUT"/);
+
+  const log = app.getAuditLog();
+  const exportAudit = log.find((entry) => entry.action === 'EXPORT_AUDIT' && entry.result === 'success');
+  assert.ok(exportAudit);
+});
+
 test('admin topics bulk create: partial success and audit count', async () => {
   const app = createApp({ jwtSecret: 'test-secret' });
 
