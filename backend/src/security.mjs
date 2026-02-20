@@ -1,9 +1,11 @@
-import { createHmac, randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
+import { createHmac, randomBytes, scrypt, scryptSync, timingSafeEqual } from 'node:crypto';
+import { promisify } from 'node:util';
 
 const SCRYPT_KEYLEN = 64;
 const SCRYPT_N = 16384;
 const SCRYPT_R = 8;
 const SCRYPT_P = 1;
+const scryptAsync = promisify(scrypt);
 
 const base64url = (input) => Buffer.from(input).toString('base64url');
 const jsonB64 = (value) => base64url(JSON.stringify(value));
@@ -14,6 +16,15 @@ export const hashPassword = (password, salt = randomBytes(16).toString('hex')) =
     r: SCRYPT_R,
     p: SCRYPT_P,
   }).toString('hex');
+  return `${salt}:${derived}`;
+};
+
+export const hashPasswordAsync = async (password, salt = randomBytes(16).toString('hex')) => {
+  const derived = (await scryptAsync(password, salt, SCRYPT_KEYLEN, {
+    N: SCRYPT_N,
+    r: SCRYPT_R,
+    p: SCRYPT_P,
+  })).toString('hex');
   return `${salt}:${derived}`;
 };
 

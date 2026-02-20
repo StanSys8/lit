@@ -12,7 +12,7 @@ resource "aws_lambda_function" "backend" {
 
   filename         = data.archive_file.backend_zip.output_path
   source_code_hash = data.archive_file.backend_zip.output_base64sha256
-  timeout          = 10
+  timeout          = 30
   memory_size      = 256
 
   environment {

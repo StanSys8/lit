@@ -1,7 +1,7 @@
 import { randomBytes, randomUUID } from 'node:crypto';
 import { MongoClient, ObjectId } from 'mongodb';
 import { buildClearedSessionCookie, buildSessionCookie, parseCookies } from './cookies.mjs';
-import { bcryptCompare, hashPassword, signToken, verifyToken } from './security.mjs';
+import { bcryptCompare, hashPassword, hashPasswordAsync, signToken, verifyToken } from './security.mjs';
 
 const SESSION_MAX_AGE_SEC = 86400;
 const LOCKOUT_ATTEMPTS = 5;
@@ -235,7 +235,7 @@ export const createApp = ({
       emailLower: cleanEmail,
       role: 'student',
       selectedTopicId: null,
-      passwordHash: hashPassword(newPassword),
+      passwordHash: await hashPasswordAsync(newPassword),
       failedAttempts: 0,
       lockedUntilMs: null,
     });
@@ -774,37 +774,101 @@ export const createApp = ({
         if (!session) return;
         if (!requireRole(session, 'admin', res)) return;
 
+        const { users } = await getDb();
         const body = await readJsonBody(req);
         const items = Array.isArray(body) ? body : [];
         const errors = [];
         const createdUsers = [];
-        const seen = new Set();
+        const seenPayloadEmails = new Set();
+        const candidates = [];
 
         for (let index = 0; index < items.length; index += 1) {
           const row = index + 1;
-          const item = items[index];
-          const emailKey = toEmailKey(item?.email);
-          if (seen.has(emailKey)) {
+          const item = items[index] ?? {};
+          const cleanName = String(item.name ?? '').trim();
+          const cleanEmail = toEmailKey(item.email);
+          const cleanClass = String(item.class ?? '').trim();
+
+          if (!cleanName || !cleanEmail || !cleanClass) {
+            errors.push({ row, message: 'name, email and class are required' });
+            continue;
+          }
+
+          if (seenPayloadEmails.has(cleanEmail)) {
             errors.push({ row, message: 'Duplicate email in CSV payload' });
             continue;
           }
-          seen.add(emailKey);
+          seenPayloadEmails.add(cleanEmail);
+          candidates.push({ row, name: cleanName, email: cleanEmail, class: cleanClass });
+        }
 
-          const created = await createStudent({
-            name: item?.name ?? '',
-            email: item?.email ?? '',
-            class: item?.class ?? '',
+        if (candidates.length > 0) {
+          const existingUsers = await users
+            .find({ emailLower: { $in: candidates.map((c) => c.email) } })
+            .project({ emailLower: 1, email: 1 })
+            .toArray();
+          const existingByEmail = new Set(existingUsers.map((entry) => toEmailKey(entry.emailLower || entry.email)));
+
+          const toCreate = candidates.filter((entry) => {
+            if (existingByEmail.has(entry.email)) {
+              errors.push({ row: entry.row, message: 'Студент з таким email вже існує' });
+              return false;
+            }
+            return true;
           });
-          if (created.error) {
-            errors.push({ row, message: created.error.message });
-            continue;
+
+          const preparedUsers = await Promise.all(
+            toCreate.map(async (entry) => {
+              const id = randomUUID();
+              const password = randomPassword();
+              const passwordHash = await hashPasswordAsync(password);
+              return {
+                doc: {
+                  id,
+                  name: entry.name,
+                  email: entry.email,
+                  class: entry.class,
+                  emailLower: entry.email,
+                  role: 'student',
+                  selectedTopicId: null,
+                  passwordHash,
+                  failedAttempts: 0,
+                  lockedUntilMs: null,
+                },
+                credential: {
+                  name: entry.name,
+                  email: entry.email,
+                  class: entry.class,
+                  password,
+                },
+              };
+            }),
+          );
+
+          if (preparedUsers.length > 0) {
+            try {
+              await users.insertMany(
+                preparedUsers.map((entry) => entry.doc),
+                { ordered: false },
+              );
+              createdUsers.push(...preparedUsers.map((entry) => entry.credential));
+            } catch (bulkError) {
+              // Keep partial successes and surface duplicates as row-level errors.
+              const writeErrors = Array.isArray(bulkError?.writeErrors) ? bulkError.writeErrors : [];
+              const failedIndexes = new Set(writeErrors.map((entry) => Number(entry.index)));
+
+              preparedUsers.forEach((entry, idx) => {
+                if (failedIndexes.has(idx)) return;
+                createdUsers.push(entry.credential);
+              });
+
+              writeErrors.forEach((entry) => {
+                const payloadIndex = Number(entry.index);
+                const payloadRow = toCreate[payloadIndex]?.row;
+                errors.push({ row: payloadRow || 0, message: 'Студент з таким email вже існує' });
+              });
+            }
           }
-          createdUsers.push({
-            name: created.data.name,
-            email: created.data.email,
-            class: created.data.class,
-            password: created.data.newPassword,
-          });
         }
 
         await logAudit({
@@ -863,7 +927,7 @@ export const createApp = ({
         const newPassword = randomPassword();
         await users.updateOne(idQuery(idFromDoc(found)), {
           $set: {
-            passwordHash: hashPassword(newPassword),
+            passwordHash: await hashPasswordAsync(newPassword),
             failedAttempts: 0,
             lockedUntilMs: null,
           },
