@@ -1,3 +1,5 @@
+import { apiUrl } from './apiBase';
+
 export type CsvTopicRow = {
   title: string;
   description: string;
@@ -26,7 +28,7 @@ export const uploadTopicsCsv = async (
   fetchImpl: FetchLike = fetch,
 ): Promise<{ ok: true; payload: TopicsBulkResponse } | { ok: false; message: string }> => {
   try {
-    const response = await fetchImpl('/admin/topics/bulk', {
+    const response = await fetchImpl(apiUrl('/admin/topics/bulk'), {
       method: 'POST',
       credentials: 'include',
       headers: { 'content-type': 'application/json' },
@@ -52,7 +54,7 @@ export const releaseTopicByAdmin = async (
   | { ok: false; status: number; error?: string; message: string }
 > => {
   try {
-    const response = await fetchImpl(`/admin/topics/${topicId}/release`, {
+    const response = await fetchImpl(apiUrl(`/admin/topics/${topicId}/release`), {
       method: 'POST',
       credentials: 'include',
     });

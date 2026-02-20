@@ -335,6 +335,10 @@ export const createApp = ({ jwtSecret = 'dev-jwt-secret' } = {}) => {
 
   const handler = async (req, res) => {
     try {
+      if (req.method === 'OPTIONS') {
+        return noContent(res);
+      }
+
       if (req.method === 'GET' && req.url === '/health') {
         return json(res, 200, { status: 'ok' });
       }

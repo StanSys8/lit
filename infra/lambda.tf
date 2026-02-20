@@ -1,4 +1,29 @@
-locals {
-  lambda_runtime = "nodejs24.x"
-  lambda_entry   = "src/index.mjs"
+data "archive_file" "backend_zip" {
+  type        = "zip"
+  source_dir  = "${path.module}/../backend/src"
+  output_path = "${path.module}/backend.zip"
+}
+
+resource "aws_lambda_function" "backend" {
+  function_name = "${var.project_name}-${var.environment}-backend"
+  role          = aws_iam_role.lambda_exec.arn
+  runtime       = "nodejs22.x"
+  handler       = "lambda.handler"
+
+  filename         = data.archive_file.backend_zip.output_path
+  source_code_hash = data.archive_file.backend_zip.output_base64sha256
+  timeout          = 10
+  memory_size      = 256
+
+  environment {
+    variables = {
+      JWT_SECRET  = data.aws_ssm_parameter.jwt_secret.value
+      MONGODB_URI = data.aws_ssm_parameter.mongodb_uri.value
+    }
+  }
+}
+
+output "lambda_arn" {
+  description = "Lambda ARN for backend handler."
+  value       = aws_lambda_function.backend.arn
 }

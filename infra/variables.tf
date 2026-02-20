@@ -11,7 +11,13 @@ variable "environment" {
 }
 
 variable "aws_region" {
-  description = "AWS region for future resources."
+  description = "AWS region for deployment resources."
   type        = string
-  default     = "us-east-1"
+  default     = "eu-central-1"
+}
+
+variable "ssm_parameter_prefix" {
+  description = "Prefix for runtime secrets in SSM Parameter Store."
+  type        = string
+  default     = "/lit"
 }

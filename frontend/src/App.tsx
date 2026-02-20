@@ -4,6 +4,7 @@ import { addStudentToList, removeStudentFromList, type StudentRow } from './admi
 import { credentialsToCsv, parseStudentsCsv, type CsvError, type CsvStudent } from './studentsCsv';
 import { parseTopicsCsv, type CsvTopic } from './topicsCsv';
 import { releaseTopicByAdmin, uploadTopicsCsv, type TopicsBulkResponse } from './adminTopicsFlows';
+import { apiUrl } from './apiBase';
 import './App.css';
 
 type LoginResponse = {
@@ -310,7 +311,7 @@ function App() {
     setStudentsError('');
 
     try {
-      const response = await fetch('/admin/users', {
+      const response = await fetch(apiUrl('/admin/users'), {
         method: 'GET',
         credentials: 'include',
       });
@@ -333,7 +334,7 @@ function App() {
     setStudentTopicsError('');
 
     try {
-      const response = await fetch('/topics', {
+      const response = await fetch(apiUrl('/topics'), {
         method: 'GET',
         credentials: 'include',
       });
@@ -356,7 +357,7 @@ function App() {
     setTopicsError('');
 
     try {
-      const response = await fetch('/admin/topics', {
+      const response = await fetch(apiUrl('/admin/topics'), {
         method: 'GET',
         credentials: 'include',
       });
@@ -378,7 +379,7 @@ function App() {
     setAuditLoading(true);
     setAuditError('');
     try {
-      const response = await fetch('/admin/audit', {
+      const response = await fetch(apiUrl('/admin/audit'), {
         method: 'GET',
         credentials: 'include',
       });
@@ -430,7 +431,7 @@ function App() {
     setError('');
 
     try {
-      const response = await fetch('/auth/login', {
+      const response = await fetch(apiUrl('/auth/login'), {
         method: 'POST',
         credentials: 'include',
         headers: { 'content-type': 'application/json' },
@@ -459,7 +460,7 @@ function App() {
 
   const onLogout = async () => {
     try {
-      await fetch('/auth/logout', {
+      await fetch(apiUrl('/auth/logout'), {
         method: 'POST',
         credentials: 'include',
       });
@@ -475,7 +476,7 @@ function App() {
     setCreatePassword('');
 
     try {
-      const response = await fetch('/admin/users', {
+      const response = await fetch(apiUrl('/admin/users'), {
         method: 'POST',
         credentials: 'include',
         headers: { 'content-type': 'application/json' },
@@ -509,7 +510,7 @@ function App() {
     setCreateError('');
 
     try {
-      const response = await fetch(`/admin/users/${studentId}`, {
+      const response = await fetch(apiUrl(`/admin/users/${studentId}`), {
         method: 'DELETE',
         credentials: 'include',
       });
@@ -534,7 +535,7 @@ function App() {
     setCreateError('');
     setResetPasswordValue('');
     try {
-      const response = await fetch(`/admin/users/${studentId}/reset-password`, {
+      const response = await fetch(apiUrl(`/admin/users/${studentId}/reset-password`), {
         method: 'POST',
         credentials: 'include',
       });
@@ -574,7 +575,7 @@ function App() {
     setBulkCredentials([]);
 
     try {
-      const response = await fetch('/admin/users/bulk', {
+      const response = await fetch(apiUrl('/admin/users/bulk'), {
         method: 'POST',
         credentials: 'include',
         headers: { 'content-type': 'application/json' },
@@ -617,7 +618,7 @@ function App() {
     setExportStatusLoading(true);
 
     try {
-      const response = await fetch('/admin/export/status', {
+      const response = await fetch(apiUrl('/admin/export/status'), {
         method: 'GET',
         credentials: 'include',
       });
@@ -648,7 +649,7 @@ function App() {
     setExportAuditLoading(true);
 
     try {
-      const response = await fetch('/admin/export/audit', {
+      const response = await fetch(apiUrl('/admin/export/audit'), {
         method: 'GET',
         credentials: 'include',
       });
@@ -679,7 +680,7 @@ function App() {
     setCreateTopicError('');
 
     try {
-      const response = await fetch('/admin/topics', {
+      const response = await fetch(apiUrl('/admin/topics'), {
         method: 'POST',
         credentials: 'include',
         headers: { 'content-type': 'application/json' },
@@ -711,7 +712,7 @@ function App() {
   const onDeleteTopic = async (topicId: string) => {
     setCreateTopicError('');
     try {
-      const response = await fetch(`/admin/topics/${topicId}`, {
+      const response = await fetch(apiUrl(`/admin/topics/${topicId}`), {
         method: 'DELETE',
         credentials: 'include',
       });
@@ -816,7 +817,7 @@ function App() {
 
     let shouldRefreshTopics = false;
     try {
-      const response = await fetch(`/topics/${topicConfirmTarget.id}/select`, {
+      const response = await fetch(apiUrl(`/topics/${topicConfirmTarget.id}/select`), {
         method: 'POST',
         credentials: 'include',
       });
