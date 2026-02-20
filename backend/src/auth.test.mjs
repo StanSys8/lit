@@ -16,12 +16,90 @@ test('student login returns 200 and secure cookie', async () => {
   const response = await login(app, 'student@example.com', 'student123');
   assert.equal(response.status, 200);
   assert.equal(response.body.role, 'student');
+  assert.equal(response.body.selectedTopic, null);
 
   const cookie = response.headers['Set-Cookie'] || '';
   assert.match(cookie, /HttpOnly/);
   assert.match(cookie, /Secure/);
   assert.match(cookie, /SameSite=None/);
   assert.match(cookie, /Max-Age=86400/);
+});
+
+test('student login returns selectedTopic after successful selection', async () => {
+  const app = createApp({ jwtSecret: 'test-secret' });
+
+  const studentLogin = await login(app, 'student@example.com', 'student123');
+  const studentCookie = studentLogin.headers['Set-Cookie'];
+  assert.ok(studentCookie);
+
+  const topics = await app.inject({
+    method: 'GET',
+    url: '/topics',
+    headers: { cookie: studentCookie },
+  });
+  assert.equal(topics.status, 200);
+  assert.ok(topics.body.length >= 1);
+
+  const select = await app.inject({
+    method: 'POST',
+    url: `/topics/${topics.body[0].id}/select`,
+    headers: { cookie: studentCookie },
+  });
+  assert.equal(select.status, 200);
+
+  const relogin = await login(app, 'student@example.com', 'student123');
+  assert.equal(relogin.status, 200);
+  assert.equal(relogin.body.role, 'student');
+  assert.ok(relogin.body.selectedTopic);
+  assert.equal(relogin.body.selectedTopic.id, topics.body[0].id);
+  assert.equal(typeof relogin.body.selectedTopic.title, 'string');
+});
+
+test('selected topic is excluded from student GET /topics list after selection', async () => {
+  const app = createApp({ jwtSecret: 'test-secret' });
+
+  const studentLogin = await login(app, 'student@example.com', 'student123');
+  const studentCookie = studentLogin.headers['Set-Cookie'];
+  assert.ok(studentCookie);
+
+  const before = await app.inject({
+    method: 'GET',
+    url: '/topics',
+    headers: { cookie: studentCookie },
+  });
+  assert.equal(before.status, 200);
+  assert.ok(before.body.length >= 1);
+  const selectedId = before.body[0].id;
+
+  const select = await app.inject({
+    method: 'POST',
+    url: `/topics/${selectedId}/select`,
+    headers: { cookie: studentCookie },
+  });
+  assert.equal(select.status, 200);
+
+  const after = await app.inject({
+    method: 'GET',
+    url: '/topics',
+    headers: { cookie: studentCookie },
+  });
+  assert.equal(after.status, 200);
+  assert.equal(after.body.some((t) => t.id === selectedId), false);
+});
+
+test('student cannot release topic via non-existing endpoint', async () => {
+  const app = createApp({ jwtSecret: 'test-secret' });
+
+  const studentLogin = await login(app, 'student@example.com', 'student123');
+  const studentCookie = studentLogin.headers['Set-Cookie'];
+  assert.ok(studentCookie);
+
+  const response = await app.inject({
+    method: 'POST',
+    url: '/topics/any-topic-id/release',
+    headers: { cookie: studentCookie },
+  });
+  assert.equal(response.status, 404);
 });
 
 test('invalid credentials returns same 401 message', async () => {

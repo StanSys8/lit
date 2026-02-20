@@ -9,6 +9,7 @@ type LoginResponse = {
   id: string;
   email: string;
   role: 'student' | 'admin';
+  selectedTopic: StudentTopic | null;
 };
 
 type CreateStudentResponse = {
@@ -381,8 +382,10 @@ function App() {
       }
 
       if ((payload as LoginResponse).role === 'admin') {
+        setSelectedTopic(null);
         navigate('/admin');
       } else {
+        setSelectedTopic((payload as LoginResponse).selectedTopic || null);
         navigate('/topics');
       }
     } catch {

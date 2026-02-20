@@ -203,6 +203,13 @@ export const createApp = ({ jwtSecret = 'dev-jwt-secret' } = {}) => {
     department: topic.department,
   });
 
+  const mapSelectedTopicForUser = (user) => {
+    if (!user?.selectedTopicId) return null;
+    const topic = topics.get(user.selectedTopicId);
+    if (!topic) return null;
+    return mapStudentTopic(topic);
+  };
+
   const createTopic = ({ title, description, supervisor, department }) => {
     const cleanTitle = String(title).trim();
     const cleanDescription = String(description).trim();
@@ -290,7 +297,12 @@ export const createApp = ({ jwtSecret = 'dev-jwt-secret' } = {}) => {
     return json(
       res,
       200,
-      { id: user.id, email: user.email, role: user.role },
+      {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        selectedTopic: mapSelectedTopicForUser(user),
+      },
       { 'Set-Cookie': buildSessionCookie(token, SESSION_MAX_AGE_SEC) },
     );
   };
