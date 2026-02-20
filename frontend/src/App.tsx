@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import type { ChangeEvent, FormEvent } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import type { ChangeEvent, FormEvent, RefObject } from 'react';
 import { addStudentToList, removeStudentFromList, type StudentRow } from './adminStudents';
 import { credentialsToCsv, parseStudentsCsv, type CsvError, type CsvStudent } from './studentsCsv';
 import { parseTopicsCsv, type CsvTopic } from './topicsCsv';
@@ -39,6 +39,14 @@ type StudentTopic = {
   description: string;
   supervisor: string;
   department: string;
+};
+
+type StudentSelectResponse = {
+  topic: {
+    id: string;
+    title: string;
+    selectedBy: string;
+  };
 };
 
 type CreateTopicResponse = TopicRow;
@@ -123,10 +131,12 @@ export const TopicAccordionItem = ({
   topic,
   expanded,
   onToggle,
+  onSelectTopic,
 }: {
   topic: StudentTopic;
   expanded: boolean;
   onToggle: () => void;
+  onSelectTopic: (topic: StudentTopic) => void;
 }) => (
   <article className="topic-accordion-item">
     <button type="button" className="topic-accordion-trigger" onClick={onToggle}>
@@ -137,12 +147,57 @@ export const TopicAccordionItem = ({
         <p>{topic.description}</p>
         <p>{`Науковий керівник: ${topic.supervisor}`}</p>
         <p>{`Кафедра: ${topic.department}`}</p>
-        <button type="button" className="topic-select-btn border-l-4 border-[#B436F0]">
+        <button
+          type="button"
+          className="topic-select-btn border-l-4 border-[#B436F0]"
+          onClick={() => onSelectTopic(topic)}
+        >
           Вибрати цю тему
         </button>
       </div>
     )}
   </article>
+);
+
+export const TopicConfirmDialog = ({
+  topic,
+  pending,
+  backButtonRef,
+  onCancel,
+  onConfirm,
+}: {
+  topic: StudentTopic | null;
+  pending: boolean;
+  backButtonRef: RefObject<HTMLButtonElement | null>;
+  onCancel: () => void;
+  onConfirm: () => void;
+}) => {
+  if (!topic) return null;
+
+  return (
+    <div className="topic-dialog-overlay" role="presentation" data-testid="topic-confirm-overlay">
+      <div className="topic-dialog" role="dialog" aria-modal="true" aria-label="Підтвердження вибору теми">
+        <p>{`Ти вибираєш: ${topic.title}. Змінити самостійно не можна — тільки через вчителя.`}</p>
+        <div className="modal-actions">
+          <button ref={backButtonRef} type="button" onClick={onCancel} disabled={pending}>
+            Назад до списку
+          </button>
+          <button type="button" onClick={onConfirm} disabled={pending}>
+            {pending ? 'Зберігаємо...' : 'Так, беру цю тему'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export const TopicConfirmedScreen = ({ topic }: { topic: StudentTopic }) => (
+  <section className="topic-confirmed">
+    <p className="topic-confirmed-mark">✓</p>
+    <h2>Тему вибрано!</h2>
+    <p>{topic.title}</p>
+    <p>Якщо потрібна зміна — звернись до вчителя</p>
+  </section>
 );
 
 function App() {
@@ -157,9 +212,15 @@ function App() {
   const [studentTopics, setStudentTopics] = useState<StudentTopic[]>([]);
   const [studentTopicsLoading, setStudentTopicsLoading] = useState(false);
   const [studentTopicsError, setStudentTopicsError] = useState('');
+  const [studentTopicActionError, setStudentTopicActionError] = useState('');
+  const [raceConditionAlert, setRaceConditionAlert] = useState('');
   const [topicSearch, setTopicSearch] = useState('');
   const [debouncedTopicSearch, setDebouncedTopicSearch] = useState('');
   const [expandedTopicId, setExpandedTopicId] = useState('');
+  const [topicConfirmTarget, setTopicConfirmTarget] = useState<StudentTopic | null>(null);
+  const [topicSelectPending, setTopicSelectPending] = useState(false);
+  const [selectedTopic, setSelectedTopic] = useState<StudentTopic | null>(null);
+  const topicConfirmBackButtonRef = useRef<HTMLButtonElement>(null);
 
   const [students, setStudents] = useState<StudentRow[]>([]);
   const [studentsLoading, setStudentsLoading] = useState(false);
@@ -289,6 +350,17 @@ function App() {
     return () => clearTimeout(timer);
   }, [topicSearch]);
 
+  useEffect(() => {
+    if (!topicConfirmTarget) return;
+    topicConfirmBackButtonRef.current?.focus();
+  }, [topicConfirmTarget]);
+
+  useEffect(() => {
+    if (!raceConditionAlert) return;
+    const timer = setTimeout(() => setRaceConditionAlert(''), 8000);
+    return () => clearTimeout(timer);
+  }, [raceConditionAlert]);
+
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
     setLoading(true);
@@ -327,6 +399,7 @@ function App() {
         credentials: 'include',
       });
     } finally {
+      setSelectedTopic(null);
       navigate('/login');
     }
   };
@@ -624,6 +697,65 @@ function App() {
     }
   };
 
+  const onOpenTopicConfirm = (topic: StudentTopic) => {
+    setStudentTopicActionError('');
+    setRaceConditionAlert('');
+    setTopicConfirmTarget(topic);
+  };
+
+  const onConfirmTopicSelect = async () => {
+    if (!topicConfirmTarget) return;
+    setStudentTopicActionError('');
+    setRaceConditionAlert('');
+    setTopicSelectPending(true);
+
+    let shouldRefreshTopics = false;
+    try {
+      const response = await fetch(`/topics/${topicConfirmTarget.id}/select`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+
+      const payload = (await response.json()) as
+        | StudentSelectResponse
+        | { error?: string; message?: string };
+
+      if (response.ok) {
+        const selected = topicConfirmTarget;
+        setSelectedTopic(selected);
+        setExpandedTopicId('');
+        setTopicConfirmTarget(null);
+        shouldRefreshTopics = true;
+        return;
+      }
+
+      if (response.status === 409) {
+        shouldRefreshTopics = true;
+        if (payload.error === 'TOPIC_ALREADY_TAKEN') {
+          setRaceConditionAlert('Цю тему щойно вибрав інший учень 😔 Список оновлено — оберіть іншу.');
+        } else if (payload.error === 'ALREADY_SELECTED') {
+          setStudentTopicActionError('Ви вже обрали тему. Змінити вибір може тільки вчитель.');
+        } else {
+          setStudentTopicActionError(payload.message || 'Не вдалося вибрати тему');
+        }
+      } else if (response.status === 404) {
+        setStudentTopicActionError('Тему не знайдено');
+      } else {
+        setStudentTopicActionError(payload.message || 'Не вдалося вибрати тему');
+      }
+
+      setTopicConfirmTarget(null);
+    } catch {
+      setStudentTopicActionError('Не вдалося вибрати тему');
+      setTopicConfirmTarget(null);
+    } finally {
+      if (shouldRefreshTopics) {
+        void loadStudentTopics();
+      }
+      setTopicSelectPending(false);
+    }
+  };
+
   const filteredStudentTopics = useMemo(() => {
     const query = debouncedTopicSearch.toLowerCase();
     if (!query) return studentTopics;
@@ -915,6 +1047,10 @@ function App() {
         </header>
 
         <section className="student-topics">
+          {selectedTopic ? (
+            <TopicConfirmedScreen topic={selectedTopic} />
+          ) : (
+            <>
           <label htmlFor="topics-search">Пошук теми</label>
           <input
             id="topics-search"
@@ -925,6 +1061,8 @@ function App() {
           />
 
           {studentTopicsError && <p className="error">{studentTopicsError}</p>}
+          {studentTopicActionError && <p className="error">{studentTopicActionError}</p>}
+          {raceConditionAlert && <p className="topic-race-alert">{raceConditionAlert}</p>}
 
           {studentTopicsLoading && (
             <div className="topic-skeletons" aria-label="Loading topics">
@@ -949,8 +1087,19 @@ function App() {
                 topic={topic}
                 expanded={expandedTopicId === topic.id}
                 onToggle={() => setExpandedTopicId((prev) => (prev === topic.id ? '' : topic.id))}
+                onSelectTopic={onOpenTopicConfirm}
               />
             ))}
+            </>
+          )}
+
+          <TopicConfirmDialog
+            topic={topicConfirmTarget}
+            pending={topicSelectPending}
+            backButtonRef={topicConfirmBackButtonRef}
+            onCancel={() => setTopicConfirmTarget(null)}
+            onConfirm={onConfirmTopicSelect}
+          />
         </section>
       </main>
     );

@@ -93,6 +93,90 @@ test('role-based guard on /topics and /admin/topics', async () => {
   assert.equal(adminTopics.status, 200);
 });
 
+test('student topic selection success, conflicts, and audit events', async () => {
+  const app = createApp({ jwtSecret: 'test-secret' });
+
+  const studentLogin = await login(app, 'student@example.com', 'student123');
+  const studentCookie = studentLogin.headers['Set-Cookie'];
+  assert.ok(studentCookie);
+
+  const adminLogin = await login(app, 'admin@example.com', 'admin123');
+  const adminCookie = adminLogin.headers['Set-Cookie'];
+  assert.ok(adminCookie);
+
+  const listBefore = await app.inject({
+    method: 'GET',
+    url: '/topics',
+    headers: { cookie: studentCookie },
+  });
+  assert.equal(listBefore.status, 200);
+  assert.ok(listBefore.body.length >= 1);
+  const freeTopicId = listBefore.body[0].id;
+
+  const takenTopic = await app.inject({
+    method: 'POST',
+    url: '/admin/topics',
+    headers: { cookie: adminCookie, 'content-type': 'application/json' },
+    body: {
+      title: 'Taken for conflict',
+      description: 'Used to verify TOPIC_ALREADY_TAKEN',
+      supervisor: 'Dr. Taken',
+      department: 'CS',
+    },
+  });
+  assert.equal(takenTopic.status, 201);
+
+  const conflictTopicId = takenTopic.body.id;
+
+  const secondStudentCreate = await app.inject({
+    method: 'POST',
+    url: '/admin/users',
+    headers: { cookie: adminCookie, 'content-type': 'application/json' },
+    body: { name: 'Second Student', email: 'second.student@example.com' },
+  });
+  assert.equal(secondStudentCreate.status, 201);
+
+  const secondStudentLogin = await login(app, 'second.student@example.com', secondStudentCreate.body.newPassword);
+  const secondCookie = secondStudentLogin.headers['Set-Cookie'];
+  assert.ok(secondCookie);
+
+  const secondStudentSelect = await app.inject({
+    method: 'POST',
+    url: `/topics/${conflictTopicId}/select`,
+    headers: { cookie: secondCookie },
+  });
+  assert.equal(secondStudentSelect.status, 200);
+
+  const selectTakenByOther = await app.inject({
+    method: 'POST',
+    url: `/topics/${conflictTopicId}/select`,
+    headers: { cookie: studentCookie },
+  });
+  assert.equal(selectTakenByOther.status, 409);
+  assert.equal(selectTakenByOther.body.error, 'TOPIC_ALREADY_TAKEN');
+
+  const selectSuccess = await app.inject({
+    method: 'POST',
+    url: `/topics/${freeTopicId}/select`,
+    headers: { cookie: studentCookie },
+  });
+  assert.equal(selectSuccess.status, 200);
+  assert.equal(selectSuccess.body.topic.id, freeTopicId);
+
+  const selectAgain = await app.inject({
+    method: 'POST',
+    url: `/topics/${freeTopicId}/select`,
+    headers: { cookie: studentCookie },
+  });
+  assert.equal(selectAgain.status, 409);
+  assert.equal(selectAgain.body.error, 'ALREADY_SELECTED');
+
+  const log = app.getAuditLog();
+  const selectEvents = log.filter((entry) => entry.action === 'SELECT_TOPIC');
+  assert.ok(selectEvents.some((entry) => entry.result === 'success' && entry.targetId === freeTopicId));
+  assert.ok(selectEvents.some((entry) => entry.result === 'denied' && entry.targetId === freeTopicId));
+});
+
 test('audit contains login events with success/failed/locked', async () => {
   const app = createApp({ jwtSecret: 'test-secret' });
 

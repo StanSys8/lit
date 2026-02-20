@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import App, { ReleaseTopicModal, ResetPasswordModal, StudentActions, TopicAccordionItem } from './App';
+import App, {
+  ReleaseTopicModal,
+  ResetPasswordModal,
+  StudentActions,
+  TopicAccordionItem,
+  TopicConfirmDialog,
+  TopicConfirmedScreen,
+} from './App';
 
 const withPath = (pathname: string, render: () => string) => {
   const previous = globalThis.window;
@@ -91,6 +98,7 @@ describe('Admin reset controls', () => {
         }}
         expanded
         onToggle={() => {}}
+        onSelectTopic={() => {}}
       />,
     );
     expect(html).toContain('Distributed Systems');
@@ -99,5 +107,44 @@ describe('Admin reset controls', () => {
     expect(html).toContain('Вибрати цю тему');
     expect(html).toContain('border-l-4');
     expect(html).toContain('border-[#B436F0]');
+  });
+
+  it('renders topic confirm dialog content and actions', () => {
+    const html = renderToStaticMarkup(
+      <TopicConfirmDialog
+        topic={{
+          id: 'topic-1',
+          title: 'Distributed Systems',
+          description: 'Event sourcing',
+          supervisor: 'Dr. Smith',
+          department: 'CS',
+        }}
+        pending={false}
+        backButtonRef={{ current: null }}
+        onCancel={() => {}}
+        onConfirm={() => {}}
+      />,
+    );
+    expect(html).toContain('Підтвердження вибору теми');
+    expect(html).toContain('Ти вибираєш: Distributed Systems.');
+    expect(html).toContain('Назад до списку');
+    expect(html).toContain('Так, беру цю тему');
+  });
+
+  it('renders topic confirmed screen', () => {
+    const html = renderToStaticMarkup(
+      <TopicConfirmedScreen
+        topic={{
+          id: 'topic-1',
+          title: 'Distributed Systems',
+          description: 'Event sourcing',
+          supervisor: 'Dr. Smith',
+          department: 'CS',
+        }}
+      />,
+    );
+    expect(html).toContain('Тему вибрано!');
+    expect(html).toContain('Distributed Systems');
+    expect(html).toContain('звернись до вчителя');
   });
 });

@@ -93,7 +93,7 @@ export const createApp = ({ jwtSecret = 'dev-jwt-secret' } = {}) => {
       description: 'Adaptive learning and recommendation models.',
       supervisor: 'Prof. Johnson',
       department: 'Data Science',
-      selectedByUserId: seedUsers[0].id,
+      selectedByUserId: seedUsers[1].id,
     },
   ];
 
@@ -323,6 +323,65 @@ export const createApp = ({ jwtSecret = 'dev-jwt-secret' } = {}) => {
         return json(res, 200, available);
       }
 
+      const selectTopicMatch = req.url?.match(/^\/topics\/([^/]+)\/select$/);
+      if (req.method === 'POST' && selectTopicMatch) {
+        const session = requireAuth(req, res);
+        if (!session) return;
+        if (!requireRole(session, 'student', res)) return;
+
+        const topicId = selectTopicMatch[1];
+        const topic = topics.get(topicId);
+        if (!topic) {
+          logAudit({
+            actor: session.sub,
+            action: 'SELECT_TOPIC',
+            ip: getIp(req),
+            result: 'denied',
+            targetId: topicId,
+          });
+          return json(res, 404, { error: 'NOT_FOUND', message: 'Topic not found' });
+        }
+
+        const student = [...users.values()].find((u) => u.id === session.sub && u.role === 'student');
+        if (!student) {
+          return json(res, 401, { error: 'UNAUTHORIZED', message: 'Unauthorized' });
+        }
+
+        const alreadySelectedTopic = [...topics.values()].find((item) => item.selectedByUserId === student.id);
+        if (student.selectedTopicId || alreadySelectedTopic) {
+          logAudit({
+            actor: student.id,
+            action: 'SELECT_TOPIC',
+            ip: getIp(req),
+            result: 'denied',
+            targetId: topicId,
+          });
+          return json(res, 409, { error: 'ALREADY_SELECTED', message: 'Тему вже обрано' });
+        }
+
+        if (topic.selectedByUserId) {
+          logAudit({
+            actor: student.id,
+            action: 'SELECT_TOPIC',
+            ip: getIp(req),
+            result: 'denied',
+            targetId: topicId,
+          });
+          return json(res, 409, { error: 'TOPIC_ALREADY_TAKEN', message: 'Цю тему вже вибрали' });
+        }
+
+        topic.selectedByUserId = student.id;
+        student.selectedTopicId = topic.id;
+        logAudit({
+          actor: student.id,
+          action: 'SELECT_TOPIC',
+          ip: getIp(req),
+          result: 'success',
+          targetId: topicId,
+        });
+        return json(res, 200, { topic: { id: topic.id, title: topic.title, selectedBy: student.id } });
+      }
+
       if (req.method === 'GET' && req.url === '/admin/topics') {
         const session = requireAuth(req, res);
         if (!session) return;
@@ -415,6 +474,11 @@ export const createApp = ({ jwtSecret = 'dev-jwt-secret' } = {}) => {
             error: 'TOPIC_ALREADY_FREE',
             message: 'Тема вже вільна',
           });
+        }
+
+        const selectedStudent = [...users.values()].find((u) => u.id === topic.selectedByUserId && u.role === 'student');
+        if (selectedStudent && selectedStudent.selectedTopicId === topic.id) {
+          selectedStudent.selectedTopicId = null;
         }
 
         topic.selectedByUserId = null;
