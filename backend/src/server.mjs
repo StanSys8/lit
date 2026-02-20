@@ -441,7 +441,13 @@ export const createApp = ({ jwtSecret = 'dev-jwt-secret' } = {}) => {
         if (!requireRole(session, 'admin', res)) return;
 
         const body = await readJsonBody(req);
-        const items = Array.isArray(body) ? body : [];
+        if (!Array.isArray(body)) {
+          return json(res, 400, {
+            error: 'VALIDATION_ERROR',
+            message: 'Payload must be an array of topics',
+          });
+        }
+        const items = body;
         const errors = [];
         let created = 0;
 
@@ -488,10 +494,24 @@ export const createApp = ({ jwtSecret = 'dev-jwt-secret' } = {}) => {
         const targetId = releaseTopicMatch[1];
         const topic = topics.get(targetId);
         if (!topic) {
+          logAudit({
+            actor: session.sub,
+            action: 'RELEASE_TOPIC',
+            ip: getIp(req),
+            result: 'denied',
+            targetId,
+          });
           return json(res, 404, { error: 'NOT_FOUND', message: 'Topic not found' });
         }
 
         if (!topic.selectedByUserId) {
+          logAudit({
+            actor: session.sub,
+            action: 'RELEASE_TOPIC',
+            ip: getIp(req),
+            result: 'denied',
+            targetId,
+          });
           return json(res, 409, {
             error: 'TOPIC_ALREADY_FREE',
             message: 'Тема вже вільна',

@@ -664,6 +664,24 @@ test('admin topics bulk create: partial success and audit count', async () => {
   assert.equal(audit.result, 'partial');
 });
 
+test('admin topics bulk create rejects non-array payload', async () => {
+  const app = createApp({ jwtSecret: 'test-secret' });
+
+  const adminLogin = await login(app, 'admin@example.com', 'admin123');
+  const adminCookie = adminLogin.headers['Set-Cookie'];
+  assert.ok(adminCookie);
+
+  const bulk = await app.inject({
+    method: 'POST',
+    url: '/admin/topics/bulk',
+    headers: { cookie: adminCookie, 'content-type': 'application/json' },
+    body: { title: 'not-an-array' },
+  });
+
+  assert.equal(bulk.status, 400);
+  assert.equal(bulk.body.error, 'VALIDATION_ERROR');
+});
+
 test('admin releases selected topic and gets errors for already free topic', async () => {
   const app = createApp({ jwtSecret: 'test-secret' });
 
@@ -709,6 +727,15 @@ test('admin releases selected topic and gets errors for already free topic', asy
   const log = app.getAuditLog();
   const releaseAudit = log.find((e) => e.action === 'RELEASE_TOPIC' && e.targetId === occupied.id);
   assert.ok(releaseAudit);
+  assert.equal(releaseAudit.result, 'success');
+  const deniedAlreadyFree = log.find(
+    (e) => e.action === 'RELEASE_TOPIC' && e.targetId === free.id && e.result === 'denied',
+  );
+  assert.ok(deniedAlreadyFree);
+  const deniedMissing = log.find(
+    (e) => e.action === 'RELEASE_TOPIC' && e.targetId === 'missing' && e.result === 'denied',
+  );
+  assert.ok(deniedMissing);
 });
 
 test('admin reset password: returns one-time password, updates auth, and logs audit without plaintext', async () => {
