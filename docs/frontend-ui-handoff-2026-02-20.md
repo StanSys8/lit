@@ -61,3 +61,24 @@
   - admin sidebar/card visual hierarchy
 - If Cloudflare rendering looks stale, verify deployment alias and cache before changing code.
 - If auth returns `405` on Pages domain, check `docs/cloudflare-pages-deploy.md` before touching UI code.
+
+## Follow-up UI alignment (admin + login title)
+
+The admin area was further aligned to `ux-design-directions` examples (Admin D1/D2):
+
+- Sidebar navigation implemented as in direction examples:
+  - `📊 Статус`
+  - `👥 Студенти`
+  - `📋 Теми`
+  - `📝 Журнал дій`
+- Admin UI switched to tabbed sections (single active panel) instead of rendering all sections in one long page.
+- Dashboard visuals updated to match reference composition:
+  - 2 status cards with left accent borders
+  - progress block with `X / Y`
+  - primary CSV action button
+- Topics screen updated to example-like table presentation:
+  - compact header actions
+  - status badges (`зайнята` / `вільна`)
+  - tighter table typography
+- Login screen now includes project title:
+  - `Вибір тем курсових робіт`

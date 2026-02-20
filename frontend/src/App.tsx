@@ -159,7 +159,7 @@ export const TopicAccordionItem = ({
         <p>{`Кафедра: ${topic.department}`}</p>
         <button
           type="button"
-          className="topic-select-btn border-l-4 border-[#B436F0]"
+          className="topic-select-btn"
           onClick={() => onSelectTopic(topic)}
         >
           Вибрати цю тему
@@ -1296,45 +1296,49 @@ function App() {
             <TopicConfirmedScreen topic={selectedTopic} />
           ) : (
             <>
-          <label htmlFor="topics-search">Пошук теми</label>
-          <input
-            id="topics-search"
-            type="text"
-            value={topicSearch}
-            onChange={(e) => setTopicSearch(e.target.value)}
-            placeholder="Введіть назву теми"
-          />
+              <div className="topic-search-wrap">
+                <label className="visually-hidden" htmlFor="topics-search">
+                  Пошук теми
+                </label>
+                <input
+                  id="topics-search"
+                  type="text"
+                  value={topicSearch}
+                  onChange={(e) => setTopicSearch(e.target.value)}
+                  placeholder="Введіть назву теми"
+                />
+              </div>
 
-          {studentTopicsError && <p className="error">{studentTopicsError}</p>}
-          {studentTopicActionError && <p className="error">{studentTopicActionError}</p>}
-          {raceConditionAlert && <p className="topic-race-alert">{raceConditionAlert}</p>}
+              {studentTopicsError && <p className="error">{studentTopicsError}</p>}
+              {studentTopicActionError && <p className="error">{studentTopicActionError}</p>}
+              {raceConditionAlert && <p className="topic-race-alert">{raceConditionAlert}</p>}
 
-          {studentTopicsLoading && (
-            <div className="topic-skeletons" aria-label="Завантаження тем">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <div key={`skeleton-${i}`} className="topic-skeleton-row" />
-              ))}
-            </div>
-          )}
+              {studentTopicsLoading && (
+                <div className="topic-skeletons" aria-label="Завантаження тем">
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <div key={`skeleton-${i}`} className="topic-skeleton-row" />
+                  ))}
+                </div>
+              )}
 
-          {!studentTopicsLoading && studentTopics.length === 0 && (
-            <p>Всі теми вже вибрані. Зверніться до вчителя.</p>
-          )}
+              {!studentTopicsLoading && studentTopics.length === 0 && (
+                <p>Всі теми вже вибрані. Зверніться до вчителя.</p>
+              )}
 
-          {!studentTopicsLoading && studentTopics.length > 0 && filteredStudentTopics.length === 0 && (
-            <p>{`Нічого не знайдено за запитом «${debouncedTopicSearch}»`}</p>
-          )}
+              {!studentTopicsLoading && studentTopics.length > 0 && filteredStudentTopics.length === 0 && (
+                <p>{`Нічого не знайдено за запитом «${debouncedTopicSearch}»`}</p>
+              )}
 
-          {!studentTopicsLoading &&
-            filteredStudentTopics.map((topic) => (
-              <TopicAccordionItem
-                key={topic.id}
-                topic={topic}
-                expanded={expandedTopicId === topic.id}
-                onToggle={() => setExpandedTopicId((prev) => (prev === topic.id ? '' : topic.id))}
-                onSelectTopic={onOpenTopicConfirm}
-              />
-            ))}
+              {!studentTopicsLoading &&
+                filteredStudentTopics.map((topic) => (
+                  <TopicAccordionItem
+                    key={topic.id}
+                    topic={topic}
+                    expanded={expandedTopicId === topic.id}
+                    onToggle={() => setExpandedTopicId((prev) => (prev === topic.id ? '' : topic.id))}
+                    onSelectTopic={onOpenTopicConfirm}
+                  />
+                ))}
             </>
           )}
 

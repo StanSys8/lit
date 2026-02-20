@@ -24,49 +24,35 @@ describe('App routes', () => {
   it('renders login form', () => {
     const html = renderToStaticMarkup(<App />);
 
-    expect(html).toContain('Login');
+    expect(html).toContain('Вхід');
     expect(html).toContain('Email');
-    expect(html).toContain('Password');
-    expect(html).toContain('Sign in');
+    expect(html).toContain('Пароль');
+    expect(html).toContain('Увійти');
   });
 
   it('renders student header logout control on /topics', () => {
     const html = withPath('/topics', () => renderToStaticMarkup(<App />));
-    expect(html).toContain('Student Topics');
-    expect(html).toContain('Logout');
+    expect(html).toContain('Вибір теми');
+    expect(html).toContain('Вийти');
     expect(html).toContain('<header');
     expect(html).toContain('Пошук теми');
     expect(html).toContain('Всі теми вже вибрані. Зверніться до вчителя.');
   });
 
-  it('renders admin students page with add/delete and bulk controls on /admin', () => {
+  it('renders admin status dashboard and sidebar tabs on /admin', () => {
     const html = withPath('/admin', () => renderToStaticMarkup(<App />));
-    expect(html).toContain('Admin Dashboard');
+
     expect(html).toContain('Статус вибору тем');
-    expect(html).toContain('0 / 0 студентів вибрали тему');
-    expect(html).toContain('0 вільних тем з 0 загалом');
-    expect(html).toContain('Завантажити CSV статусу');
-    expect(html).toContain('Students');
-    expect(html).toContain('Topics');
-    expect(html).toContain('Add student');
-    expect(html).toContain('Add topic');
-    expect(html).toContain('Bulk upload topics');
-    expect(html).toContain('Actions');
-    expect(html).toContain('Bulk upload students');
-    expect(html).toContain('type="file"');
+    expect(html).toContain('Прогрес');
+    expect(html).toContain('0 / 0');
+    expect(html).toContain('0 вільних тем із 0');
+    expect(html).toContain('⬇ Вивантажити CSV');
+
     expect(html).toContain('<aside');
-    expect(html).toContain('Name');
-    expect(html).toContain('Email');
-    expect(html).toContain('Title');
-    expect(html).toContain('Description');
-    expect(html).toContain('Supervisor');
-    expect(html).toContain('Department');
+    expect(html).toContain('📊 Статус');
+    expect(html).toContain('👥 Студенти');
+    expect(html).toContain('📋 Теми');
     expect(html).toContain('Журнал дій');
-    expect(html).toContain('Завантажити CSV аудиту');
-    expect(html).toContain('Час');
-    expect(html).toContain('Actor');
-    expect(html).toContain('Action');
-    expect(html).toContain('Result');
   });
 });
 
@@ -75,7 +61,7 @@ describe('Admin reset controls', () => {
     const html = renderToStaticMarkup(
       <StudentActions studentId="student-1" onDelete={() => {}} onResetPassword={() => {}} />,
     );
-    expect(html).toContain('Delete');
+    expect(html).toContain('Видалити');
     expect(html).toContain('Скинути пароль');
   });
 
@@ -97,7 +83,7 @@ describe('Admin reset controls', () => {
     expect(html).toContain('Скасувати');
   });
 
-  it('renders topic accordion expanded content and select button classes', () => {
+  it('renders topic accordion expanded content and core classes', () => {
     const html = renderToStaticMarkup(
       <TopicAccordionItem
         topic={{
@@ -116,8 +102,8 @@ describe('Admin reset controls', () => {
     expect(html).toContain('Науковий керівник: Dr. Smith');
     expect(html).toContain('Кафедра: CS');
     expect(html).toContain('Вибрати цю тему');
-    expect(html).toContain('border-l-4');
-    expect(html).toContain('border-[#B436F0]');
+    expect(html).toContain('topic-accordion-item--open');
+    expect(html).toContain('topic-select-btn');
   });
 
   it('renders topic confirm dialog content and actions', () => {
