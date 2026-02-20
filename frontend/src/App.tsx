@@ -835,18 +835,20 @@ function App() {
       }
 
       if (response.status === 409) {
+        const errorPayload = payload as { error?: string; message?: string };
         shouldRefreshTopics = true;
-        if (payload.error === 'TOPIC_ALREADY_TAKEN') {
+        if (errorPayload.error === 'TOPIC_ALREADY_TAKEN') {
           setRaceConditionAlert('Цю тему щойно вибрав інший учень 😔 Список оновлено — оберіть іншу.');
-        } else if (payload.error === 'ALREADY_SELECTED') {
+        } else if (errorPayload.error === 'ALREADY_SELECTED') {
           setStudentTopicActionError('Ви вже обрали тему. Змінити вибір може тільки вчитель.');
         } else {
-          setStudentTopicActionError(payload.message || 'Не вдалося вибрати тему');
+          setStudentTopicActionError(errorPayload.message || 'Не вдалося вибрати тему');
         }
       } else if (response.status === 404) {
         setStudentTopicActionError('Тему не знайдено');
       } else {
-        setStudentTopicActionError(payload.message || 'Не вдалося вибрати тему');
+        const errorPayload = payload as { message?: string };
+        setStudentTopicActionError(errorPayload.message || 'Не вдалося вибрати тему');
       }
 
       setTopicConfirmTarget(null);
