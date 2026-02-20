@@ -293,6 +293,7 @@ function App() {
   const [topicBulkErrors, setTopicBulkErrors] = useState<Array<{ row: number; message: string }>>([]);
   const [releaseTopicTargetId, setReleaseTopicTargetId] = useState('');
   const [releaseTopicTitle, setReleaseTopicTitle] = useState('');
+  const [adminTab, setAdminTab] = useState<'status' | 'students' | 'topics' | 'audit'>('status');
 
   const heading = useMemo(() => {
     if (route === '/topics') return 'Вибір теми';
@@ -873,344 +874,408 @@ function App() {
   const selectedStudentsCount = useMemo(() => students.filter((student) => student.hasSelectedTopic).length, [students]);
   const totalStudentsCount = students.length;
   const selectionProgress = totalStudentsCount > 0 ? Math.round((selectedStudentsCount / totalStudentsCount) * 100) : 0;
+  const remainingStudentsCount = Math.max(0, totalStudentsCount - selectedStudentsCount);
   const freeTopicsCount = useMemo(() => topics.filter((topic) => !topic.selectedBy).length, [topics]);
   const totalTopicsCount = topics.length;
 
   if (route === '/admin') {
     return (
       <main className="shell shell--admin">
-        <aside className="sidebar">
-          <h1>{heading}</h1>
-          <button type="button" onClick={onLogout}>
+        <aside className="admin-sidebar">
+          <div className="admin-logo">
+            <span>Система вибору тем</span>
+          </div>
+          <nav className="admin-nav">
+            <button
+              type="button"
+              className={`admin-nav-item ${adminTab === 'status' ? 'active' : ''}`}
+              onClick={() => setAdminTab('status')}
+            >
+              📊 Статус
+            </button>
+            <button
+              type="button"
+              className={`admin-nav-item ${adminTab === 'students' ? 'active' : ''}`}
+              onClick={() => setAdminTab('students')}
+            >
+              👥 Студенти
+            </button>
+            <button
+              type="button"
+              className={`admin-nav-item ${adminTab === 'topics' ? 'active' : ''}`}
+              onClick={() => setAdminTab('topics')}
+            >
+              📋 Теми
+            </button>
+            <button
+              type="button"
+              className={`admin-nav-item ${adminTab === 'audit' ? 'active' : ''}`}
+              onClick={() => setAdminTab('audit')}
+            >
+              📝 Журнал дій
+            </button>
+          </nav>
+          <button type="button" className="admin-logout-btn" onClick={onLogout}>
             Вийти
           </button>
         </aside>
 
-        <section className="admin-dashboard-stats" data-testid="admin-dashboard-stats">
-          <AdminStatCard
-            title="Статус вибору тем"
-            value={`${selectedStudentsCount} / ${totalStudentsCount} студентів вибрали тему`}
-            subtitle="Прогрес вибору тем"
-            progressPercent={selectionProgress}
-            variant={totalStudentsCount > 0 && selectedStudentsCount === totalStudentsCount ? 'primary' : 'warning'}
-          />
-          <AdminStatCard
-            title="Вільні теми"
-            value={`${freeTopicsCount} вільних тем з ${totalTopicsCount} загалом`}
-            subtitle="Актуальний стан пулу тем"
-            progressPercent={totalTopicsCount > 0 ? Math.round((freeTopicsCount / totalTopicsCount) * 100) : 0}
-            variant={freeTopicsCount > 0 ? 'warning' : 'primary'}
-          />
-          <div className="admin-dashboard-actions">
-            <button type="button" onClick={onExportTopicsStatus} disabled={exportStatusLoading}>
-              {exportStatusLoading ? 'Експорт...' : 'Завантажити CSV статусу'}
-            </button>
-            {exportStatusError && <p className="error">{exportStatusError}</p>}
-          </div>
-        </section>
+        <section className="admin-content">
+          {adminTab === 'status' && (
+            <section className="admin-panel" data-testid="admin-dashboard-stats">
+              <h1 className="admin-title">Статус вибору тем</h1>
+              <div className="admin-stats">
+                <article className="admin-stat">
+                  <p className="admin-stat-num">{selectedStudentsCount}</p>
+                  <p className="admin-stat-label">студентів вибрали</p>
+                </article>
+                <article className="admin-stat admin-stat-orange">
+                  <p className="admin-stat-num">{remainingStudentsCount}</p>
+                  <p className="admin-stat-label">не вибрали ще</p>
+                </article>
+              </div>
+              <section className="admin-progress">
+                <div className="admin-progress-label">
+                  <span>Прогрес</span>
+                  <span>{`${selectedStudentsCount} / ${totalStudentsCount}`}</span>
+                </div>
+                <div className="admin-progress-bar">
+                  <span className="admin-progress-fill" style={{ width: `${selectionProgress}%` }} />
+                </div>
+              </section>
+              <div className="admin-dashboard-actions">
+                <button type="button" onClick={onExportTopicsStatus} disabled={exportStatusLoading}>
+                  {exportStatusLoading ? 'Експорт...' : '⬇ Вивантажити CSV'}
+                </button>
+                {exportStatusError && <p className="error">{exportStatusError}</p>}
+              </div>
+              <div className="admin-topic-health">{`${freeTopicsCount} вільних тем із ${totalTopicsCount}`}</div>
+            </section>
+          )}
 
-        <section className="admin-students">
-          <h2>Студенти</h2>
+          {adminTab === 'students' && (
+            <section className="admin-panel">
+              <div className="admin-panel-header">
+                <h1 className="admin-title">Студенти</h1>
+              </div>
+              <form className="login-form" onSubmit={onCreateStudent}>
+                <label htmlFor="student-name">Ім'я</label>
+                <input
+                  id="student-name"
+                  type="text"
+                  value={newStudentName}
+                  onChange={(e) => setNewStudentName(e.target.value)}
+                  required
+                />
 
-          <form className="login-form" onSubmit={onCreateStudent}>
-            <label htmlFor="student-name">Ім'я</label>
-            <input
-              id="student-name"
-              type="text"
-              value={newStudentName}
-              onChange={(e) => setNewStudentName(e.target.value)}
-              required
-            />
+                <label htmlFor="student-email">Email</label>
+                <input
+                  id="student-email"
+                  type="email"
+                  value={newStudentEmail}
+                  onChange={(e) => setNewStudentEmail(e.target.value)}
+                  required
+                />
 
-            <label htmlFor="student-email">Email</label>
-            <input
-              id="student-email"
-              type="email"
-              value={newStudentEmail}
-              onChange={(e) => setNewStudentEmail(e.target.value)}
-              required
-            />
+                <button type="submit">Додати студента</button>
+              </form>
 
-            <button type="submit">Додати студента</button>
-          </form>
+              <section className="bulk-box">
+                <h3>Масове завантаження студентів</h3>
+                <input type="file" accept=".csv,text/csv" onChange={onCsvSelect} />
 
-          <section className="bulk-box">
-            <h3>Масове завантаження студентів</h3>
-            <input type="file" accept=".csv,text/csv" onChange={onCsvSelect} />
+                {csvRows.length > 0 && (
+                  <>
+                    <p>Попередній перегляд (перші 3 рядки):</p>
+                    <table className="students-table">
+                      <thead>
+                        <tr>
+                          <th>Ім'я</th>
+                          <th>Email</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {csvRows.slice(0, 3).map((row, idx) => (
+                          <tr key={`${row.email}-${idx}`}>
+                            <td>{row.name}</td>
+                            <td>{row.email}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
 
-            {csvRows.length > 0 && (
-              <>
-                <p>Попередній перегляд (перші 3 рядки):</p>
+                    <button type="button" onClick={onBulkUpload}>
+                      Завантажити CSV
+                    </button>
+                  </>
+                )}
+
+                {csvErrors.length > 0 && (
+                  <ul className="error-list">
+                    {csvErrors.map((err) => (
+                      <li key={`csv-${err.row}-${err.message}`}>{`Row ${err.row}: ${err.message}`}</li>
+                    ))}
+                  </ul>
+                )}
+
+                {bulkCreated > 0 && <p>{`Створено ${bulkCreated} користувачів`}</p>}
+                {bulkErrors.length > 0 && (
+                  <ul className="error-list">
+                    {bulkErrors.map((err) => (
+                      <li key={`bulk-${err.row}-${err.message}`}>{`Row ${err.row}: ${err.message}`}</li>
+                    ))}
+                  </ul>
+                )}
+
+                {bulkCredentials.length > 0 && (
+                  <button type="button" onClick={onDownloadCredentials}>
+                    Завантажити CSV з паролями
+                  </button>
+                )}
+              </section>
+
+              {createError && <p className="error">{createError}</p>}
+              <ResetPasswordModal password={resetPasswordValue} onClose={() => setResetPasswordValue('')} />
+              {createPassword && <p className="secret">Згенерований пароль: {createPassword}</p>}
+              {studentsError && <p className="error">{studentsError}</p>}
+
+              {studentsLoading ? (
+                <p>Завантаження студентів...</p>
+              ) : (
                 <table className="students-table">
                   <thead>
                     <tr>
                       <th>Ім'я</th>
                       <th>Email</th>
+                      <th>Тему обрано</th>
+                      <th>Дії</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {csvRows.slice(0, 3).map((row, idx) => (
-                      <tr key={`${row.email}-${idx}`}>
-                        <td>{row.name}</td>
-                        <td>{row.email}</td>
+                    {students.map((student) => (
+                      <tr key={student.id}>
+                        <td>{student.name}</td>
+                        <td>{student.email}</td>
+                        <td>{student.hasSelectedTopic ? 'Так' : 'Ні'}</td>
+                        <td className="table-actions">
+                          <StudentActions
+                            studentId={student.id}
+                            onDelete={onDeleteStudent}
+                            onResetPassword={onResetPassword}
+                          />
+                        </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
-
-                <button type="button" onClick={onBulkUpload}>
-                  Завантажити CSV
-                </button>
-              </>
-            )}
-
-            {csvErrors.length > 0 && (
-              <ul className="error-list">
-                {csvErrors.map((err) => (
-                  <li key={`csv-${err.row}-${err.message}`}>{`Row ${err.row}: ${err.message}`}</li>
-                ))}
-              </ul>
-            )}
-
-            {bulkCreated > 0 && <p>{`Створено ${bulkCreated} користувачів`}</p>}
-            {bulkErrors.length > 0 && (
-              <ul className="error-list">
-                {bulkErrors.map((err) => (
-                  <li key={`bulk-${err.row}-${err.message}`}>{`Row ${err.row}: ${err.message}`}</li>
-                ))}
-              </ul>
-            )}
-
-            {bulkCredentials.length > 0 && (
-              <button type="button" onClick={onDownloadCredentials}>
-                Завантажити CSV з паролями
-              </button>
-            )}
-          </section>
-
-          {createError && <p className="error">{createError}</p>}
-          <ResetPasswordModal password={resetPasswordValue} onClose={() => setResetPasswordValue('')} />
-          {createPassword && <p className="secret">Згенерований пароль: {createPassword}</p>}
-          {studentsError && <p className="error">{studentsError}</p>}
-
-          {studentsLoading ? (
-            <p>Завантаження студентів...</p>
-          ) : (
-            <table className="students-table">
-              <thead>
-                <tr>
-                  <th>Ім'я</th>
-                  <th>Email</th>
-                  <th>Тему обрано</th>
-                  <th>Дії</th>
-                </tr>
-              </thead>
-              <tbody>
-                {students.map((student) => (
-                  <tr key={student.id}>
-                    <td>{student.name}</td>
-                    <td>{student.email}</td>
-                    <td>{student.hasSelectedTopic ? 'Так' : 'Ні'}</td>
-                    <td>
-                      <StudentActions
-                        studentId={student.id}
-                        onDelete={onDeleteStudent}
-                        onResetPassword={onResetPassword}
-                      />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+              )}
+            </section>
           )}
 
-          <section className="admin-topics">
-            <h2>Теми</h2>
+          {adminTab === 'topics' && (
+            <section className="admin-panel">
+              <div className="admin-panel-header">
+                <h1 className="admin-title">Теми</h1>
+                <div className="admin-panel-actions">
+                  <button type="button" className="admin-btn-muted">
+                    ⬆ CSV
+                  </button>
+                  <button type="button">+ Додати тему</button>
+                </div>
+              </div>
 
-            <form className="login-form" onSubmit={onCreateTopic}>
-              <label htmlFor="topic-title">Назва</label>
-              <input
-                id="topic-title"
-                type="text"
-                value={newTopicTitle}
-                onChange={(e) => setNewTopicTitle(e.target.value)}
-                required
+              <form className="login-form" onSubmit={onCreateTopic}>
+                <label htmlFor="topic-title">Назва</label>
+                <input
+                  id="topic-title"
+                  type="text"
+                  value={newTopicTitle}
+                  onChange={(e) => setNewTopicTitle(e.target.value)}
+                  required
+                />
+
+                <label htmlFor="topic-description">Опис</label>
+                <input
+                  id="topic-description"
+                  type="text"
+                  value={newTopicDescription}
+                  onChange={(e) => setNewTopicDescription(e.target.value)}
+                  required
+                />
+
+                <label htmlFor="topic-supervisor">Керівник</label>
+                <input
+                  id="topic-supervisor"
+                  type="text"
+                  value={newTopicSupervisor}
+                  onChange={(e) => setNewTopicSupervisor(e.target.value)}
+                  required
+                />
+
+                <label htmlFor="topic-department">Кафедра</label>
+                <input
+                  id="topic-department"
+                  type="text"
+                  value={newTopicDepartment}
+                  onChange={(e) => setNewTopicDepartment(e.target.value)}
+                  required
+                />
+
+                <button type="submit">Додати тему</button>
+              </form>
+
+              <section className="bulk-box">
+                <h3>Масове завантаження тем</h3>
+                <input type="file" accept=".csv,text/csv" onChange={onTopicCsvSelect} />
+
+                {topicCsvRows.length > 0 && (
+                  <>
+                    <p>Попередній перегляд (перші 3 рядки):</p>
+                    <table className="students-table">
+                      <thead>
+                        <tr>
+                          <th>Назва</th>
+                          <th>Опис</th>
+                          <th>Керівник</th>
+                          <th>Кафедра</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {topicCsvRows.slice(0, 3).map((row, idx) => (
+                          <tr key={`${row.title}-${idx}`}>
+                            <td>{row.title}</td>
+                            <td>{row.description}</td>
+                            <td>{row.supervisor}</td>
+                            <td>{row.department}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+
+                    <button type="button" onClick={onBulkTopicsUpload}>
+                      Завантажити CSV тем
+                    </button>
+                  </>
+                )}
+
+                {topicCsvErrors.length > 0 && (
+                  <ul className="error-list">
+                    {topicCsvErrors.map((err) => (
+                      <li key={`topic-csv-${err.row}-${err.message}`}>{`Row ${err.row}: ${err.message}`}</li>
+                    ))}
+                  </ul>
+                )}
+
+                {topicBulkCreated > 0 && <p>{`Створено ${topicBulkCreated} тем`}</p>}
+                {topicBulkErrors.length > 0 && (
+                  <ul className="error-list">
+                    {topicBulkErrors.map((err) => (
+                      <li key={`topic-bulk-${err.row}-${err.message}`}>{`Row ${err.row}: ${err.message}`}</li>
+                    ))}
+                  </ul>
+                )}
+              </section>
+
+              {createTopicError && <p className="error">{createTopicError}</p>}
+              {topicsError && <p className="error">{topicsError}</p>}
+              <ReleaseTopicModal
+                topicTitle={releaseTopicTitle}
+                onConfirm={onConfirmReleaseTopic}
+                onCancel={() => {
+                  setReleaseTopicTargetId('');
+                  setReleaseTopicTitle('');
+                }}
               />
 
-              <label htmlFor="topic-description">Опис</label>
-              <input
-                id="topic-description"
-                type="text"
-                value={newTopicDescription}
-                onChange={(e) => setNewTopicDescription(e.target.value)}
-                required
-              />
-
-              <label htmlFor="topic-supervisor">Керівник</label>
-              <input
-                id="topic-supervisor"
-                type="text"
-                value={newTopicSupervisor}
-                onChange={(e) => setNewTopicSupervisor(e.target.value)}
-                required
-              />
-
-              <label htmlFor="topic-department">Кафедра</label>
-              <input
-                id="topic-department"
-                type="text"
-                value={newTopicDepartment}
-                onChange={(e) => setNewTopicDepartment(e.target.value)}
-                required
-              />
-
-              <button type="submit">Додати тему</button>
-            </form>
-
-            <section className="bulk-box">
-              <h3>Масове завантаження тем</h3>
-              <input type="file" accept=".csv,text/csv" onChange={onTopicCsvSelect} />
-
-              {topicCsvRows.length > 0 && (
-                <>
-                  <p>Попередній перегляд (перші 3 рядки):</p>
+              {topicsLoading ? (
+                <p>Завантаження тем...</p>
+              ) : (
+                <div className="admin-table">
+                  <div className="admin-table-header">
+                    <span className="admin-table-title">{`${totalTopicsCount} тем всього`}</span>
+                  </div>
                   <table className="students-table">
                     <thead>
                       <tr>
-                        <th>Назва</th>
-                        <th>Опис</th>
-                        <th>Керівник</th>
-                        <th>Кафедра</th>
+                        <th>Назва теми</th>
+                        <th>Статус</th>
+                        <th>Студент</th>
+                        <th>Дії</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {topicCsvRows.slice(0, 3).map((row, idx) => (
-                        <tr key={`${row.title}-${idx}`}>
-                          <td>{row.title}</td>
-                          <td>{row.description}</td>
-                          <td>{row.supervisor}</td>
-                          <td>{row.department}</td>
+                      {topics.map((topic) => (
+                        <tr key={topic.id}>
+                          <td>{topic.title}</td>
+                          <td>
+                            <span className={`badge ${topic.selectedBy ? 'badge-taken' : 'badge-free'}`}>
+                              {topic.selectedBy ? 'зайнята' : 'вільна'}
+                            </span>
+                          </td>
+                          <td>{topic.selectedBy?.name || '—'}</td>
+                          <td className="table-actions">
+                            <button type="button" onClick={() => onDeleteTopic(topic.id)}>
+                              Видалити
+                            </button>
+                            {topic.selectedBy && (
+                              <button type="button" onClick={() => onOpenReleaseTopicModal(topic)}>
+                                Звільнити
+                              </button>
+                            )}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
-
-                  <button type="button" onClick={onBulkTopicsUpload}>
-                    Завантажити CSV тем
-                  </button>
-                </>
-              )}
-
-              {topicCsvErrors.length > 0 && (
-                <ul className="error-list">
-                  {topicCsvErrors.map((err) => (
-                    <li key={`topic-csv-${err.row}-${err.message}`}>{`Row ${err.row}: ${err.message}`}</li>
-                  ))}
-                </ul>
-              )}
-
-              {topicBulkCreated > 0 && <p>{`Створено ${topicBulkCreated} тем`}</p>}
-              {topicBulkErrors.length > 0 && (
-                <ul className="error-list">
-                  {topicBulkErrors.map((err) => (
-                    <li key={`topic-bulk-${err.row}-${err.message}`}>{`Row ${err.row}: ${err.message}`}</li>
-                  ))}
-                </ul>
+                </div>
               )}
             </section>
+          )}
 
-            {createTopicError && <p className="error">{createTopicError}</p>}
-            {topicsError && <p className="error">{topicsError}</p>}
-            <ReleaseTopicModal
-              topicTitle={releaseTopicTitle}
-              onConfirm={onConfirmReleaseTopic}
-              onCancel={() => {
-                setReleaseTopicTargetId('');
-                setReleaseTopicTitle('');
-              }}
-            />
-
-            {topicsLoading ? (
-              <p>Завантаження тем...</p>
-            ) : (
-              <table className="students-table">
-                <thead>
-                  <tr>
-                    <th>Назва</th>
-                    <th>Опис</th>
-                    <th>Керівник</th>
-                    <th>Кафедра</th>
-                    <th>Студент</th>
-                    <th>Дії</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {topics.map((topic) => (
-                    <tr key={topic.id}>
-                      <td>{topic.title}</td>
-                      <td>{topic.description}</td>
-                      <td>{topic.supervisor}</td>
-                      <td>{topic.department}</td>
-                      <td>{topic.selectedBy?.name || 'вільна'}</td>
-                      <td>
-                        <button type="button" onClick={() => onDeleteTopic(topic.id)}>
-                          Видалити тему
-                        </button>
-                        {topic.selectedBy && (
-                          <button type="button" onClick={() => onOpenReleaseTopicModal(topic)}>
-                            Звільнити тему
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </section>
-
-          <section className="admin-audit">
-            <h2>Журнал дій</h2>
-            <div className="admin-dashboard-actions">
-              <button type="button" onClick={onExportAuditLog} disabled={exportAuditLoading}>
-                {exportAuditLoading ? 'Експорт...' : 'Завантажити CSV аудиту'}
-              </button>
+          {adminTab === 'audit' && (
+            <section className="admin-panel">
+              <div className="admin-panel-header">
+                <h1 className="admin-title">Журнал дій</h1>
+                <button type="button" onClick={onExportAuditLog} disabled={exportAuditLoading}>
+                  {exportAuditLoading ? 'Експорт...' : '⬇ Вивантажити CSV'}
+                </button>
+              </div>
               {exportAuditError && <p className="error">{exportAuditError}</p>}
-            </div>
-            {auditError && <p className="error">{auditError}</p>}
-            {auditLoading ? (
-              <p>Завантаження журналу...</p>
-            ) : (
-              <table className="students-table">
-                <thead>
-                  <tr>
-                    <th>Час</th>
-                    <th>Actor</th>
-                    <th>Action</th>
-                    <th>IP</th>
-                    <th>Result</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {auditRows.length === 0 ? (
+              {auditError && <p className="error">{auditError}</p>}
+              {auditLoading ? (
+                <p>Завантаження журналу...</p>
+              ) : (
+                <table className="students-table">
+                  <thead>
                     <tr>
-                      <td colSpan={5}>Немає записів аудиту</td>
+                      <th>Час</th>
+                      <th>Actor</th>
+                      <th>Action</th>
+                      <th>IP</th>
+                      <th>Result</th>
                     </tr>
-                  ) : (
-                    auditRows.map((row) => (
-                      <tr key={row.id}>
-                        <td>{new Date(row.createdAt).toLocaleString('uk-UA')}</td>
-                        <td>{row.actor}</td>
-                        <td>{row.action}</td>
-                        <td>{row.ip}</td>
-                        <td>{row.result}</td>
+                  </thead>
+                  <tbody>
+                    {auditRows.length === 0 ? (
+                      <tr>
+                        <td colSpan={5}>Немає записів аудиту</td>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            )}
-          </section>
+                    ) : (
+                      auditRows.map((row) => (
+                        <tr key={row.id}>
+                          <td>{new Date(row.createdAt).toLocaleString('uk-UA')}</td>
+                          <td>{row.actor}</td>
+                          <td>{row.action}</td>
+                          <td>{row.ip}</td>
+                          <td>{row.result}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              )}
+            </section>
+          )}
         </section>
       </main>
     );
@@ -1288,6 +1353,7 @@ function App() {
   return (
     <main className="shell shell--login">
       <h1>{heading}</h1>
+      <p className="login-project-title">Вибір тем курсових робіт</p>
       <form className="login-form" onSubmit={onSubmit}>
         <label htmlFor="email">Email</label>
         <input
