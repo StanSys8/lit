@@ -3,6 +3,7 @@ import type { ChangeEvent, FormEvent, RefObject } from 'react';
 import { addStudentToList, removeStudentFromList, type StudentRow } from './adminStudents';
 import { credentialsToCsv, parseStudentsCsv, type CsvError, type CsvStudent } from './studentsCsv';
 import { parseTopicsCsv, type CsvTopic } from './topicsCsv';
+import { releaseTopicByAdmin, uploadTopicsCsv, type TopicsBulkResponse } from './adminTopicsFlows';
 import './App.css';
 
 type LoginResponse = {
@@ -61,10 +62,6 @@ type StudentSelectResponse = {
 };
 
 type CreateTopicResponse = TopicRow;
-type TopicsBulkResponse = {
-  created: number;
-  errors: Array<{ row: number; message: string }>;
-};
 
 const normalizePath = (path: string) => {
   if (path === '/topics' || path === '/admin') return path;
@@ -750,35 +747,23 @@ function App() {
     if (!releaseTopicTargetId) return;
     setCreateTopicError('');
 
-    try {
-      const response = await fetch(`/admin/topics/${releaseTopicTargetId}/release`, {
-        method: 'POST',
-        credentials: 'include',
-      });
-
-      if (response.ok) {
-        const payload = (await response.json()) as { topic: TopicRow };
-        setTopics((prev) => prev.map((topic) => (topic.id === payload.topic.id ? payload.topic : topic)));
-        setReleaseTopicTargetId('');
-        setReleaseTopicTitle('');
-        return;
-      }
-
-      const payload = (await response.json()) as { error?: string; message?: string };
-      if (response.status === 409 && payload.error === 'TOPIC_ALREADY_FREE') {
-        setCreateTopicError(payload.message || 'Тема вже вільна');
-      } else if (response.status === 404) {
-        setCreateTopicError('Topic not found');
-      } else {
-        setCreateTopicError('Failed to release topic');
-      }
+    const result = await releaseTopicByAdmin(releaseTopicTargetId);
+    if (result.ok) {
+      setTopics((prev) => prev.map((topic) => (topic.id === result.topic.id ? result.topic : topic)));
       setReleaseTopicTargetId('');
       setReleaseTopicTitle('');
-    } catch {
-      setCreateTopicError('Failed to release topic');
-      setReleaseTopicTargetId('');
-      setReleaseTopicTitle('');
+      return;
     }
+
+    if (result.status === 409 && result.error === 'TOPIC_ALREADY_FREE') {
+      setCreateTopicError(result.message || 'Тема вже вільна');
+    } else if (result.status === 404) {
+      setCreateTopicError('Topic not found');
+    } else {
+      setCreateTopicError(result.message || 'Failed to release topic');
+    }
+    setReleaseTopicTargetId('');
+    setReleaseTopicTitle('');
   };
 
   const onTopicCsvSelect = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -803,27 +788,17 @@ function App() {
     setTopicBulkCreated(0);
     setCreateTopicError('');
 
-    try {
-      const response = await fetch('/admin/topics/bulk', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(topicCsvRows),
-      });
+    const result = await uploadTopicsCsv(topicCsvRows);
+    if (!result.ok) {
+      setCreateTopicError(result.message);
+      return;
+    }
 
-      if (!response.ok) {
-        setCreateTopicError('Failed to upload topics CSV');
-        return;
-      }
-
-      const payload = (await response.json()) as TopicsBulkResponse;
-      setTopicBulkCreated(payload.created);
-      setTopicBulkErrors(payload.errors);
-      if (payload.created > 0) {
-        void loadTopics();
-      }
-    } catch {
-      setCreateTopicError('Failed to upload topics CSV');
+    const payload = result.payload as TopicsBulkResponse;
+    setTopicBulkCreated(payload.created);
+    setTopicBulkErrors(payload.errors);
+    if (payload.created > 0) {
+      void loadTopics();
     }
   };
 
