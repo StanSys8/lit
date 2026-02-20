@@ -273,6 +273,7 @@ function App() {
   const [bulkErrors, setBulkErrors] = useState<Array<{ row: number; message: string }>>([]);
   const [bulkCreated, setBulkCreated] = useState(0);
   const [bulkCredentials, setBulkCredentials] = useState<Array<{ name: string; email: string; class: string; password: string }>>([]);
+  const [studentsCsvInputKey, setStudentsCsvInputKey] = useState(0);
   const [resetPasswordValue, setResetPasswordValue] = useState('');
   const [topics, setTopics] = useState<TopicRow[]>([]);
   const [topicsLoading, setTopicsLoading] = useState(false);
@@ -576,6 +577,7 @@ function App() {
   };
 
   const onBulkUpload = async () => {
+    setCreateError('');
     setBulkErrors([]);
     setBulkCreated(0);
     setBulkCredentials([]);
@@ -599,17 +601,31 @@ function App() {
       setBulkCredentials(payload.users);
 
       if (payload.users.length > 0) {
-        void loadStudents();
+        // Show newly created students immediately, then sync from server.
+        setStudents((prev) => {
+          const existing = new Set(prev.map((item) => item.email.toLowerCase()));
+          const appended = payload.users
+            .filter((item) => !existing.has(item.email.toLowerCase()))
+            .map((item, idx) => ({
+              id: `bulk-${Date.now()}-${idx}`,
+              name: item.name,
+              email: item.email,
+              class: item.class,
+              hasSelectedTopic: false,
+            }));
+          return [...prev, ...appended];
+        });
+        downloadCredentialsCsv(payload.users);
+        await loadStudents();
       }
     } catch {
       setCreateError('Не вдалося завантажити CSV');
     }
   };
 
-  const onDownloadCredentials = () => {
-    if (bulkCredentials.length === 0) return;
-
-    const csv = credentialsToCsv(bulkCredentials);
+  const downloadCredentialsCsv = (items: Array<{ name: string; email: string; class: string; password: string }>) => {
+    if (items.length === 0) return;
+    const csv = credentialsToCsv(items);
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -617,6 +633,19 @@ function App() {
     link.download = 'student-credentials.csv';
     link.click();
     URL.revokeObjectURL(url);
+  };
+
+  const onDownloadCredentials = () => {
+    downloadCredentialsCsv(bulkCredentials);
+  };
+
+  const onResetStudentsCsv = () => {
+    setCsvRows([]);
+    setCsvErrors([]);
+    setBulkErrors([]);
+    setBulkCreated(0);
+    setBulkCredentials([]);
+    setStudentsCsvInputKey((prev) => prev + 1);
   };
 
   const onExportTopicsStatus = async () => {
@@ -995,7 +1024,12 @@ function App() {
 
               <section className="bulk-box">
                 <h3>Масове завантаження студентів</h3>
-                <input type="file" accept=".csv,text/csv" onChange={onCsvSelect} />
+                <input
+                  key={studentsCsvInputKey}
+                  type="file"
+                  accept=".csv,text/csv"
+                  onChange={onCsvSelect}
+                />
 
                 {csvRows.length > 0 && (
                   <>
@@ -1045,6 +1079,12 @@ function App() {
                 {bulkCredentials.length > 0 && (
                   <button type="button" onClick={onDownloadCredentials}>
                     Завантажити CSV з паролями
+                  </button>
+                )}
+
+                {(csvErrors.length > 0 || bulkErrors.length > 0) && (
+                  <button type="button" className="admin-btn-muted" onClick={onResetStudentsCsv}>
+                    Скинути CSV
                   </button>
                 )}
               </section>
