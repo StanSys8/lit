@@ -73,6 +73,7 @@ const idQuery = (value) => {
 };
 
 const sortByCreatedAtDesc = { createdAt: -1, _id: -1 };
+const BULK_CREATE_CHUNK_SIZE = 25;
 
 export const createApp = ({
   jwtSecret = 'dev-jwt-secret',
@@ -817,35 +818,39 @@ export const createApp = ({
             return true;
           });
 
-          const preparedUsers = await Promise.all(
-            toCreate.map(async (entry) => {
-              const id = randomUUID();
-              const password = randomPassword();
-              const passwordHash = await hashPasswordAsync(password);
-              return {
-                doc: {
-                  id,
-                  name: entry.name,
-                  email: entry.email,
-                  class: entry.class,
-                  emailLower: entry.email,
-                  role: 'student',
-                  selectedTopicId: null,
-                  passwordHash,
-                  failedAttempts: 0,
-                  lockedUntilMs: null,
-                },
-                credential: {
-                  name: entry.name,
-                  email: entry.email,
-                  class: entry.class,
-                  password,
-                },
-              };
-            }),
-          );
+          for (let offset = 0; offset < toCreate.length; offset += BULK_CREATE_CHUNK_SIZE) {
+            const chunk = toCreate.slice(offset, offset + BULK_CREATE_CHUNK_SIZE);
+            const preparedUsers = await Promise.all(
+              chunk.map(async (entry) => {
+                const id = randomUUID();
+                const password = randomPassword();
+                const passwordHash = await hashPasswordAsync(password);
+                return {
+                  row: entry.row,
+                  doc: {
+                    id,
+                    name: entry.name,
+                    email: entry.email,
+                    class: entry.class,
+                    emailLower: entry.email,
+                    role: 'student',
+                    selectedTopicId: null,
+                    passwordHash,
+                    failedAttempts: 0,
+                    lockedUntilMs: null,
+                  },
+                  credential: {
+                    name: entry.name,
+                    email: entry.email,
+                    class: entry.class,
+                    password,
+                  },
+                };
+              }),
+            );
 
-          if (preparedUsers.length > 0) {
+            if (preparedUsers.length === 0) continue;
+
             try {
               await users.insertMany(
                 preparedUsers.map((entry) => entry.doc),
@@ -864,7 +869,7 @@ export const createApp = ({
 
               writeErrors.forEach((entry) => {
                 const payloadIndex = Number(entry.index);
-                const payloadRow = toCreate[payloadIndex]?.row;
+                const payloadRow = preparedUsers[payloadIndex]?.row;
                 errors.push({ row: payloadRow || 0, message: 'Студент з таким email вже існує' });
               });
             }

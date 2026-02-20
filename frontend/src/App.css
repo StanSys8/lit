@@ -116,9 +116,17 @@ button:disabled {
 }
 
 .shell--student .header button {
-  background: #fff;
-  border-color: #fff;
-  color: #471260;
+  background: rgb(255 255 255 / 16%);
+  border-color: rgb(255 255 255 / 34%);
+  color: #fff;
+  box-shadow: none;
+  backdrop-filter: blur(2px);
+}
+
+.shell--student .header button:hover:enabled {
+  transform: none;
+  box-shadow: none;
+  background: rgb(255 255 255 / 24%);
 }
 
 .student-topics {

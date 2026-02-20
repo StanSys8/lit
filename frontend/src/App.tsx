@@ -591,7 +591,8 @@ function App() {
       });
 
       if (!response.ok) {
-        setCreateError('Не вдалося завантажити CSV');
+        const payload = (await response.json().catch(() => ({}))) as { message?: string; error?: string };
+        setCreateError(payload.message || payload.error || `Не вдалося завантажити CSV (HTTP ${response.status})`);
         return;
       }
 
