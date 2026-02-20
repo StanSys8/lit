@@ -82,6 +82,12 @@
   gap: 1rem;
 }
 
+.admin-audit {
+  margin-top: 1rem;
+  display: grid;
+  gap: 0.75rem;
+}
+
 .bulk-box {
   border: 1px solid #ddd;
   padding: 0.75rem;

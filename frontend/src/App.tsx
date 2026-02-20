@@ -34,6 +34,16 @@ type TopicRow = {
   selectedBy: { id: string; name: string } | null;
 };
 
+type AuditRow = {
+  id: string;
+  actor: string;
+  action: string;
+  targetId: string | null;
+  ip: string;
+  result: string;
+  createdAt: string;
+};
+
 type StudentTopic = {
   id: string;
   title: string;
@@ -266,6 +276,9 @@ function App() {
   const [topics, setTopics] = useState<TopicRow[]>([]);
   const [topicsLoading, setTopicsLoading] = useState(false);
   const [topicsError, setTopicsError] = useState('');
+  const [auditRows, setAuditRows] = useState<AuditRow[]>([]);
+  const [auditLoading, setAuditLoading] = useState(false);
+  const [auditError, setAuditError] = useState('');
   const [exportStatusError, setExportStatusError] = useState('');
   const [exportStatusLoading, setExportStatusLoading] = useState(false);
   const [createTopicError, setCreateTopicError] = useState('');
@@ -362,10 +375,32 @@ function App() {
     }
   };
 
+  const loadAudit = async () => {
+    setAuditLoading(true);
+    setAuditError('');
+    try {
+      const response = await fetch('/admin/audit', {
+        method: 'GET',
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        setAuditError('Failed to load audit log');
+        return;
+      }
+      const payload = (await response.json()) as AuditRow[];
+      setAuditRows(payload || []);
+    } catch {
+      setAuditError('Failed to load audit log');
+    } finally {
+      setAuditLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (route === '/admin') {
       void loadStudents();
       void loadTopics();
+      void loadAudit();
     }
     if (route === '/topics') {
       void loadStudentTopics();
@@ -1117,6 +1152,43 @@ function App() {
                       </td>
                     </tr>
                   ))}
+                </tbody>
+              </table>
+            )}
+          </section>
+
+          <section className="admin-audit">
+            <h2>Журнал дій</h2>
+            {auditError && <p className="error">{auditError}</p>}
+            {auditLoading ? (
+              <p>Loading audit...</p>
+            ) : (
+              <table className="students-table">
+                <thead>
+                  <tr>
+                    <th>Час</th>
+                    <th>Actor</th>
+                    <th>Action</th>
+                    <th>IP</th>
+                    <th>Result</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {auditRows.length === 0 ? (
+                    <tr>
+                      <td colSpan={5}>Немає записів аудиту</td>
+                    </tr>
+                  ) : (
+                    auditRows.map((row) => (
+                      <tr key={row.id}>
+                        <td>{new Date(row.createdAt).toLocaleString('uk-UA')}</td>
+                        <td>{row.actor}</td>
+                        <td>{row.action}</td>
+                        <td>{row.ip}</td>
+                        <td>{row.result}</td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             )}

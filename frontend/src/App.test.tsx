@@ -61,6 +61,11 @@ describe('App routes', () => {
     expect(html).toContain('Description');
     expect(html).toContain('Supervisor');
     expect(html).toContain('Department');
+    expect(html).toContain('Журнал дій');
+    expect(html).toContain('Час');
+    expect(html).toContain('Actor');
+    expect(html).toContain('Action');
+    expect(html).toContain('Result');
   });
 });
 

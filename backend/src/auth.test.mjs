@@ -531,6 +531,45 @@ test('admin exports topic status CSV with headers and audit', async () => {
   assert.ok(exportAudit);
 });
 
+test('admin gets audit log sorted newest first and read-only endpoint does not self-log', async () => {
+  const app = createApp({ jwtSecret: 'test-secret' });
+
+  const studentLogin = await login(app, 'student@example.com', 'student123');
+  const studentCookie = studentLogin.headers['Set-Cookie'];
+  assert.ok(studentCookie);
+
+  await app.inject({
+    method: 'POST',
+    url: '/auth/logout',
+    headers: { cookie: studentCookie },
+  });
+
+  const adminLogin = await login(app, 'admin@example.com', 'admin123');
+  const adminCookie = adminLogin.headers['Set-Cookie'];
+  assert.ok(adminCookie);
+
+  const beforeReadCount = app.getAuditLog().length;
+  const auditResponse = await app.inject({
+    method: 'GET',
+    url: '/admin/audit',
+    headers: { cookie: adminCookie },
+  });
+  assert.equal(auditResponse.status, 200);
+  assert.ok(Array.isArray(auditResponse.body));
+  assert.ok(auditResponse.body.length >= 2);
+  assert.equal(typeof auditResponse.body[0].id, 'string');
+  assert.equal(typeof auditResponse.body[0].createdAt, 'string');
+  assert.ok(new Date(auditResponse.body[0].createdAt).toString() !== 'Invalid Date');
+  assert.ok(
+    auditResponse.body.every((entry, idx, arr) =>
+      idx === 0 ? true : String(arr[idx - 1].createdAt).localeCompare(String(entry.createdAt)) >= 0,
+    ),
+  );
+
+  const afterReadCount = app.getAuditLog().length;
+  assert.equal(afterReadCount, beforeReadCount);
+});
+
 test('admin topics bulk create: partial success and audit count', async () => {
   const app = createApp({ jwtSecret: 'test-secret' });
 

@@ -111,7 +111,8 @@ export const createApp = ({ jwtSecret = 'dev-jwt-secret' } = {}) => {
   }
 
   const logAudit = ({ actor, action, ip, result, targetId = null, count = null }) => {
-    auditLog.push({ actor, action, ip, result, targetId, count, timestamp: nowIso() });
+    const createdAt = nowIso();
+    auditLog.push({ id: randomUUID(), actor, action, ip, result, targetId, count, createdAt, timestamp: createdAt });
   };
 
   const authenticate = (req) => {
@@ -558,6 +559,26 @@ export const createApp = ({ jwtSecret = 'dev-jwt-secret' } = {}) => {
           }));
 
         return json(res, 200, students);
+      }
+
+      if (req.method === 'GET' && req.url === '/admin/audit') {
+        const session = requireAuth(req, res);
+        if (!session) return;
+        if (!requireRole(session, 'admin', res)) return;
+
+        const items = [...auditLog]
+          .slice()
+          .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)))
+          .map((entry) => ({
+            id: entry.id,
+            actor: entry.actor,
+            action: entry.action,
+            targetId: entry.targetId,
+            ip: entry.ip,
+            result: entry.result,
+            createdAt: entry.createdAt,
+          }));
+        return json(res, 200, items);
       }
 
       if (req.method === 'GET' && req.url === '/admin/export/status') {
