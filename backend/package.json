@@ -7,6 +7,9 @@
     "start": "node src/index.mjs",
     "test": "node --test src/*.test.mjs"
   },
+  "dependencies": {
+    "mongodb": "^6.21.0"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",

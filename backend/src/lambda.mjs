@@ -1,6 +1,10 @@
 import { createApp } from './server.mjs';
 
-const app = createApp({ jwtSecret: process.env.JWT_SECRET || 'dev-jwt-secret' });
+const app = createApp({
+  jwtSecret: process.env.JWT_SECRET || 'dev-jwt-secret',
+  mongodbUri: process.env.MONGODB_URI || '',
+  mongodbDbName: process.env.MONGODB_DB_NAME || '',
+});
 
 const toCookieHeader = (cookies = []) => {
   if (!Array.isArray(cookies) || cookies.length === 0) return {};

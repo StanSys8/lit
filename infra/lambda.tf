@@ -1,6 +1,6 @@
 data "archive_file" "backend_zip" {
   type        = "zip"
-  source_dir  = "${path.module}/../backend/src"
+  source_dir  = "${path.module}/../backend"
   output_path = "${path.module}/backend.zip"
 }
 
@@ -8,7 +8,7 @@ resource "aws_lambda_function" "backend" {
   function_name = "${var.project_name}-${var.environment}-backend"
   role          = aws_iam_role.lambda_exec.arn
   runtime       = "nodejs22.x"
-  handler       = "lambda.handler"
+  handler       = "src/lambda.handler"
 
   filename         = data.archive_file.backend_zip.output_path
   source_code_hash = data.archive_file.backend_zip.output_base64sha256

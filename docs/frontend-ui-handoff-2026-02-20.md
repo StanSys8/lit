@@ -37,6 +37,15 @@
 
 - Added Inter font import and base typography/background setup per spec direction.
 
+### `frontend/src/apiBase.ts`
+
+- Added production-safe API base handling for Cloudflare Pages hosts.
+- New behavior:
+  - uses `VITE_API_BASE_URL` when present
+  - if missing and host is `*.pages.dev`, falls back to:
+    - `https://58r8t1adkk.execute-api.eu-central-1.amazonaws.com`
+- Reason: prevent `POST /auth/login` from hitting `lit-bvd.pages.dev/auth/login` (`405`).
+
 ## Validation performed
 
 - Build passes:
@@ -51,3 +60,4 @@
   - student mobile-first flow
   - admin sidebar/card visual hierarchy
 - If Cloudflare rendering looks stale, verify deployment alias and cache before changing code.
+- If auth returns `405` on Pages domain, check `docs/cloudflare-pages-deploy.md` before touching UI code.
