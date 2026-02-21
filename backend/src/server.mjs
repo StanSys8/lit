@@ -320,6 +320,7 @@ export const createApp = ({
       200,
       {
         id: idFromDoc(user),
+        name: user.name || '',
         email: user.email,
         role: user.role,
         selectedTopic: await mapSelectedTopicForUser(user),
@@ -957,6 +958,7 @@ export const createApp = ({
         if (!user) return json(res, 401, { error: 'UNAUTHORIZED', message: 'Unauthorized' });
         return json(res, 200, {
           id: idFromDoc(user),
+          name: user.name || '',
           email: user.email,
           role: user.role,
           selectedTopic: await mapSelectedTopicForUser(user),

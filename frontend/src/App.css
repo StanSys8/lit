@@ -341,6 +341,33 @@ button:disabled {
   margin-bottom: 16px;
 }
 
+.topic-confirmed-details {
+  margin: 0;
+  text-align: left;
+  width: 100%;
+  max-width: 320px;
+  background: rgb(71 18 96 / 4%);
+  border-radius: 10px;
+  padding: 12px 16px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 12px;
+  font-size: 13px;
+  line-height: 1.4;
+  margin-bottom: 8px;
+}
+
+.topic-confirmed-details dt {
+  color: #888;
+  font-weight: 500;
+}
+
+.topic-confirmed-details dd {
+  margin: 0;
+  color: #471260;
+  font-weight: 600;
+}
+
 .topic-confirmed-hint {
   margin: 0;
   font-size: 12px;
