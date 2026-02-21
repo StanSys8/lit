@@ -386,14 +386,14 @@ function App() {
         credentials: 'include',
       });
       if (!response.ok) {
-        setStudentTopicsError('Не вдалося завантажити список тем');
+        setStudentTopicsError(`Не вдалося завантажити список тем (${response.status})`);
         return;
       }
 
       const payload = (await response.json()) as StudentTopic[];
       setStudentTopics(payload || []);
-    } catch {
-      setStudentTopicsError('Не вдалося завантажити список тем');
+    } catch (err) {
+      setStudentTopicsError(`Не вдалося завантажити список тем (network: ${err instanceof Error ? err.message : String(err)})`);
     } finally {
       setStudentTopicsLoading(false);
     }

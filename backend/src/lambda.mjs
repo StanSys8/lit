@@ -4,6 +4,7 @@ const app = createApp({
   jwtSecret: process.env.JWT_SECRET || 'dev-jwt-secret',
   mongodbUri: process.env.MONGODB_URI || '',
   mongodbDbName: process.env.MONGODB_DB_NAME || '',
+  allowedOrigin: process.env.ALLOWED_ORIGIN || '',
 });
 
 const toCookieHeader = (cookies = []) => {

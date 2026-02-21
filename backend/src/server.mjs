@@ -79,6 +79,7 @@ export const createApp = ({
   jwtSecret = 'dev-jwt-secret',
   mongodbUri = '',
   mongodbDbName = '',
+  allowedOrigin = '',
 } = {}) => {
   if (!mongodbUri) {
     throw new Error('MONGODB_URI is required');
@@ -337,9 +338,26 @@ export const createApp = ({
   };
 
   const handler = async (req, res) => {
+    // Inject CORS headers into every response for cross-origin clients (Samsung, Firefox, Safari)
+    const reqOrigin = req.headers['origin'] || req.headers['Origin'] || '';
+    if (allowedOrigin && reqOrigin && (reqOrigin === allowedOrigin || allowedOrigin === '*')) {
+      const _writeHead = res.writeHead.bind(res);
+      res.writeHead = (status, headers = {}) => _writeHead(status, {
+        'Access-Control-Allow-Origin': reqOrigin,
+        'Access-Control-Allow-Credentials': 'true',
+        'Vary': 'Origin',
+        ...headers,
+      });
+    }
+
     try {
       if (req.method === 'OPTIONS') {
-        return noContent(res);
+        res.writeHead(204, {
+          'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type',
+          'Access-Control-Max-Age': '86400',
+        });
+        return res.end();
       }
 
       if (req.method === 'GET' && req.url === '/health') {

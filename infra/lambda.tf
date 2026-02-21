@@ -17,8 +17,9 @@ resource "aws_lambda_function" "backend" {
 
   environment {
     variables = {
-      JWT_SECRET  = data.aws_ssm_parameter.jwt_secret.value
-      MONGODB_URI = data.aws_ssm_parameter.mongodb_uri.value
+      JWT_SECRET     = data.aws_ssm_parameter.jwt_secret.value
+      MONGODB_URI    = data.aws_ssm_parameter.mongodb_uri.value
+      ALLOWED_ORIGIN = data.aws_ssm_parameter.cors_origin.value
     }
   }
 }
