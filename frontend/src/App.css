@@ -331,14 +331,36 @@ button:disabled {
   color: #fff;
 }
 
-.topic-race-alert {
-  margin: 0;
-  border: 1px solid #f24c0a;
-  background: #fff1ea;
-  color: #812902;
+.topic-race-modal {
+  width: min(360px, 100%);
+  border: 1.5px solid #f24c0a;
+  background: #fff3f0;
   border-radius: 10px;
-  padding: 10px 12px;
-  font-size: 14px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.topic-race-overlay {
+  background: rgb(71 18 96 / 28%);
+}
+
+.topic-race-modal-icon {
+  font-size: 16px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.topic-race-modal-text {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #2b2b2b;
+}
+
+.topic-race-modal-text strong {
+  color: #f24c0a;
 }
 
 .topic-dialog-overlay {

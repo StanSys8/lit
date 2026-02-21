@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import App, {
   AdminStatCard,
+  RaceConditionModal,
   ReleaseTopicModal,
   ResetPasswordModal,
   StudentActions,
@@ -126,6 +127,18 @@ describe('Admin reset controls', () => {
     expect(html).toContain('Ти вибираєш: Distributed Systems.');
     expect(html).toContain('Назад до списку');
     expect(html).toContain('Так, беру цю тему');
+  });
+
+  it('renders race condition modal and close action', () => {
+    const html = renderToStaticMarkup(
+      <RaceConditionModal
+        message={'Цю тему щойно вибрав інший учень.\nСписок оновлено — оберіть іншу тему.'}
+        onClose={() => {}}
+      />,
+    );
+    expect(html).toContain('role="alertdialog"');
+    expect(html).toContain('Цю тему щойно вибрав інший учень');
+    expect(html).toContain('Список оновлено — оберіть іншу тему.');
   });
 
   it('renders topic confirmed screen', () => {

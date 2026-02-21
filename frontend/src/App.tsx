@@ -205,6 +205,34 @@ export const TopicConfirmDialog = ({
   );
 };
 
+export const RaceConditionModal = ({
+  message,
+  onClose,
+}: {
+  message: string;
+  onClose: () => void;
+}) => {
+  if (!message) return null;
+  const [headline, details] = message.split('\n');
+
+  return (
+    <div className="topic-dialog-overlay topic-race-overlay" role="presentation" data-testid="topic-race-overlay" onClick={onClose}>
+      <div className="topic-race-modal" role="alertdialog" aria-modal="true" aria-label="Повідомлення про недоступну тему" onClick={(event) => event.stopPropagation()}>
+        <span className="topic-race-modal-icon" aria-hidden="true">😔</span>
+        <p className="topic-race-modal-text">
+          <strong>{headline}</strong>
+          {details && (
+            <>
+              <br />
+              {details}
+            </>
+          )}
+        </p>
+      </div>
+    </div>
+  );
+};
+
 export const TopicConfirmedScreen = ({ topic, studentName, adminEmail }: { topic: StudentTopic; studentName: string; adminEmail: string }) => (
   <section className="topic-confirmed">
     <div className="topic-confirmed-checkmark" aria-hidden="true">✓</div>
@@ -1031,7 +1059,7 @@ function App() {
         const errorPayload = payload as { error?: string; message?: string };
         shouldRefreshTopics = true;
         if (errorPayload.error === 'TOPIC_ALREADY_TAKEN') {
-          setRaceConditionAlert('Цю тему щойно вибрав інший учень 😔 Список оновлено — оберіть іншу.');
+          setRaceConditionAlert('Цю тему щойно вибрав інший учень.\nСписок оновлено — оберіть іншу тему.');
         } else if (errorPayload.error === 'ALREADY_SELECTED') {
           setStudentTopicActionError('Ви вже обрали тему. Змінити вибір може тільки вчитель.');
         } else {
@@ -1571,59 +1599,61 @@ function App() {
         {selectedTopic ? (
           <TopicConfirmedScreen topic={selectedTopic} studentName={studentName} adminEmail={adminEmail} />
         ) : (
-          <section className="student-topics">
-            <div className="topic-search-wrap">
-              <label className="visually-hidden" htmlFor="topics-search">
-                Пошук теми
-              </label>
-              <input
-                id="topics-search"
-                type="text"
-                value={topicSearch}
-                onChange={(e) => setTopicSearch(e.target.value)}
-                placeholder="Введіть назву теми"
-              />
-            </div>
-
-            {studentTopicsError && <p className="error">{studentTopicsError}</p>}
-            {studentTopicActionError && <p className="error">{studentTopicActionError}</p>}
-            {raceConditionAlert && <p className="topic-race-alert">{raceConditionAlert}</p>}
-
-            {(initializing || studentTopicsLoading) && (
-              <div className="topic-skeletons" aria-label="Завантаження тем">
-                {Array.from({ length: 4 }).map((_, i) => (
-                  <div key={`skeleton-${i}`} className="topic-skeleton-row" />
-                ))}
-              </div>
-            )}
-
-            {!studentTopicsLoading && !studentTopicsError && studentTopics.length === 0 && (
-              <p>Всі теми вже вибрані. Зверніться до вчителя.</p>
-            )}
-
-            {!studentTopicsLoading && studentTopics.length > 0 && filteredStudentTopics.length === 0 && (
-              <p>{`Нічого не знайдено за запитом «${debouncedTopicSearch}»`}</p>
-            )}
-
-            {!studentTopicsLoading &&
-              filteredStudentTopics.map((topic) => (
-                <TopicAccordionItem
-                  key={topic.id}
-                  topic={topic}
-                  expanded={expandedTopicId === topic.id}
-                  onToggle={() => setExpandedTopicId((prev) => (prev === topic.id ? '' : topic.id))}
-                  onSelectTopic={onOpenTopicConfirm}
+          <>
+            <section className="student-topics">
+              <div className="topic-search-wrap">
+                <label className="visually-hidden" htmlFor="topics-search">
+                  Пошук теми
+                </label>
+                <input
+                  id="topics-search"
+                  type="text"
+                  value={topicSearch}
+                  onChange={(e) => setTopicSearch(e.target.value)}
+                  placeholder="Введіть назву теми"
                 />
-              ))}
+              </div>
 
-            <TopicConfirmDialog
-              topic={topicConfirmTarget}
-              pending={topicSelectPending}
-              backButtonRef={topicConfirmBackButtonRef}
-              onCancel={() => setTopicConfirmTarget(null)}
-              onConfirm={onConfirmTopicSelect}
-            />
-          </section>
+              {studentTopicsError && <p className="error">{studentTopicsError}</p>}
+              {studentTopicActionError && <p className="error">{studentTopicActionError}</p>}
+
+              {(initializing || studentTopicsLoading) && (
+                <div className="topic-skeletons" aria-label="Завантаження тем">
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <div key={`skeleton-${i}`} className="topic-skeleton-row" />
+                  ))}
+                </div>
+              )}
+
+              {!studentTopicsLoading && !studentTopicsError && studentTopics.length === 0 && (
+                <p>Всі теми вже вибрані. Зверніться до вчителя.</p>
+              )}
+
+              {!studentTopicsLoading && studentTopics.length > 0 && filteredStudentTopics.length === 0 && (
+                <p>{`Нічого не знайдено за запитом «${debouncedTopicSearch}»`}</p>
+              )}
+
+              {!studentTopicsLoading &&
+                filteredStudentTopics.map((topic) => (
+                  <TopicAccordionItem
+                    key={topic.id}
+                    topic={topic}
+                    expanded={expandedTopicId === topic.id}
+                    onToggle={() => setExpandedTopicId((prev) => (prev === topic.id ? '' : topic.id))}
+                    onSelectTopic={onOpenTopicConfirm}
+                  />
+                ))}
+
+              <TopicConfirmDialog
+                topic={topicConfirmTarget}
+                pending={topicSelectPending}
+                backButtonRef={topicConfirmBackButtonRef}
+                onCancel={() => setTopicConfirmTarget(null)}
+                onConfirm={onConfirmTopicSelect}
+              />
+            </section>
+            <RaceConditionModal message={raceConditionAlert} onClose={() => setRaceConditionAlert('')} />
+          </>
         )}
       </main>
     );
