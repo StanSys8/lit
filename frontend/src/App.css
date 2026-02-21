@@ -118,17 +118,24 @@ button:disabled {
 }
 
 .shell--student .header button {
-  background: rgb(255 255 255 / 16%);
-  border-color: rgb(255 255 255 / 34%);
-  color: #fff;
+  background: transparent;
+  border: 1px solid rgb(255 255 255 / 28%);
+  border-radius: 999px;
+  color: rgb(255 255 255 / 72%);
   box-shadow: none;
-  backdrop-filter: blur(2px);
+  min-height: 32px;
+  padding: 0 14px;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
 }
 
 .shell--student .header button:hover:enabled {
   transform: none;
   box-shadow: none;
-  background: rgb(255 255 255 / 24%);
+  color: #fff;
+  border-color: rgb(255 255 255 / 48%);
+  background: rgb(255 255 255 / 10%);
 }
 
 .student-topics {
