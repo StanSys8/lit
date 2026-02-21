@@ -139,6 +139,7 @@ describe('Admin reset controls', () => {
           department: 'CS',
         }}
         studentName="John Doe"
+        adminEmail="admin@example.com"
       />,
     );
     expect(html).toContain('Тему вибрано!');
@@ -146,7 +147,8 @@ describe('Admin reset controls', () => {
     expect(html).toContain('Dr. Smith');
     expect(html).toContain('CS');
     expect(html).toContain('John Doe');
-    expect(html).toContain('звернись до вчителя');
+    expect(html).toContain('admin@example.com');
+    expect(html).toContain('пишіть на пошту');
   });
 
   it('renders admin stat card in primary variant', () => {

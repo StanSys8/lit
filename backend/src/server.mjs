@@ -172,6 +172,12 @@ export const createApp = ({
     department: topic.department,
   });
 
+  const getFirstAdminEmail = async () => {
+    const { users } = await getDb();
+    const admin = await users.findOne({ role: 'admin' }, { projection: { email: 1 } });
+    return admin?.email || '';
+  };
+
   const mapSelectedTopicForUser = async (user) => {
     if (!user?.selectedTopicId) return null;
     const { topics } = await getDb();
@@ -324,6 +330,7 @@ export const createApp = ({
         email: user.email,
         role: user.role,
         selectedTopic: await mapSelectedTopicForUser(user),
+        adminEmail: user.role === 'student' ? await getFirstAdminEmail() : '',
       },
       { 'Set-Cookie': buildSessionCookie(token, SESSION_MAX_AGE_SEC) },
     );
@@ -962,6 +969,7 @@ export const createApp = ({
           email: user.email,
           role: user.role,
           selectedTopic: await mapSelectedTopicForUser(user),
+          adminEmail: user.role === 'student' ? await getFirstAdminEmail() : '',
         });
       }
 

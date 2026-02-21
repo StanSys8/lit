@@ -13,6 +13,7 @@ type LoginResponse = {
   email: string;
   role: 'student' | 'admin';
   selectedTopic: StudentTopic | null;
+  adminEmail: string;
 };
 
 type CreateStudentResponse = {
@@ -203,7 +204,7 @@ export const TopicConfirmDialog = ({
   );
 };
 
-export const TopicConfirmedScreen = ({ topic, studentName }: { topic: StudentTopic; studentName: string }) => (
+export const TopicConfirmedScreen = ({ topic, studentName, adminEmail }: { topic: StudentTopic; studentName: string; adminEmail: string }) => (
   <section className="topic-confirmed">
     <div className="topic-confirmed-checkmark" aria-hidden="true">✓</div>
     <h3 className="topic-confirmed-heading">Тему вибрано!</h3>
@@ -234,7 +235,11 @@ export const TopicConfirmedScreen = ({ topic, studentName }: { topic: StudentTop
         </>
       )}
     </dl>
-    <p className="topic-confirmed-hint">Якщо потрібна зміна — звернись до вчителя</p>
+    <p className="topic-confirmed-hint">
+      {adminEmail
+        ? <>Якщо потрібна зміна теми — пишіть на пошту <a href={`mailto:${adminEmail}`}>{adminEmail}</a></>
+        : 'Якщо потрібна зміна теми — зверніться до адміністратора'}
+    </p>
   </section>
 );
 
@@ -289,6 +294,7 @@ function App() {
   const [topicSelectPending, setTopicSelectPending] = useState(false);
   const [selectedTopic, setSelectedTopic] = useState<StudentTopic | null>(null);
   const [studentName, setStudentName] = useState('');
+  const [adminEmail, setAdminEmail] = useState('');
   const topicConfirmBackButtonRef = useRef<HTMLButtonElement>(null);
 
   const [students, setStudents] = useState<StudentRow[]>([]);
@@ -449,6 +455,7 @@ function App() {
         if (payload.role === 'student') {
           setSelectedTopic(payload.selectedTopic ?? null);
           setStudentName(payload.name || '');
+          setAdminEmail(payload.adminEmail || '');
         }
       } catch {
         navigate('/login');
@@ -513,6 +520,7 @@ function App() {
       } else {
         setSelectedTopic((payload as LoginResponse).selectedTopic || null);
         setStudentName((payload as LoginResponse).name || '');
+        setAdminEmail((payload as LoginResponse).adminEmail || '');
         navigate('/topics');
       }
     } catch {
@@ -1409,7 +1417,7 @@ function App() {
         </header>
 
         {selectedTopic ? (
-          <TopicConfirmedScreen topic={selectedTopic} studentName={studentName} />
+          <TopicConfirmedScreen topic={selectedTopic} studentName={studentName} adminEmail={adminEmail} />
         ) : (
           <section className="student-topics">
             <div className="topic-search-wrap">
