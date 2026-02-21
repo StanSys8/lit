@@ -119,12 +119,14 @@ describe('Admin reset controls', () => {
         }}
         pending={false}
         backButtonRef={{ current: null }}
+        adminEmail="admin@example.com"
         onCancel={() => {}}
         onConfirm={() => {}}
       />,
     );
     expect(html).toContain('Підтвердження вибору теми');
     expect(html).toContain('Ти вибираєш: Distributed Systems.');
+    expect(html).toContain('admin@example.com');
     expect(html).toContain('Назад до списку');
     expect(html).toContain('Так, беру цю тему');
   });

@@ -391,6 +391,16 @@ button:disabled {
   gap: 10px;
 }
 
+.topic-dialog a {
+  color: #b436f0;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.topic-dialog a:hover {
+  text-decoration: underline;
+}
+
 .modal-actions {
   display: flex;
   flex-wrap: wrap;

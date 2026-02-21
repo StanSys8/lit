@@ -177,12 +177,14 @@ export const TopicConfirmDialog = ({
   topic,
   pending,
   backButtonRef,
+  adminEmail,
   onCancel,
   onConfirm,
 }: {
   topic: StudentTopic | null;
   pending: boolean;
   backButtonRef: RefObject<HTMLButtonElement | null>;
+  adminEmail: string;
   onCancel: () => void;
   onConfirm: () => void;
 }) => {
@@ -191,7 +193,18 @@ export const TopicConfirmDialog = ({
   return (
     <div className="topic-dialog-overlay" role="presentation" data-testid="topic-confirm-overlay">
       <div className="topic-dialog" role="dialog" aria-modal="true" aria-label="Підтвердження вибору теми">
-        <p>{`Ти вибираєш: ${topic.title}. Змінити самостійно не можна — тільки через вчителя.`}</p>
+        <p>{`Ти вибираєш: ${topic.title}.`}</p>
+        <p>
+          Змінити самостійно не можна.
+          {' '}
+          {adminEmail ? (
+            <>
+              Якщо потрібна зміна теми — пишіть на пошту <a href={`mailto:${adminEmail}`}>{adminEmail}</a>.
+            </>
+          ) : (
+            'Якщо потрібна зміна теми — зверніться до адміністратора.'
+          )}
+        </p>
         <div className="modal-actions">
           <button ref={backButtonRef} type="button" className="modal-btn-secondary" onClick={onCancel} disabled={pending}>
             Назад до списку
@@ -1648,6 +1661,7 @@ function App() {
                 topic={topicConfirmTarget}
                 pending={topicSelectPending}
                 backButtonRef={topicConfirmBackButtonRef}
+                adminEmail={adminEmail}
                 onCancel={() => setTopicConfirmTarget(null)}
                 onConfirm={onConfirmTopicSelect}
               />
