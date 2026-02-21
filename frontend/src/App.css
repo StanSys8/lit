@@ -55,7 +55,7 @@ select {
   padding-right: 44px;
 }
 
-.password-toggle {
+.login-form .password-toggle {
   position: absolute;
   right: 8px;
   top: 50%;
@@ -65,17 +65,19 @@ select {
   border: none;
   box-shadow: none;
   min-height: 0;
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #bba8cc;
+  color: #9b7bb5;
   border-radius: 6px;
+  z-index: 1;
+  cursor: pointer;
 }
 
-.password-toggle:hover:enabled {
+.login-form .password-toggle:hover:enabled {
   color: #b436f0;
   background: #f5eeff;
   -webkit-transform: translateY(-50%);
