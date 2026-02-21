@@ -338,6 +338,7 @@ function App() {
   const [showAddTopicForm, setShowAddTopicForm] = useState(false);
   const [expandedAdminTopicId, setExpandedAdminTopicId] = useState('');
   const topicCsvInputRef = useRef<HTMLInputElement>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   const heading = useMemo(() => {
     if (route === '/topics') return 'Вибір теми';
@@ -541,6 +542,44 @@ function App() {
       });
     } finally {
       setSelectedTopic(null);
+      setStudentName('');
+      setAdminEmail('');
+      setStudentTopics([]);
+      setStudentTopicsError('');
+      setStudentTopicActionError('');
+      setRaceConditionAlert('');
+      setTopicSearch('');
+      setDebouncedTopicSearch('');
+      setExpandedTopicId('');
+      setTopicConfirmTarget(null);
+      setStudents([]);
+      setStudentsError('');
+      setTopics([]);
+      setTopicsError('');
+      setAuditRows([]);
+      setAuditError('');
+      setCreateError('');
+      setCreatePassword('');
+      setNewStudentName('');
+      setNewStudentEmail('');
+      setNewStudentClass('');
+      setNewTopicTitle('');
+      setNewTopicDescription('');
+      setNewTopicSupervisor('');
+      setNewTopicDepartment('');
+      setCsvRows([]);
+      setCsvErrors([]);
+      setBulkCreated(0);
+      setBulkCredentials([]);
+      setTopicCsvRows([]);
+      setTopicCsvErrors([]);
+      setTopicBulkCreated(0);
+      setReleaseTopicTargetId('');
+      setReleaseTopicTitle('');
+      setResetPasswordValue('');
+      setAdminTab('status');
+      setShowAddTopicForm(false);
+      setExpandedAdminTopicId('');
       navigate('/login');
     }
   };
@@ -1519,7 +1558,7 @@ function App() {
               </div>
             )}
 
-            {!studentTopicsLoading && studentTopics.length === 0 && (
+            {!studentTopicsLoading && !studentTopicsError && studentTopics.length === 0 && (
               <p>Всі теми вже вибрані. Зверніться до вчителя.</p>
             )}
 
@@ -1566,13 +1605,23 @@ function App() {
         />
 
         <label htmlFor="password">Пароль</label>
-        <input
-          id="password"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
+        <div className="password-wrap">
+          <input
+            id="password"
+            type={showPassword ? 'text' : 'password'}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+          <button
+            type="button"
+            className="password-toggle"
+            onClick={() => setShowPassword((v) => !v)}
+            aria-label={showPassword ? 'Сховати пароль' : 'Показати пароль'}
+          >
+            {showPassword ? 'Сховати' : 'Показати'}
+          </button>
+        </div>
 
         {error && <p className="error">{error}</p>}
 

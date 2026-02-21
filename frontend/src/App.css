@@ -1,9 +1,21 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
 #root {
   min-height: 100vh;
 }
 
 body {
   color: #2b2b2b;
+  overflow-x: hidden;
+}
+
+input,
+textarea,
+select {
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 .shell {
@@ -32,6 +44,40 @@ body {
   align-content: center;
   gap: 20px;
   background: #faf5ff;
+}
+
+.password-wrap {
+  position: relative;
+}
+
+.password-wrap input {
+  width: 100%;
+  padding-right: 76px;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  -webkit-transform: translateY(-50%);
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  box-shadow: none;
+  min-height: 34px;
+  padding: 0 10px;
+  color: #888;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 7px;
+}
+
+.password-toggle:hover:enabled {
+  color: #471260;
+  background: #f2f2f2;
+  -webkit-transform: translateY(-50%);
+  transform: translateY(-50%);
+  box-shadow: none;
 }
 
 .login-project-title {
@@ -280,10 +326,16 @@ button:disabled {
 
 .topic-dialog-overlay {
   position: fixed;
-  inset: 0;
-  background: rgb(71 18 96 / 45%);
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: rgba(71, 18, 96, 0.45);
+  display: -webkit-flex;
   display: flex;
+  -webkit-align-items: center;
   align-items: center;
+  -webkit-justify-content: center;
   justify-content: center;
   padding: 16px;
   z-index: 25;
