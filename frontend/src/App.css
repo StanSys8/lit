@@ -2,8 +2,19 @@
   box-sizing: border-box;
 }
 
+:root {
+  --app-viewport-height: 100vh;
+}
+
+@supports (height: 100dvh) {
+  :root {
+    --app-viewport-height: 100dvh;
+  }
+}
+
 #root {
   min-height: 100vh;
+  min-height: var(--app-viewport-height);
 }
 
 body {
@@ -22,6 +33,7 @@ select {
   width: min(480px, 100%);
   margin: 0 auto;
   min-height: 100vh;
+  min-height: var(--app-viewport-height);
   padding: 16px;
 }
 
