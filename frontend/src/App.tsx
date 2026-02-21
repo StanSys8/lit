@@ -14,6 +14,7 @@ type LoginResponse = {
   role: 'student' | 'admin';
   selectedTopic: StudentTopic | null;
   adminEmail: string;
+  token?: string;
 };
 
 type CreateStudentResponse = {
@@ -269,6 +270,21 @@ export const AdminStatCard = ({
   </article>
 );
 
+const SESSION_TOKEN_KEY = 'lit_session_token';
+const getStoredToken = () => sessionStorage.getItem(SESSION_TOKEN_KEY) ?? '';
+const setStoredToken = (t: string) => sessionStorage.setItem(SESSION_TOKEN_KEY, t);
+const clearStoredToken = () => sessionStorage.removeItem(SESSION_TOKEN_KEY);
+
+const authFetch = (url: string, options: RequestInit = {}): Promise<Response> => {
+  const token = getStoredToken();
+  if (!token) return fetch(url, options);
+  const existing = (options.headers ?? {}) as Record<string, string>;
+  return fetch(url, {
+    ...options,
+    headers: { ...existing, Authorization: `Bearer ${token}` },
+  });
+};
+
 function App() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -358,7 +374,7 @@ function App() {
     setStudentsError('');
 
     try {
-      const response = await fetch(apiUrl('/admin/users'), {
+      const response = await authFetch(apiUrl('/admin/users'), {
         method: 'GET',
         credentials: 'include',
       });
@@ -381,7 +397,7 @@ function App() {
     setStudentTopicsError('');
 
     try {
-      const response = await fetch(apiUrl('/topics'), {
+      const response = await authFetch(apiUrl('/topics'), {
         method: 'GET',
         credentials: 'include',
       });
@@ -404,7 +420,7 @@ function App() {
     setTopicsError('');
 
     try {
-      const response = await fetch(apiUrl('/admin/topics'), {
+      const response = await authFetch(apiUrl('/admin/topics'), {
         method: 'GET',
         credentials: 'include',
       });
@@ -426,7 +442,7 @@ function App() {
     setAuditLoading(true);
     setAuditError('');
     try {
-      const response = await fetch(apiUrl('/admin/audit'), {
+      const response = await authFetch(apiUrl('/admin/audit'), {
         method: 'GET',
         credentials: 'include',
       });
@@ -447,7 +463,7 @@ function App() {
     if (!initializing) return;
     void (async () => {
       try {
-        const response = await fetch(apiUrl('/auth/me'), {
+        const response = await authFetch(apiUrl('/auth/me'), {
           method: 'GET',
           credentials: 'include',
         });
@@ -505,7 +521,7 @@ function App() {
     setError('');
 
     try {
-      const response = await fetch(apiUrl('/auth/login'), {
+      const response = await authFetch(apiUrl('/auth/login'), {
         method: 'POST',
         credentials: 'include',
         headers: { 'content-type': 'application/json' },
@@ -518,13 +534,15 @@ function App() {
         return;
       }
 
-      if ((payload as LoginResponse).role === 'admin') {
+      const loginPayload = payload as LoginResponse;
+      if (loginPayload.token) setStoredToken(loginPayload.token);
+      if (loginPayload.role === 'admin') {
         setSelectedTopic(null);
         navigate('/admin');
       } else {
-        setSelectedTopic((payload as LoginResponse).selectedTopic || null);
-        setStudentName((payload as LoginResponse).name || '');
-        setAdminEmail((payload as LoginResponse).adminEmail || '');
+        setSelectedTopic(loginPayload.selectedTopic || null);
+        setStudentName(loginPayload.name || '');
+        setAdminEmail(loginPayload.adminEmail || '');
         navigate('/topics');
       }
     } catch {
@@ -536,11 +554,12 @@ function App() {
 
   const onLogout = async () => {
     try {
-      await fetch(apiUrl('/auth/logout'), {
+      await authFetch(apiUrl('/auth/logout'), {
         method: 'POST',
         credentials: 'include',
       });
     } finally {
+      clearStoredToken();
       setSelectedTopic(null);
       setStudentName('');
       setAdminEmail('');
@@ -590,7 +609,7 @@ function App() {
     setCreatePassword('');
 
     try {
-      const response = await fetch(apiUrl('/admin/users'), {
+      const response = await authFetch(apiUrl('/admin/users'), {
         method: 'POST',
         credentials: 'include',
         headers: { 'content-type': 'application/json' },
@@ -626,7 +645,7 @@ function App() {
     setCreateError('');
 
     try {
-      const response = await fetch(apiUrl(`/admin/users/${studentId}`), {
+      const response = await authFetch(apiUrl(`/admin/users/${studentId}`), {
         method: 'DELETE',
         credentials: 'include',
       });
@@ -651,7 +670,7 @@ function App() {
     setCreateError('');
     setResetPasswordValue('');
     try {
-      const response = await fetch(apiUrl(`/admin/users/${studentId}/reset-password`), {
+      const response = await authFetch(apiUrl(`/admin/users/${studentId}/reset-password`), {
         method: 'POST',
         credentials: 'include',
       });
@@ -692,7 +711,7 @@ function App() {
     setBulkCredentials([]);
 
     try {
-      const response = await fetch(apiUrl('/admin/users/bulk'), {
+      const response = await authFetch(apiUrl('/admin/users/bulk'), {
         method: 'POST',
         credentials: 'include',
         headers: { 'content-type': 'application/json' },
@@ -765,7 +784,7 @@ function App() {
     setExportStatusLoading(true);
 
     try {
-      const response = await fetch(apiUrl('/admin/export/status'), {
+      const response = await authFetch(apiUrl('/admin/export/status'), {
         method: 'GET',
         credentials: 'include',
       });
@@ -798,7 +817,7 @@ function App() {
     setExportAuditLoading(true);
 
     try {
-      const response = await fetch(apiUrl('/admin/export/audit'), {
+      const response = await authFetch(apiUrl('/admin/export/audit'), {
         method: 'GET',
         credentials: 'include',
       });
@@ -831,7 +850,7 @@ function App() {
     setCreateTopicError('');
 
     try {
-      const response = await fetch(apiUrl('/admin/topics'), {
+      const response = await authFetch(apiUrl('/admin/topics'), {
         method: 'POST',
         credentials: 'include',
         headers: { 'content-type': 'application/json' },
@@ -865,7 +884,7 @@ function App() {
   const onDeleteTopic = async (topicId: string) => {
     setCreateTopicError('');
     try {
-      const response = await fetch(apiUrl(`/admin/topics/${topicId}`), {
+      const response = await authFetch(apiUrl(`/admin/topics/${topicId}`), {
         method: 'DELETE',
         credentials: 'include',
       });
@@ -901,7 +920,7 @@ function App() {
     if (!releaseTopicTargetId) return;
     setCreateTopicError('');
 
-    const result = await releaseTopicByAdmin(releaseTopicTargetId);
+    const result = await releaseTopicByAdmin(releaseTopicTargetId, authFetch);
     if (result.ok) {
       setTopics((prev) => prev.map((topic) => (topic.id === result.topic.id ? result.topic : topic)));
       setReleaseTopicTargetId('');
@@ -942,7 +961,7 @@ function App() {
     setTopicBulkCreated(0);
     setCreateTopicError('');
 
-    const result = await uploadTopicsCsv(topicCsvRows);
+    const result = await uploadTopicsCsv(topicCsvRows, authFetch);
     if (!result.ok) {
       setCreateTopicError(result.message);
       return;
@@ -970,7 +989,7 @@ function App() {
 
     let shouldRefreshTopics = false;
     try {
-      const response = await fetch(apiUrl(`/topics/${topicConfirmTarget.id}/select`), {
+      const response = await authFetch(apiUrl(`/topics/${topicConfirmTarget.id}/select`), {
         method: 'POST',
         credentials: 'include',
       });

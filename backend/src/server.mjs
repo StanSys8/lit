@@ -140,6 +140,12 @@ export const createApp = ({
   };
 
   const authenticate = async (req) => {
+    const authHeader = req.headers['authorization'] || '';
+    if (authHeader.startsWith('Bearer ')) {
+      const headerToken = authHeader.slice(7);
+      const headerPayload = verifyToken(headerToken, jwtSecret);
+      if (headerPayload) return headerPayload;
+    }
     const cookies = parseCookies(req.headers.cookie);
     const token = cookies.session;
     if (!token) return null;
@@ -332,6 +338,7 @@ export const createApp = ({
         role: user.role,
         selectedTopic: await mapSelectedTopicForUser(user),
         adminEmail: user.role === 'student' ? await getFirstAdminEmail() : '',
+        token,
       },
       { 'Set-Cookie': buildSessionCookie(token, SESSION_MAX_AGE_SEC) },
     );

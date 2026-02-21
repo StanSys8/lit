@@ -21,7 +21,7 @@ export type TopicsBulkResponse = {
   errors: Array<{ row: number; message: string }>;
 };
 
-type FetchLike = typeof fetch;
+type FetchLike = (url: string, init?: RequestInit) => Promise<Response>;
 
 export const uploadTopicsCsv = async (
   rows: CsvTopicRow[],
