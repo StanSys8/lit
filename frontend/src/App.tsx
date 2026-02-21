@@ -246,6 +246,10 @@ function App() {
     if (typeof window === 'undefined') return '/login';
     return normalizePath(window.location.pathname);
   });
+  const [initializing, setInitializing] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return normalizePath(window.location.pathname) !== '/login';
+  });
   const [studentTopics, setStudentTopics] = useState<StudentTopic[]>([]);
   const [studentTopicsLoading, setStudentTopicsLoading] = useState(false);
   const [studentTopicsError, setStudentTopicsError] = useState('');
@@ -402,6 +406,31 @@ function App() {
   };
 
   useEffect(() => {
+    if (!initializing) return;
+    void (async () => {
+      try {
+        const response = await fetch(apiUrl('/auth/me'), {
+          method: 'GET',
+          credentials: 'include',
+        });
+        if (!response.ok) {
+          navigate('/login');
+          return;
+        }
+        const payload = (await response.json()) as LoginResponse;
+        if (payload.role === 'student') {
+          setSelectedTopic(payload.selectedTopic ?? null);
+        }
+      } catch {
+        navigate('/login');
+      } finally {
+        setInitializing(false);
+      }
+    })();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (initializing) return;
     if (route === '/admin') {
       void loadStudents();
       void loadTopics();
@@ -410,7 +439,7 @@ function App() {
     if (route === '/topics') {
       void loadStudentTopics();
     }
-  }, [route]);
+  }, [route, initializing]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -1370,7 +1399,7 @@ function App() {
             {studentTopicActionError && <p className="error">{studentTopicActionError}</p>}
             {raceConditionAlert && <p className="topic-race-alert">{raceConditionAlert}</p>}
 
-            {studentTopicsLoading && (
+            {(initializing || studentTopicsLoading) && (
               <div className="topic-skeletons" aria-label="Завантаження тем">
                 {Array.from({ length: 4 }).map((_, i) => (
                   <div key={`skeleton-${i}`} className="topic-skeleton-row" />

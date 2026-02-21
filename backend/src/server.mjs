@@ -949,6 +949,20 @@ export const createApp = ({
         return json(res, 200, { newPassword });
       }
 
+      if (req.method === 'GET' && req.url === '/auth/me') {
+        const session = await requireAuth(req, res);
+        if (!session) return;
+        const { users } = await getDb();
+        const user = await users.findOne(idQuery(session.sub));
+        if (!user) return json(res, 401, { error: 'UNAUTHORIZED', message: 'Unauthorized' });
+        return json(res, 200, {
+          id: idFromDoc(user),
+          email: user.email,
+          role: user.role,
+          selectedTopic: await mapSelectedTopicForUser(user),
+        });
+      }
+
       return json(res, 404, { error: 'NOT_FOUND', message: 'Not Found' });
     } catch (error) {
       console.error('[backend] request failed', error);
