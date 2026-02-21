@@ -138,10 +138,14 @@ describe('Admin reset controls', () => {
           supervisor: 'Dr. Smith',
           department: 'CS',
         }}
+        studentName="John Doe"
       />,
     );
     expect(html).toContain('Тему вибрано!');
     expect(html).toContain('Distributed Systems');
+    expect(html).toContain('Dr. Smith');
+    expect(html).toContain('CS');
+    expect(html).toContain('John Doe');
     expect(html).toContain('звернись до вчителя');
   });
 
