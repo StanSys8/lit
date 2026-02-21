@@ -105,7 +105,7 @@ export const ResetPasswordModal = ({
       <p>Новий пароль (показується один раз):</p>
       <code>{password}</code>
       <p>Скопіюйте пароль та передайте студенту безпечно.</p>
-      <button type="button" onClick={onClose}>
+      <button type="button" className="modal-btn-secondary" onClick={onClose}>
         Закрити
       </button>
     </div>
@@ -128,11 +128,11 @@ export const ReleaseTopicModal = ({
       <p>{`Звільнити тему "${topicTitle}"?`}</p>
       <p>Після цього тема знову стане доступною для вибору студентом.</p>
       <div className="modal-actions">
+        <button type="button" className="modal-btn-secondary" onClick={onCancel}>
+          Скасувати
+        </button>
         <button type="button" onClick={onConfirm}>
           Підтвердити
-        </button>
-        <button type="button" onClick={onCancel}>
-          Скасувати
         </button>
       </div>
     </div>
@@ -192,7 +192,7 @@ export const TopicConfirmDialog = ({
       <div className="topic-dialog" role="dialog" aria-modal="true" aria-label="Підтвердження вибору теми">
         <p>{`Ти вибираєш: ${topic.title}. Змінити самостійно не можна — тільки через вчителя.`}</p>
         <div className="modal-actions">
-          <button ref={backButtonRef} type="button" onClick={onCancel} disabled={pending}>
+          <button ref={backButtonRef} type="button" className="modal-btn-secondary" onClick={onCancel} disabled={pending}>
             Назад до списку
           </button>
           <button type="button" onClick={onConfirm} disabled={pending}>
@@ -1348,7 +1348,7 @@ function App() {
                   <div className="admin-table-header">
                     <span className="admin-table-title">{`${totalTopicsCount} тем всього`}</span>
                   </div>
-                  <table className="students-table">
+                  <table className="students-table admin-topics-table">
                     <thead>
                       <tr>
                         <th>Назва теми</th>

@@ -712,11 +712,11 @@ export const createApp = ({
         const { topics, users } = await getDb();
         const [topicItems, userItems] = await Promise.all([
           topics.find({}).toArray(),
-          users.find({}).project({ id: 1, _id: 1, name: 1, email: 1 }).toArray(),
+          users.find({}).project({ id: 1, _id: 1, name: 1, email: 1, class: 1 }).toArray(),
         ]);
 
         const usersById = new Map(userItems.map((u) => [idFromDoc(u), u]));
-        const header = ['title', 'description', 'supervisor', 'department', 'studentName', 'studentEmail', 'status'].join(
+        const header = ['title', 'description', 'supervisor', 'department', 'studentName', 'studentEmail', 'studentClass', 'status'].join(
           ',',
         );
         const rows = topicItems.map((topic) => {
@@ -728,6 +728,7 @@ export const createApp = ({
             csvSafe(topic.department),
             csvSafe(selectedUser?.name ?? ''),
             csvSafe(selectedUser?.email ?? ''),
+            csvSafe(selectedUser?.class ?? ''),
             csvSafe(selectedUser ? 'зайнята' : 'вільна'),
           ].join(',');
         });

@@ -62,7 +62,8 @@ body {
 .students-table button,
 .student-topics input,
 .student-topics button,
-.bulk-box button {
+.bulk-box button,
+.modal-actions button {
   min-height: 44px;
   border-radius: 10px;
   border: 1px solid #d8c4e7;
@@ -208,14 +209,19 @@ button:disabled {
 }
 
 .topic-accordion-item {
-  border: 1px solid #e8d8f4;
+  border-left: 3px solid transparent;
   border-radius: 12px;
   overflow: hidden;
   background: #fff;
+  transition: border-color 0.2s;
+}
+
+.topic-accordion-item:hover {
+  border-left-color: #f24c0a;
 }
 
 .topic-accordion-item--open {
-  border-left: 3px solid #b436f0;
+  border-left-color: #b436f0;
 }
 
 .topic-accordion-trigger {
@@ -298,6 +304,20 @@ button:disabled {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  justify-content: flex-end;
+}
+
+.modal-btn-secondary {
+  background: #f2f2f2;
+  border-color: #e0e0e0;
+  color: #471260;
+}
+
+.modal-btn-secondary:hover:enabled {
+  background: #eae2f3;
+  border-color: #d8c4e7;
+  transform: none;
+  box-shadow: none;
 }
 
 .topic-confirmed {
@@ -702,6 +722,26 @@ button:disabled {
   border-collapse: collapse;
   border-radius: 10px;
   overflow: hidden;
+}
+
+.admin-topics-table {
+  table-layout: fixed;
+}
+
+.admin-topics-table th:nth-child(1) { width: 42%; }
+.admin-topics-table th:nth-child(2) { width: 12%; }
+.admin-topics-table th:nth-child(3) { width: 26%; }
+.admin-topics-table th:nth-child(4) { width: 20%; }
+
+.admin-topics-table td {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-topics-table .admin-topic-details-row td {
+  white-space: normal;
+  overflow: visible;
 }
 
 .students-table th,
