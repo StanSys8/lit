@@ -204,10 +204,10 @@ export const TopicConfirmDialog = ({
 
 export const TopicConfirmedScreen = ({ topic }: { topic: StudentTopic }) => (
   <section className="topic-confirmed">
-    <p className="topic-confirmed-mark">✓</p>
-    <h2>Тему вибрано!</h2>
-    <p>{topic.title}</p>
-    <p>Якщо потрібна зміна — звернись до вчителя</p>
+    <div className="topic-confirmed-checkmark" aria-hidden="true">✓</div>
+    <h3 className="topic-confirmed-heading">Тему вибрано!</h3>
+    <div className="topic-confirmed-name">{topic.title}</div>
+    <p className="topic-confirmed-hint">Якщо потрібна зміна — звернись до вчителя</p>
   </section>
 );
 
@@ -1349,65 +1349,63 @@ function App() {
           </button>
         </header>
 
-        <section className="student-topics">
-          {selectedTopic ? (
-            <TopicConfirmedScreen topic={selectedTopic} />
-          ) : (
-            <>
-              <div className="topic-search-wrap">
-                <label className="visually-hidden" htmlFor="topics-search">
-                  Пошук теми
-                </label>
-                <input
-                  id="topics-search"
-                  type="text"
-                  value={topicSearch}
-                  onChange={(e) => setTopicSearch(e.target.value)}
-                  placeholder="Введіть назву теми"
-                />
-              </div>
+        {selectedTopic ? (
+          <TopicConfirmedScreen topic={selectedTopic} />
+        ) : (
+          <section className="student-topics">
+            <div className="topic-search-wrap">
+              <label className="visually-hidden" htmlFor="topics-search">
+                Пошук теми
+              </label>
+              <input
+                id="topics-search"
+                type="text"
+                value={topicSearch}
+                onChange={(e) => setTopicSearch(e.target.value)}
+                placeholder="Введіть назву теми"
+              />
+            </div>
 
-              {studentTopicsError && <p className="error">{studentTopicsError}</p>}
-              {studentTopicActionError && <p className="error">{studentTopicActionError}</p>}
-              {raceConditionAlert && <p className="topic-race-alert">{raceConditionAlert}</p>}
+            {studentTopicsError && <p className="error">{studentTopicsError}</p>}
+            {studentTopicActionError && <p className="error">{studentTopicActionError}</p>}
+            {raceConditionAlert && <p className="topic-race-alert">{raceConditionAlert}</p>}
 
-              {studentTopicsLoading && (
-                <div className="topic-skeletons" aria-label="Завантаження тем">
-                  {Array.from({ length: 4 }).map((_, i) => (
-                    <div key={`skeleton-${i}`} className="topic-skeleton-row" />
-                  ))}
-                </div>
-              )}
-
-              {!studentTopicsLoading && studentTopics.length === 0 && (
-                <p>Всі теми вже вибрані. Зверніться до вчителя.</p>
-              )}
-
-              {!studentTopicsLoading && studentTopics.length > 0 && filteredStudentTopics.length === 0 && (
-                <p>{`Нічого не знайдено за запитом «${debouncedTopicSearch}»`}</p>
-              )}
-
-              {!studentTopicsLoading &&
-                filteredStudentTopics.map((topic) => (
-                  <TopicAccordionItem
-                    key={topic.id}
-                    topic={topic}
-                    expanded={expandedTopicId === topic.id}
-                    onToggle={() => setExpandedTopicId((prev) => (prev === topic.id ? '' : topic.id))}
-                    onSelectTopic={onOpenTopicConfirm}
-                  />
+            {studentTopicsLoading && (
+              <div className="topic-skeletons" aria-label="Завантаження тем">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={`skeleton-${i}`} className="topic-skeleton-row" />
                 ))}
-            </>
-          )}
+              </div>
+            )}
 
-          <TopicConfirmDialog
-            topic={topicConfirmTarget}
-            pending={topicSelectPending}
-            backButtonRef={topicConfirmBackButtonRef}
-            onCancel={() => setTopicConfirmTarget(null)}
-            onConfirm={onConfirmTopicSelect}
-          />
-        </section>
+            {!studentTopicsLoading && studentTopics.length === 0 && (
+              <p>Всі теми вже вибрані. Зверніться до вчителя.</p>
+            )}
+
+            {!studentTopicsLoading && studentTopics.length > 0 && filteredStudentTopics.length === 0 && (
+              <p>{`Нічого не знайдено за запитом «${debouncedTopicSearch}»`}</p>
+            )}
+
+            {!studentTopicsLoading &&
+              filteredStudentTopics.map((topic) => (
+                <TopicAccordionItem
+                  key={topic.id}
+                  topic={topic}
+                  expanded={expandedTopicId === topic.id}
+                  onToggle={() => setExpandedTopicId((prev) => (prev === topic.id ? '' : topic.id))}
+                  onSelectTopic={onOpenTopicConfirm}
+                />
+              ))}
+
+            <TopicConfirmDialog
+              topic={topicConfirmTarget}
+              pending={topicSelectPending}
+              backButtonRef={topicConfirmBackButtonRef}
+              onCancel={() => setTopicConfirmTarget(null)}
+              onConfirm={onConfirmTopicSelect}
+            />
+          </section>
+        )}
       </main>
     );
   }
