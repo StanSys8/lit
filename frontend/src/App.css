@@ -501,6 +501,88 @@ button:disabled {
   box-shadow: none;
 }
 
+.admin-btn-logout {
+  color: #888;
+  border-color: #e0e0e0;
+  font-size: 12px;
+  min-height: 32px;
+  padding: 0 12px;
+}
+
+.admin-btn-logout:hover:enabled {
+  color: #471260;
+  border-color: #d8c4e7;
+  background: #f2f2f2;
+}
+
+.admin-btn-add {
+  background: #b436f0;
+  border-color: #b436f0;
+  color: #fff;
+  border-radius: 10px;
+  padding: 0 16px;
+  min-height: 36px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.admin-btn-add:hover:enabled {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgb(180 54 240 / 30%);
+}
+
+.admin-topic-expand-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: 0;
+  box-shadow: none;
+  color: #2b2b2b;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 0;
+  min-height: 0;
+  text-align: left;
+  cursor: pointer;
+}
+
+.admin-topic-expand-btn:hover:enabled {
+  transform: none;
+  box-shadow: none;
+  color: #b436f0;
+}
+
+.admin-topic-expand-icon {
+  color: #b436f0;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.admin-topic-details-row td {
+  background: #faf5ff;
+  border-top: 0;
+}
+
+.admin-topic-details {
+  margin: 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 16px;
+  font-size: 13px;
+  padding: 4px 0;
+}
+
+.admin-topic-details dt {
+  color: #888;
+  font-weight: 500;
+}
+
+.admin-topic-details dd {
+  margin: 0;
+  color: #2b2b2b;
+}
+
 .admin-title {
   margin: 0;
   font-size: 16px;
@@ -576,6 +658,14 @@ button:disabled {
   display: grid;
   gap: 8px;
   justify-items: start;
+}
+
+.admin-btn-export {
+  min-height: 44px;
+  padding: 0 20px;
+  font-size: 14px;
+  font-weight: 700;
+  border-radius: 12px;
 }
 
 .bulk-box {

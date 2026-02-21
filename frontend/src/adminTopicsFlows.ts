@@ -13,7 +13,7 @@ export type TopicRow = {
   description: string;
   supervisor: string;
   department: string;
-  selectedBy: { id: string; name: string } | null;
+  selectedBy: { id: string; name: string; class: string } | null;
 };
 
 export type TopicsBulkResponse = {

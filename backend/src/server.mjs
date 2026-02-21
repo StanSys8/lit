@@ -206,7 +206,7 @@ export const createApp = ({
       description: topic.description,
       supervisor: topic.supervisor,
       department: topic.department,
-      selectedBy: selectedUser ? { id: idFromDoc(selectedUser), name: selectedUser.name } : null,
+      selectedBy: selectedUser ? { id: idFromDoc(selectedUser), name: selectedUser.name, class: String(selectedUser.class ?? '') } : null,
     };
   };
 

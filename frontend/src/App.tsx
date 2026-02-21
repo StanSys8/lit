@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import type { ChangeEvent, FormEvent, RefObject } from 'react';
 import { addStudentToList, removeStudentFromList, type StudentRow } from './adminStudents';
 import { credentialsToCsv, parseStudentsCsv, type CsvError, type CsvStudent } from './studentsCsv';
@@ -36,7 +36,7 @@ type TopicRow = {
   description: string;
   supervisor: string;
   department: string;
-  selectedBy: { id: string; name: string } | null;
+  selectedBy: { id: string; name: string; class: string } | null;
 };
 
 type AuditRow = {
@@ -335,6 +335,9 @@ function App() {
   const [releaseTopicTargetId, setReleaseTopicTargetId] = useState('');
   const [releaseTopicTitle, setReleaseTopicTitle] = useState('');
   const [adminTab, setAdminTab] = useState<'status' | 'students' | 'topics' | 'audit'>('status');
+  const [showAddTopicForm, setShowAddTopicForm] = useState(false);
+  const [expandedAdminTopicId, setExpandedAdminTopicId] = useState('');
+  const topicCsvInputRef = useRef<HTMLInputElement>(null);
 
   const heading = useMemo(() => {
     if (route === '/topics') return 'Вибір теми';
@@ -699,7 +702,9 @@ function App() {
     const link = document.createElement('a');
     link.href = url;
     link.download = 'student-credentials.csv';
+    document.body.appendChild(link);
     link.click();
+    document.body.removeChild(link);
     URL.revokeObjectURL(url);
   };
 
@@ -738,7 +743,9 @@ function App() {
       const link = document.createElement('a');
       link.href = url;
       link.download = fileName;
+      document.body.appendChild(link);
       link.click();
+      document.body.removeChild(link);
       URL.revokeObjectURL(url);
     } catch {
       setExportStatusError('Не вдалося завантажити CSV статусу');
@@ -769,7 +776,9 @@ function App() {
       const link = document.createElement('a');
       link.href = url;
       link.download = fileName;
+      document.body.appendChild(link);
       link.click();
+      document.body.removeChild(link);
       URL.revokeObjectURL(url);
     } catch {
       setExportAuditError('Не вдалося завантажити CSV аудиту');
@@ -778,7 +787,7 @@ function App() {
     }
   };
 
-  const onCreateTopic = async (event: FormEvent) => {
+  const onCreateTopic = async (event: FormEvent): Promise<boolean> => {
     event.preventDefault();
     setCreateTopicError('');
 
@@ -798,7 +807,7 @@ function App() {
       const payload = (await response.json()) as CreateTopicResponse | { message?: string };
       if (!response.ok) {
         setCreateTopicError((payload as { message?: string }).message || 'Не вдалося додати тему');
-        return;
+        return false;
       }
 
       const created = payload as CreateTopicResponse;
@@ -807,8 +816,10 @@ function App() {
       setNewTopicDescription('');
       setNewTopicSupervisor('');
       setNewTopicDepartment('');
+      return true;
     } catch {
       setCreateTopicError('Не вдалося додати тему');
+      return false;
     }
   };
 
@@ -1024,7 +1035,10 @@ function App() {
         <section className="admin-content">
           {adminTab === 'status' && (
             <section className="admin-panel" data-testid="admin-dashboard-stats">
-              <h1 className="admin-title">Статус вибору тем</h1>
+              <div className="admin-panel-header">
+                <h1 className="admin-title">Статус вибору тем</h1>
+                <button type="button" className="admin-btn-muted admin-btn-logout" onClick={onLogout}>Вийти</button>
+              </div>
               <div className="admin-stats">
                 <article className="admin-stat">
                   <p className="admin-stat-num">{selectedStudentsCount}</p>
@@ -1045,8 +1059,8 @@ function App() {
                 </div>
               </section>
               <div className="admin-dashboard-actions">
-                <button type="button" onClick={onExportTopicsStatus} disabled={exportStatusLoading}>
-                  {exportStatusLoading ? 'Експорт...' : '⬇ Вивантажити CSV'}
+                <button type="button" className="admin-btn-export" onClick={onExportTopicsStatus} disabled={exportStatusLoading}>
+                  {exportStatusLoading ? 'Експорт...' : '⬇ Вивантажити CSV з вибраними темами'}
                 </button>
                 {exportStatusError && <p className="error">{exportStatusError}</p>}
               </div>
@@ -1058,6 +1072,7 @@ function App() {
             <section className="admin-panel">
               <div className="admin-panel-header">
                 <h1 className="admin-title">Студенти</h1>
+                <button type="button" className="admin-btn-muted admin-btn-logout" onClick={onLogout}>Вийти</button>
               </div>
               <form className="login-form" onSubmit={onCreateStudent}>
                 <label htmlFor="student-name">Ім'я</label>
@@ -1202,56 +1217,65 @@ function App() {
               <div className="admin-panel-header">
                 <h1 className="admin-title">Теми</h1>
                 <div className="admin-panel-actions">
-                  <button type="button" className="admin-btn-muted">
+                  <button type="button" className="admin-btn-muted admin-btn-logout" onClick={onLogout}>Вийти</button>
+                  <button type="button" className="admin-btn-muted" onClick={() => topicCsvInputRef.current?.click()}>
                     ⬆ CSV
                   </button>
-                  <button type="button">+ Додати тему</button>
+                  <button
+                    type="button"
+                    className="admin-btn-add"
+                    onClick={() => setShowAddTopicForm((v) => !v)}
+                  >
+                    {showAddTopicForm ? '✕ Скасувати' : '+ Додати тему'}
+                  </button>
                 </div>
               </div>
 
-              <form className="login-form" onSubmit={onCreateTopic}>
-                <label htmlFor="topic-title">Назва</label>
-                <input
-                  id="topic-title"
-                  type="text"
-                  value={newTopicTitle}
-                  onChange={(e) => setNewTopicTitle(e.target.value)}
-                  required
-                />
+              {showAddTopicForm && (
+                <form className="login-form" onSubmit={async (e) => { if (await onCreateTopic(e)) setShowAddTopicForm(false); }}>
+                  <label htmlFor="topic-title">Назва</label>
+                  <input
+                    id="topic-title"
+                    type="text"
+                    value={newTopicTitle}
+                    onChange={(e) => setNewTopicTitle(e.target.value)}
+                    required
+                  />
 
-                <label htmlFor="topic-description">Опис</label>
-                <input
-                  id="topic-description"
-                  type="text"
-                  value={newTopicDescription}
-                  onChange={(e) => setNewTopicDescription(e.target.value)}
-                  required
-                />
+                  <label htmlFor="topic-description">Опис</label>
+                  <input
+                    id="topic-description"
+                    type="text"
+                    value={newTopicDescription}
+                    onChange={(e) => setNewTopicDescription(e.target.value)}
+                    required
+                  />
 
-                <label htmlFor="topic-supervisor">Керівник</label>
-                <input
-                  id="topic-supervisor"
-                  type="text"
-                  value={newTopicSupervisor}
-                  onChange={(e) => setNewTopicSupervisor(e.target.value)}
-                  required
-                />
+                  <label htmlFor="topic-supervisor">Керівник</label>
+                  <input
+                    id="topic-supervisor"
+                    type="text"
+                    value={newTopicSupervisor}
+                    onChange={(e) => setNewTopicSupervisor(e.target.value)}
+                    required
+                  />
 
-                <label htmlFor="topic-department">Кафедра</label>
-                <input
-                  id="topic-department"
-                  type="text"
-                  value={newTopicDepartment}
-                  onChange={(e) => setNewTopicDepartment(e.target.value)}
-                  required
-                />
+                  <label htmlFor="topic-department">Кафедра</label>
+                  <input
+                    id="topic-department"
+                    type="text"
+                    value={newTopicDepartment}
+                    onChange={(e) => setNewTopicDepartment(e.target.value)}
+                    required
+                  />
 
-                <button type="submit">Додати тему</button>
-              </form>
+                  <button type="submit">Зберегти тему</button>
+                </form>
+              )}
 
               <section className="bulk-box">
                 <h3>Масове завантаження тем</h3>
-                <input type="file" accept=".csv,text/csv" onChange={onTopicCsvSelect} />
+                <input ref={topicCsvInputRef} type="file" accept=".csv,text/csv" onChange={onTopicCsvSelect} />
 
                 {topicCsvRows.length > 0 && (
                   <>
@@ -1303,14 +1327,19 @@ function App() {
 
               {createTopicError && <p className="error">{createTopicError}</p>}
               {topicsError && <p className="error">{topicsError}</p>}
-              <ReleaseTopicModal
-                topicTitle={releaseTopicTitle}
-                onConfirm={onConfirmReleaseTopic}
-                onCancel={() => {
-                  setReleaseTopicTargetId('');
-                  setReleaseTopicTitle('');
-                }}
-              />
+
+              {releaseTopicTitle && (
+                <div className="topic-dialog-overlay">
+                  <ReleaseTopicModal
+                    topicTitle={releaseTopicTitle}
+                    onConfirm={onConfirmReleaseTopic}
+                    onCancel={() => {
+                      setReleaseTopicTargetId('');
+                      setReleaseTopicTitle('');
+                    }}
+                  />
+                </div>
+              )}
 
               {topicsLoading ? (
                 <p>Завантаження тем...</p>
@@ -1330,25 +1359,67 @@ function App() {
                     </thead>
                     <tbody>
                       {topics.map((topic) => (
-                        <tr key={topic.id}>
-                          <td>{topic.title}</td>
-                          <td>
-                            <span className={`badge ${topic.selectedBy ? 'badge-taken' : 'badge-free'}`}>
-                              {topic.selectedBy ? 'зайнята' : 'вільна'}
-                            </span>
-                          </td>
-                          <td>{topic.selectedBy?.name || '—'}</td>
-                          <td className="table-actions">
-                            <button type="button" onClick={() => onDeleteTopic(topic.id)}>
-                              Видалити
-                            </button>
-                            {topic.selectedBy && (
-                              <button type="button" onClick={() => onOpenReleaseTopicModal(topic)}>
-                                Звільнити
+                        <Fragment key={topic.id}>
+                          <tr>
+                            <td>
+                              <button
+                                type="button"
+                                className="admin-topic-expand-btn"
+                                onClick={() => setExpandedAdminTopicId((prev) => (prev === topic.id ? '' : topic.id))}
+                                aria-expanded={expandedAdminTopicId === topic.id}
+                              >
+                                <span className="admin-topic-expand-icon">{expandedAdminTopicId === topic.id ? '▾' : '▸'}</span>
+                                {topic.title}
                               </button>
-                            )}
-                          </td>
-                        </tr>
+                            </td>
+                            <td>
+                              <span className={`badge ${topic.selectedBy ? 'badge-taken' : 'badge-free'}`}>
+                                {topic.selectedBy ? 'зайнята' : 'вільна'}
+                              </span>
+                            </td>
+                            <td>
+                              {topic.selectedBy
+                                ? `${topic.selectedBy.name}${topic.selectedBy.class ? ` (${topic.selectedBy.class})` : ''}`
+                                : '—'}
+                            </td>
+                            <td className="table-actions">
+                              <button type="button" onClick={() => onDeleteTopic(topic.id)}>
+                                Видалити
+                              </button>
+                              {topic.selectedBy && (
+                                <button type="button" onClick={() => onOpenReleaseTopicModal(topic)}>
+                                  Звільнити
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                          {expandedAdminTopicId === topic.id && (
+                            <tr className="admin-topic-details-row">
+                              <td colSpan={4}>
+                                <dl className="admin-topic-details">
+                                  {topic.description && (
+                                    <>
+                                      <dt>Опис</dt>
+                                      <dd>{topic.description}</dd>
+                                    </>
+                                  )}
+                                  {topic.supervisor && (
+                                    <>
+                                      <dt>Керівник</dt>
+                                      <dd>{topic.supervisor}</dd>
+                                    </>
+                                  )}
+                                  {topic.department && (
+                                    <>
+                                      <dt>Кафедра</dt>
+                                      <dd>{topic.department}</dd>
+                                    </>
+                                  )}
+                                </dl>
+                              </td>
+                            </tr>
+                          )}
+                        </Fragment>
                       ))}
                     </tbody>
                   </table>
@@ -1361,9 +1432,12 @@ function App() {
             <section className="admin-panel">
               <div className="admin-panel-header">
                 <h1 className="admin-title">Журнал дій</h1>
-                <button type="button" onClick={onExportAuditLog} disabled={exportAuditLoading}>
-                  {exportAuditLoading ? 'Експорт...' : '⬇ Вивантажити CSV'}
-                </button>
+                <div className="admin-panel-actions">
+                  <button type="button" className="admin-btn-muted admin-btn-logout" onClick={onLogout}>Вийти</button>
+                  <button type="button" onClick={onExportAuditLog} disabled={exportAuditLoading}>
+                    {exportAuditLoading ? 'Експорт...' : '⬇ Вивантажити CSV'}
+                  </button>
+                </div>
               </div>
               {exportAuditError && <p className="error">{exportAuditError}</p>}
               {auditError && <p className="error">{auditError}</p>}
