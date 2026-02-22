@@ -23,6 +23,7 @@ type CreateStudentResponse = {
   email: string;
   class: string;
   newPassword: string;
+  credentialEmailStatus?: 'sent' | 'failed' | 'disabled';
 };
 
 type BulkCreateResponse = {
@@ -193,7 +194,8 @@ export const TopicConfirmDialog = ({
   return (
     <div className="topic-dialog-overlay" role="presentation" data-testid="topic-confirm-overlay">
       <div className="topic-dialog" role="dialog" aria-modal="true" aria-label="Підтвердження вибору теми">
-        <p>{`Ти вибираєш: ${topic.title}.`}</p>
+        <p>Обрана тема:</p>
+        <p className="topic-confirm-selected-topic">{topic.title}</p>
         <p>
           Змінити самостійно не можна.
           {' '}
@@ -358,6 +360,7 @@ function App() {
   const [studentsLoading, setStudentsLoading] = useState(false);
   const [studentsError, setStudentsError] = useState('');
   const [createError, setCreateError] = useState('');
+  const [createNotice, setCreateNotice] = useState('');
   const [createPassword, setCreatePassword] = useState('');
   const [newStudentName, setNewStudentName] = useState('');
   const [newStudentEmail, setNewStudentEmail] = useState('');
@@ -639,6 +642,7 @@ function App() {
       setAuditRows([]);
       setAuditError('');
       setCreateError('');
+      setCreateNotice('');
       setCreatePassword('');
       setNewStudentName('');
       setNewStudentEmail('');
@@ -667,6 +671,7 @@ function App() {
   const onCreateStudent = async (event: FormEvent) => {
     event.preventDefault();
     setCreateError('');
+    setCreateNotice('');
     setCreatePassword('');
 
     try {
@@ -694,6 +699,13 @@ function App() {
         }),
       );
       setCreatePassword(created.newPassword);
+      if (created.credentialEmailStatus === 'sent') {
+        setCreateNotice('Лист із доступом надіслано студентові на email.');
+      } else if (created.credentialEmailStatus === 'failed') {
+        setCreateNotice('Студента створено, але лист не вдалося надіслати. Передайте пароль вручну.');
+      } else if (created.credentialEmailStatus === 'disabled') {
+        setCreateNotice('Студента створено. Email-розсилка наразі вимкнена.');
+      }
       setNewStudentName('');
       setNewStudentEmail('');
       setNewStudentClass('');
@@ -1292,6 +1304,7 @@ function App() {
               </section>
 
               {createError && <p className="error">{createError}</p>}
+              {createNotice && <p className="secret">{createNotice}</p>}
               <ResetPasswordModal password={resetPasswordValue} onClose={() => setResetPasswordValue('')} />
               {createPassword && <p className="secret">Згенерований пароль: {createPassword}</p>}
               {studentsError && <p className="error">{studentsError}</p>}

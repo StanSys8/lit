@@ -125,7 +125,9 @@ describe('Admin reset controls', () => {
       />,
     );
     expect(html).toContain('Підтвердження вибору теми');
-    expect(html).toContain('Ти вибираєш: Distributed Systems.');
+    expect(html).toContain('Обрана тема:');
+    expect(html).toContain('topic-confirm-selected-topic');
+    expect(html).toContain('Distributed Systems');
     expect(html).toContain('admin@example.com');
     expect(html).toContain('Назад до списку');
     expect(html).toContain('Так, беру цю тему');

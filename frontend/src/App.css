@@ -401,6 +401,17 @@ button:disabled {
   text-decoration: underline;
 }
 
+.topic-confirm-selected-topic {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #b436f0;
+  background: #edd9fb;
+  border-radius: 8px;
+  padding: 8px 12px;
+  line-height: 1.45;
+}
+
 .modal-actions {
   display: flex;
   flex-wrap: wrap;
