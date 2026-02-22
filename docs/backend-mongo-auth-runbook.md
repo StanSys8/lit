@@ -88,4 +88,7 @@ curl -i -X POST "$API/auth/login" \
 ## Notes
 
 - Backend now requires `MONGODB_URI` at runtime.
+- For credential emails after student creation, runtime also reads:
+  - `EMAIL_FROM` (`/lit/email-from` in SSM, SES-verified sender)
+  - `APP_BASE_URL` (`/lit/app-base-url` in SSM, login URL base)
 - Terraform packaging must include backend dependencies (`node_modules`) for Lambda.

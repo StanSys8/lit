@@ -1,6 +1,7 @@
 import { randomBytes, randomUUID } from 'node:crypto';
 import { MongoClient, ObjectId } from 'mongodb';
 import { buildClearedSessionCookie, buildSessionCookie, parseCookies } from './cookies.mjs';
+import { createCredentialEmailSender } from './credentialEmail.mjs';
 import { bcryptCompare, hashPassword, hashPasswordAsync, signToken, verifyToken } from './security.mjs';
 
 const SESSION_MAX_AGE_SEC = 86400;
@@ -80,12 +81,17 @@ export const createApp = ({
   mongodbUri = '',
   mongodbDbName = '',
   allowedOrigin = '',
+  emailFrom = '',
+  appBaseUrl = '',
+  emailRegion = '',
+  sendCredentialEmail = null,
 } = {}) => {
   if (!mongodbUri) {
     throw new Error('MONGODB_URI is required');
   }
 
   const resolvedDbName = mongodbDbName || inferDbNameFromUri(mongodbUri, 'lit');
+  const resolvedAppBaseUrl = appBaseUrl || (allowedOrigin && allowedOrigin !== '*' ? allowedOrigin : '');
   let dbPromise = null;
 
   const getDb = async () => {
@@ -138,6 +144,15 @@ export const createApp = ({
       $or: [{ emailLower }, { email: emailLower }, { email: caseInsensitiveEmail }],
     });
   };
+
+  const credentialEmailSender =
+    typeof sendCredentialEmail === 'function'
+      ? sendCredentialEmail
+      : createCredentialEmailSender({
+        fromEmail: emailFrom,
+        appBaseUrl: resolvedAppBaseUrl,
+        emailRegion,
+      });
 
   const authenticate = async (req) => {
     const authHeader = req.headers['authorization'] || '';
@@ -774,6 +789,7 @@ export const createApp = ({
         const session = await requireAuth(req, res);
         if (!session) return;
         if (!requireRole(session, 'admin', res)) return;
+        const requestIp = getIp(req);
 
         const { name = '', email = '', class: className = '' } = await readJsonBody(req);
         const created = await createStudent({ name, email, class: className });
@@ -790,10 +806,43 @@ export const createApp = ({
         await logAudit({
           actor: session.sub,
           action: 'CREATE_USER',
-          ip: getIp(req),
+          ip: requestIp,
           result: 'success',
           targetId: created.data.id,
         });
+
+        let credentialEmailStatus = 'disabled';
+        if (credentialEmailSender) {
+          try {
+            await credentialEmailSender({
+              toEmail: created.data.email,
+              studentName: created.data.name,
+              password: created.data.newPassword,
+            });
+            credentialEmailStatus = 'sent';
+            await logAudit({
+              actor: session.sub,
+              action: 'SEND_USER_CREDENTIALS_EMAIL',
+              ip: requestIp,
+              result: 'success',
+              targetId: created.data.id,
+            });
+          } catch (error) {
+            credentialEmailStatus = 'failed';
+            console.error('[backend] failed to send credentials email', {
+              targetId: created.data.id,
+              email: created.data.email,
+              message: error instanceof Error ? error.message : String(error),
+            });
+            await logAudit({
+              actor: session.sub,
+              action: 'SEND_USER_CREDENTIALS_EMAIL',
+              ip: requestIp,
+              result: 'failed',
+              targetId: created.data.id,
+            });
+          }
+        }
 
         return json(res, 201, {
           id: created.data.id,
@@ -801,6 +850,7 @@ export const createApp = ({
           email: created.data.email,
           class: created.data.class,
           newPassword: created.data.newPassword,
+          credentialEmailStatus,
         });
       }
 

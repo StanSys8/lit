@@ -43,6 +43,14 @@ resource "aws_iam_role_policy" "lambda_ssm_access" {
         Effect   = "Allow"
         Action   = ["kms:Decrypt"]
         Resource = "*"
+      },
+      {
+        Sid    = "SendCredentialEmails"
+        Effect = "Allow"
+        Action = [
+          "ses:SendEmail"
+        ]
+        Resource = "*"
       }
     ]
   })

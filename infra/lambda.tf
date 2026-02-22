@@ -20,6 +20,9 @@ resource "aws_lambda_function" "backend" {
       JWT_SECRET     = data.aws_ssm_parameter.jwt_secret.value
       MONGODB_URI    = data.aws_ssm_parameter.mongodb_uri.value
       ALLOWED_ORIGIN = data.aws_ssm_parameter.cors_origin.value
+      EMAIL_FROM     = data.aws_ssm_parameter.email_from.value
+      APP_BASE_URL   = data.aws_ssm_parameter.app_base_url.value
+      EMAIL_REGION   = var.aws_region
     }
   }
 }

@@ -33,6 +33,8 @@ export AWS_REGION=us-east-1
 export MONGODB_URI='mongodb+srv://...'
 export JWT_SECRET='replace-with-random-secret'
 export CORS_ORIGIN='https://<your-cloudflare-pages-domain>'
+export EMAIL_FROM='no-reply@<your-verified-domain>'
+export APP_BASE_URL='https://<your-cloudflare-pages-domain>'
 ```
 
 Create/update parameters:
@@ -41,6 +43,8 @@ Create/update parameters:
 aws ssm put-parameter --name /lit/mongodb-uri --type SecureString --value "$MONGODB_URI" --overwrite --region "$AWS_REGION"
 aws ssm put-parameter --name /lit/jwt-secret --type SecureString --value "$JWT_SECRET" --overwrite --region "$AWS_REGION"
 aws ssm put-parameter --name /lit/cors-origin --type SecureString --value "$CORS_ORIGIN" --overwrite --region "$AWS_REGION"
+aws ssm put-parameter --name /lit/email-from --type SecureString --value "$EMAIL_FROM" --overwrite --region "$AWS_REGION"
+aws ssm put-parameter --name /lit/app-base-url --type SecureString --value "$APP_BASE_URL" --overwrite --region "$AWS_REGION"
 ```
 
 Verify:
