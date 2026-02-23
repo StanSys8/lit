@@ -1,4 +1,4 @@
-# Story 2.2: Bulk upload студентів та export credentials
+# Story 2.2: Bulk upload учнів та export credentials
 
 Status: review
 
@@ -24,7 +24,7 @@ so that I can quickly populate the system and send login details to all students
    **Then** UI показує кнопку "Завантажити CSV з паролями" — CSV генерується client-side з даних відповіді (Papa Parse unparse).
 5. **Given** завантажений CSV credentials,  
    **When** відкрити файл,  
-   **Then** містить колонки `name,email,password` для всіх успішно створених студентів.
+   **Then** містить колонки `name,email,password` для всіх успішно створених учнів.
 6. **Given** bulk upload (успішний або частковий),  
    **When** операція завершена,  
    **Then** `logAudit(db, { actor: adminId, action: "BULK_CREATE_USERS", count: N, ip, result })` викликано.

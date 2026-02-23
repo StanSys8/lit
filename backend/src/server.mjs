@@ -252,7 +252,7 @@ export const createApp = ({
       return {
         error: {
           code: 'EMAIL_ALREADY_EXISTS',
-          message: 'Студент з таким email вже існує',
+          message: 'Учень з таким email вже існує',
         },
       };
     }
@@ -658,7 +658,7 @@ export const createApp = ({
         if (topic.selectedByUserId) {
           return json(res, 409, {
             error: 'TOPIC_IN_USE',
-            message: 'Тема вже вибрана студентом — спочатку звільніть її',
+            message: 'Тема вже вибрана учнем — спочатку звільніть її',
           });
         }
 
@@ -809,7 +809,7 @@ export const createApp = ({
           if (created.error.code === 'EMAIL_ALREADY_EXISTS') {
             return json(res, 409, {
               error: 'EMAIL_ALREADY_EXISTS',
-              message: 'Студент з таким email вже існує',
+              message: 'Учень з таким email вже існує',
             });
           }
           return json(res, 400, { error: 'VALIDATION_ERROR', message: created.error.message });
@@ -910,7 +910,7 @@ export const createApp = ({
 
           const toCreate = candidates.filter((entry) => {
             if (existingByEmail.has(entry.email)) {
-              errors.push({ row: entry.row, message: 'Студент з таким email вже існує' });
+              errors.push({ row: entry.row, message: 'Учень з таким email вже існує' });
               return false;
             }
             return true;
@@ -969,7 +969,7 @@ export const createApp = ({
               writeErrors.forEach((entry) => {
                 const payloadIndex = Number(entry.index);
                 const payloadRow = preparedUsers[payloadIndex]?.row;
-                errors.push({ row: payloadRow || 0, message: 'Студент з таким email вже існує' });
+                errors.push({ row: payloadRow || 0, message: 'Учень з таким email вже існує' });
               });
             }
           }

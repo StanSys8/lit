@@ -18,13 +18,13 @@ so that I can maintain the list of topics available for students to choose from.
    **Then** відповідь `201` з `{ id, title, description, supervisor, department, selectedBy: null }`.
 3. **Given** тема з `selectedBy !== null`,  
    **When** `DELETE /admin/topics/:id`,  
-   **Then** відповідь `409` з `{ error: "TOPIC_IN_USE", message: "Тема вже вибрана студентом — спочатку звільніть її" }`.
+   **Then** відповідь `409` з `{ error: "TOPIC_IN_USE", message: "Тема вже вибрана учнем — спочатку звільніть її" }`.
 4. **Given** вільна тема,  
    **When** `DELETE /admin/topics/:id`,  
    **Then** відповідь `204 No Content`.
 5. **Given** `AdminTopicsPage`,  
    **When** сторінка завантажена,  
-   **Then** таблиця відображає назву, опис, ім'я студента (або "вільна") та кнопки дій.
+   **Then** таблиця відображає назву, опис, ім'я учня (або "вільна") та кнопки дій.
 6. **Given** кожна write-операція (CREATE, DELETE),  
    **When** операція завершена,  
    **Then** `logAudit(db, { actor: adminId, action: "CREATE_TOPIC"|"DELETE_TOPIC", targetId, ip, result })` викликано.

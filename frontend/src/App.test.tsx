@@ -174,14 +174,14 @@ describe('Admin reset controls', () => {
     const html = renderToStaticMarkup(
       <AdminStatCard
         title="Статус вибору тем"
-        value="10 / 10 студентів вибрали тему"
+        value="10 / 10 учнів вибрали тему"
         subtitle="Прогрес вибору тем"
         progressPercent={100}
         variant="primary"
       />,
     );
     expect(html).toContain('Статус вибору тем');
-    expect(html).toContain('10 / 10 студентів вибрали тему');
+    expect(html).toContain('10 / 10 учнів вибрали тему');
     expect(html).toContain('border-[#B436F0]');
     expect(html).toContain('progressbar');
   });

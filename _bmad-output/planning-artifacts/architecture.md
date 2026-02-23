@@ -26,9 +26,9 @@ _This document builds collaboratively through step-by-step discovery. Sections a
 
 1. **Auth & Authorization (FR1–FR6)** — email/password login для двох ролей (student, admin), JWT-сесія, вихід, скидання пароля адміном. Архітектурний наслідок: middleware авторизації на всіх захищених маршрутах, RBAC на рівні API.
 
-2. **Topic Discovery & Selection (FR7–FR15)** — студент бачить тільки вільні теми, обирає одну, система гарантує атомарність (нуль дублів), явна відмова при race condition, скасування тільки адміном. Архітектурний наслідок: атомарна write-операція з lock-механізмом — центральний технічний ризик.
+2. **Topic Discovery & Selection (FR7–FR15)** — учень бачить тільки вільні теми, обирає одну, система гарантує атомарність (нуль дублів), явна відмова при race condition, скасування тільки адміном. Архітектурний наслідок: атомарна write-операція з lock-механізмом — центральний технічний ризик.
 
-3. **User Management Admin (FR16–FR20)** — CRUD студентів, bulk CSV upload, автогенерація паролів, CSV export credentials. Архітектурний наслідок: CSV processing на сервері або клієнті (TBD).
+3. **User Management Admin (FR16–FR20)** — CRUD учнів, bulk CSV upload, автогенерація паролів, CSV export credentials. Архітектурний наслідок: CSV processing на сервері або клієнті (TBD).
 
 4. **Topic Management Admin (FR21–FR24)** — CRUD тем, bulk CSV upload, звільнення теми (повернення у список). Архітектурний наслідок: write-операція звільнення теми теж потребує consistent state.
 
@@ -249,10 +249,10 @@ HTTP status: 400 bad request · 401 unauthorized · 403 forbidden · 409 conflic
 | POST | /admin/topics/bulk | admin | CSV bulk import |
 | DELETE | /admin/topics/:id | admin | Видалити тему (FR22) |
 | POST | /admin/topics/:id/release | admin | Звільнити тему (FR24) |
-| GET | /admin/users | admin | Список студентів |
-| POST | /admin/users | admin | Додати студента |
+| GET | /admin/users | admin | Список учнів |
+| POST | /admin/users | admin | Додати учня |
 | POST | /admin/users/bulk | admin | CSV bulk import |
-| DELETE | /admin/users/:id | admin | Видалити студента (FR17) |
+| DELETE | /admin/users/:id | admin | Видалити учня (FR17) |
 | POST | /admin/users/:id/reset-password | admin | Returns `{ newPassword }` |
 | GET | /admin/export/status | admin | CSV stream: `title,description,supervisor,department,studentName,studentEmail,status` |
 | GET | /admin/export/audit | admin | CSV stream |

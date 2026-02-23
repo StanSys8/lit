@@ -1,4 +1,4 @@
-# Story 2.1: Управління студентами — перегляд, додавання, видалення
+# Story 2.1: Управління учнями — перегляд, додавання, видалення
 
 Status: review
 
@@ -18,8 +18,8 @@ so that I can manage the student list and ensure each student has access to the 
    **Then** відповідь `201` з `{ id, name, email, newPassword }` — пароль повернений один раз у відповіді, зберігається тільки hash.
 3. **Given** `POST /admin/users` з email, що вже існує,  
    **When** запит виконано,  
-   **Then** відповідь `409` з `{ error: "EMAIL_ALREADY_EXISTS", message: "Студент з таким email вже існує" }`.
-4. **Given** існуючий студент,  
+   **Then** відповідь `409` з `{ error: "EMAIL_ALREADY_EXISTS", message: "Учень з таким email вже існує" }`.
+4. **Given** існуючий учень,  
    **When** `DELETE /admin/users/:id`,  
    **Then** відповідь `204 No Content`.
 5. **Given** неіснуючий id,  
@@ -42,9 +42,9 @@ so that I can manage the student list and ensure each student has access to the 
   - [x] Зберігати пароль лише як hash
   - [x] Додати audit log для CREATE/DELETE
 - [x] Frontend `AdminStudentsPage` (AC: 6)
-  - [x] Таблиця студентів (`name`, `email`, `hasSelectedTopic`)
-  - [x] Форма додавання студента (`name`, `email`)
-  - [x] Кнопка видалення студента з підтвердженням
+  - [x] Таблиця учнів (`name`, `email`, `hasSelectedTopic`)
+  - [x] Форма додавання учня (`name`, `email`)
+  - [x] Кнопка видалення учня з підтвердженням
   - [x] Обробка помилок (`409`, `404`, `403`, `401`)
 - [x] Tests and validation (AC: 1-7)
   - [x] Backend тести для всіх 3 endpoints + edge cases
@@ -59,7 +59,7 @@ so that I can manage the student list and ensure each student has access to the 
 
 ### References
 
-- [Source: `_bmad-output/planning-artifacts/epics.md#Story 2.1: Управління студентами — перегляд, додавання, видалення`]
+- [Source: `_bmad-output/planning-artifacts/epics.md#Story 2.1: Управління учнями — перегляд, додавання, видалення`]
 - [Source: `_bmad-output/planning-artifacts/architecture.md#API & Communication`]
 - [Source: `_bmad-output/planning-artifacts/architecture.md#Authentication & Security`]
 

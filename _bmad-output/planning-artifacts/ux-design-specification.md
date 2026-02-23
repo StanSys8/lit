@@ -22,7 +22,7 @@ inputDocuments: ['_bmad-output/planning-artifacts/prd.md', '_bmad-output/plannin
 
 ### Target Users
 
-**Студент — учень 9 класу (~14-15 років)**
+**Учень — учень 9 класу (~14-15 років)**
 - Пристрій: переважно мобільний
 - Технічний рівень: базовий
 - Контекст: між уроками, швидка одноразова задача
@@ -42,7 +42,7 @@ inputDocuments: ['_bmad-output/planning-artifacts/prd.md', '_bmad-output/plannin
 
 ### Design Opportunities
 
-1. **Мінімальний шлях для студента** — зайти → знайти → підтвердити
+1. **Мінімальний шлях для учня** — зайти → знайти → підтвердити
 2. **Статус одним поглядом для адміна** — дашборд як головна сторінка
 3. **Повністю українська мова** — людські тексти, не системні повідомлення
 
@@ -68,7 +68,7 @@ inputDocuments: ['_bmad-output/planning-artifacts/prd.md', '_bmad-output/plannin
 
 ### Critical Success Moments
 
-1. **Студент бачить підтвердження** — "Твоя тема: [назва]" після вибору. Це момент завершення задачі.
+1. **Учень бачить підтвердження** — "Твоя тема: [назва]" після вибору. Це момент завершення задачі.
 2. **Race condition відмова** — людське повідомлення замість технічної помилки. Учень одразу розуміє що робити далі.
 3. **Адмін бачить прогрес** — `47 / 90` з першого погляду. Одна цифра замінює всю email-переписку.
 
@@ -83,12 +83,12 @@ inputDocuments: ['_bmad-output/planning-artifacts/prd.md', '_bmad-output/plannin
 
 ### Primary Emotional Goals
 
-**Студент:** Спокійна впевненість — "я зробив що треба, все зрозуміло."
+**Учень:** Спокійна впевненість — "я зробив що треба, все зрозуміло."
 **Адмін:** Відчуття контролю — "я бачу стан, можу діяти."
 
 ### Emotional Journey Mapping
 
-| Момент | Студент | Адмін |
+| Момент | Учень | Адмін |
 |---|---|---|
 | Логін | Нейтральний → одразу до справи | Нейтральний → одразу статус |
 | Основна дія | Зосередженість → рішення | Впевненість → знайома дія (CSV) |
@@ -180,7 +180,7 @@ inputDocuments: ['_bmad-output/planning-artifacts/prd.md', '_bmad-output/plannin
 
 ### Color Palette
 
-**Студентський UI:**
+**Учнівський UI:**
 - Фон сторінки: `#FAF5FF`
 - Фон карток: `#EDD9FB`
 - Кнопки / акцент: `#B436F0`
@@ -211,7 +211,7 @@ inputDocuments: ['_bmad-output/planning-artifacts/prd.md', '_bmad-output/plannin
 
 Визначальна взаємодія: **учень знаходить тему і забирає її собі одним підтвердженням.**
 
-Якщо це зроблено ідеально — все інше слідує автоматично. Студент описуватиме це як: "зайшов, вибрав, все."
+Якщо це зроблено ідеально — все інше слідує автоматично. Учень описуватиме це як: "зайшов, вибрав, все."
 
 ### 2.2 User Mental Model
 
@@ -223,7 +223,7 @@ inputDocuments: ['_bmad-output/planning-artifacts/prd.md', '_bmad-output/plannin
 
 ### 2.3 Success Criteria
 
-- Студент завершує вибір за ≤3 хвилини від першого входу
+- Учень завершує вибір за ≤3 хвилини від першого входу
 - Жодного питання "а що тепер робити?" на будь-якому кроці
 - Підтвердження однозначне — немає сумнівів чи тема вибрана
 - При відмові (race condition) — наступна дія очевидна
@@ -262,7 +262,7 @@ inputDocuments: ['_bmad-output/planning-artifacts/prd.md', '_bmad-output/plannin
 | Primary | `#B436F0` | Кнопки, акценти, посилання |
 | Primary Dark | `#471260` | Sidebar, заголовки, hover |
 | Primary Mid | `#442e66` | Навігація адмін |
-| Surface | `#FAF5FF` | Фон сторінки (студент) |
+| Surface | `#FAF5FF` | Фон сторінки (учень) |
 | Surface Alt | `#EDD9FB` | Фон карток, accordion |
 | Admin BG | `#F2F2F2` | Контентна зона адмін |
 | CTA Alt | `#F24C0A` | Другорядні CTA, помилки |
@@ -290,7 +290,7 @@ Line-height: 1.5 для body, 1.2 для заголовків.
 **Base unit:** 4px (Tailwind default)
 **Основні значення:** 4 · 8 · 12 · 16 · 24 · 32 · 48px
 
-**Мобільний layout (студент):**
+**Мобільний layout (учень):**
 - Padding сторінки: 16px горизонтально
 - Touch target: мін. 44px висота для кожного рядка списку
 - Accordion item padding: 16px вертикально
@@ -314,7 +314,7 @@ Line-height: 1.5 для body, 1.2 для заголовків.
 
 ### Design Directions Explored
 
-6 варіантів для студентського UI: Clean Cards, Borderless Minimal, Bold Purple ✓, Compact Dense, Success State, Race Condition State.
+6 варіантів для учнівського UI: Clean Cards, Borderless Minimal, Bold Purple ✓, Compact Dense, Success State, Race Condition State.
 
 ### Chosen Direction
 
@@ -344,7 +344,7 @@ Line-height: 1.5 для body, 1.2 для заголовків.
 
 ## User Journey Flows
 
-### Journey 1: Студент — успішний вибір теми
+### Journey 1: Учень — успішний вибір теми
 
 ```mermaid
 flowchart TD
@@ -367,7 +367,7 @@ flowchart TD
     N --> O[✓ Екран підтвердження]
 ```
 
-### Journey 2: Студент — race condition
+### Journey 2: Учень — race condition
 
 ```mermaid
 flowchart TD
@@ -384,7 +384,7 @@ flowchart TD
     K --> A
 ```
 
-### Journey 3: Студент — повторний вхід
+### Journey 3: Учень — повторний вхід
 
 ```mermaid
 flowchart TD
@@ -400,8 +400,8 @@ flowchart TD
 ```mermaid
 flowchart TD
     A([Логін як адмін]) --> B[Дашборд: 0/90]
-    B --> C[Студенти → Завантажити CSV]
-    C --> D[Upload файлу зі студентами]
+    B --> C[Учні → Завантажити CSV]
+    C --> D[Upload файлу зі учнями]
     D --> E[Система генерує паролі]
     E --> F[Вивантажити CSV з credentials]
     F --> G[Адмін відправляє вручну через email]
@@ -420,8 +420,8 @@ flowchart TD
     A([Логін як адмін]) --> B[Дашборд: X/90]
     B --> C{Є проблема?}
     C -->|Все ок| D[Вивантажує CSV → деканат]
-    C -->|Студент просить змінити| E[Теми → Звільнити тему]
-    E --> F[Студент вибирає нову тему]
+    C -->|Учень просить змінити| E[Теми → Звільнити тему]
+    E --> F[Учень вибирає нову тему]
     C -->|Підозріла активність| G[Журнал дій → аналіз]
 ```
 
@@ -438,7 +438,7 @@ flowchart TD
 1. **Zero dead ends** — кожен стан помилки веде до наступної дії
 2. **Мінімум кроків** — логін → список → вибір → підтвердження (4 кроки)
 3. **Атомарність** — API або повертає успіх, або явну відмову
-4. **Стан завжди видимий** — студент знає чи вибрав тему з першого погляду
+4. **Стан завжди видимий** — учень знає чи вибрав тему з першого погляду
 
 ## Component Strategy
 
@@ -450,7 +450,7 @@ flowchart TD
 | `Dialog` | Модалка підтвердження вибору |
 | `Button` | Всі кнопки дій |
 | `Input` | Пошуковий рядок |
-| `Table` | Адмін таблиці студентів і тем |
+| `Table` | Адмін таблиці учнів і тем |
 | `Badge` | Статус "вільна" / "зайнята" |
 | `Progress` | Прогрес-бар X/90 на дашборді |
 | `Alert` | Race condition повідомлення |
@@ -482,7 +482,7 @@ flowchart TD
 
 #### `AdminSidebar`
 **Призначення:** Навігаційна панель адміна
-**Nav items:** Статус · Студенти · Теми · Журнал дій
+**Nav items:** Статус · Учні · Теми · Журнал дій
 
 ### Component Implementation Strategy
 
@@ -493,7 +493,7 @@ flowchart TD
 
 ### Implementation Roadmap
 
-**Phase 1 — Критичний студентський флоу:**
+**Phase 1 — Критичний учнівський флоу:**
 `TopicAccordionItem` → `TopicConfirmDialog` → `TopicConfirmedScreen`
 
 **Phase 2 — Edge cases:**
@@ -532,7 +532,7 @@ flowchart TD
 
 ### Navigation Patterns
 
-- **Студент:** без навігації — єдиний маршрут
+- **Учень:** без навігації — єдиний маршрут
 - **Адмін:** sidebar, active `bg-[#B436F0]`, поточна сторінка не клікабельна
 
 ### Modal Patterns
@@ -542,7 +542,7 @@ flowchart TD
 ### Empty States
 
 - Всі теми вибрані: *"Всі теми вже вибрані. Зверніться до вчителя."*
-- Студентів немає: *"Студентів ще немає. Завантажте CSV щоб додати."*
+- Учнів немає: *"Учнів ще немає. Завантажте CSV щоб додати."*
 - Пошук без результатів: *"Нічого не знайдено за запитом «[query]»"*
 
 ### Loading States
@@ -556,7 +556,7 @@ flowchart TD
 
 ### Responsive Strategy
 
-**Студентський UI — mobile-first:** основний досвід для 375px. Десктоп: той самий layout з більшими відступами і `max-width: 480px` centered.
+**Учнівський UI — mobile-first:** основний досвід для 375px. Десктоп: той самий layout з більшими відступами і `max-width: 480px` centered.
 
 **Адмін-панель — desktop-first:** Sidebar + content. На < 768px sidebar collapse у верхні tabs.
 
@@ -566,7 +566,7 @@ Tailwind defaults (mobile-first):
 
 | Breakpoint | Розмір | Використання |
 |---|---|---|
-| default | 0px+ | Студентський мобільний layout |
+| default | 0px+ | Учнівський мобільний layout |
 | `sm` | 640px+ | Збільшені відступи |
 | `md` | 768px+ | Адмін sidebar з'являється |
 | `lg` | 1024px+ | Адмін повний desktop layout |

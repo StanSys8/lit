@@ -14,7 +14,7 @@ so that I know exactly whether my selection was recorded or if I need to choose 
 2. Overlay click не закриває діалог.
 3. Фокус при відкритті встановлюється на кнопку "Назад до списку".
 4. Під час confirm кнопка стає disabled і показує loading state.
-5. Успіх `POST /topics/:id/select` переводить студента в confirmed state.
+5. Успіх `POST /topics/:id/select` переводить учня в confirmed state.
 6. `409 TOPIC_ALREADY_TAKEN` показує `RaceConditionAlert`.
 7. `RaceConditionAlert` автозникає через 8 секунд.
 8. `409 ALREADY_SELECTED` повертається для повторного вибору.

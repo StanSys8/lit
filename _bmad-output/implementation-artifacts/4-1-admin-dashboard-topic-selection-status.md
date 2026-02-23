@@ -12,17 +12,17 @@ so that I can monitor how many students have chosen their topics at a glance.
 
 1. **Given** `AdminDashboardPage`,  
    **When** сторінка завантажується,  
-   **Then** `AdminStatCard` відображає `X / Y студентів вибрали тему`.
+   **Then** `AdminStatCard` відображає `X / Y учнів вибрали тему`.
 2. **Given** дані з `GET /admin/users` і `GET /admin/topics`,  
    **When** дашборд рендериться,  
    **Then** прогрес-блок відображає X/Y без додаткового API call.
 3. **Given** другий `AdminStatCard`,  
    **When** дашборд завантажено,  
    **Then** відображає `Z вільних тем з N загалом`.
-4. **Given** 0 студентів вибрали тему,  
+4. **Given** 0 учнів вибрали тему,  
    **When** дашборд відкрито,  
    **Then** прогрес `0 / Y` відображається коректно.
-5. **Given** всі студенти вибрали теми,  
+5. **Given** всі учні вибрали теми,  
    **When** дашборд відкрито,  
    **Then** card рендериться з primary-варіантом (`border-[#B436F0]`).
 
@@ -33,7 +33,7 @@ so that I can monitor how many students have chosen their topics at a glance.
   - [x] Додано два статистичні блоки: student progress + free topics
   - [x] Додано primary/warning variants для card
 - [x] Computed metrics from existing state (AC: 2)
-  - [x] Розрахунок X/Y студентів із `students` state
+  - [x] Розрахунок X/Y учнів із `students` state
   - [x] Розрахунок Z/N тем із `topics` state
   - [x] Без додаткових API викликів
 - [x] Tests and validation

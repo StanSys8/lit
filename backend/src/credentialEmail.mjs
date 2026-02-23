@@ -77,7 +77,7 @@ const buildAuthorizationHeader = ({
 
 const buildEmailBodyText = ({ studentName, loginUrl, email, password }) =>
   [
-    `Вітаємо, ${studentName || 'студент'}!`,
+    `Вітаємо, ${studentName || 'учень'}!`,
     'Ваш обліковий запис у системі вибору тем створено.',
     '',
     `Посилання: ${loginUrl}`,

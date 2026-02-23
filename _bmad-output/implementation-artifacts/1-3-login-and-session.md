@@ -10,7 +10,7 @@ so that I can access my role-specific area and remain authenticated across page 
 
 ## Acceptance Criteria
 
-1. **Given** валідні credentials студента,  
+1. **Given** валідні credentials учня,  
    **When** `POST /auth/login`,  
    **Then** відповідь `200` з body `{ id, email, role: "student" }` і встановлений cookie `httpOnly; Secure; SameSite=None; MaxAge=86400`.
 2. **Given** валідні credentials адміна,  
@@ -26,9 +26,9 @@ so that I can access my role-specific area and remain authenticated across page 
    **When** 6-та спроба,  
    **Then** відповідь `423` з `{ error: "ACCOUNT_LOCKED", lockedUntil: <ISO timestamp +15хв> }`.
 6. **Given** валідний JWT cookie,  
-   **When** `GET /topics` (студент) або `GET /admin/topics` (адмін),  
+   **When** `GET /topics` (учень) або `GET /admin/topics` (адмін),  
    **Then** відповідь `200`.
-7. **Given** студентський cookie,  
+7. **Given** учнівський cookie,  
    **When** `GET /admin/topics`,  
    **Then** відповідь `403 Forbidden`.
 8. **Given** відсутній або прострочений cookie,  
@@ -38,7 +38,7 @@ so that I can access my role-specific area and remain authenticated across page 
    **When** операція завершена,  
    **Then** `logAudit(db, { actor: email, action: "LOGIN", ip, result: "success"|"failed"|"locked" })` викликано.
 10. **Given** `LoginPage`,  
-    **When** успішний вхід студента,  
+    **When** успішний вхід учня,  
     **Then** редірект на `/topics`.
 11. **Given** `LoginPage`,  
     **When** успішний вхід адміна,  

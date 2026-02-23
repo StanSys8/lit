@@ -11,15 +11,15 @@ so that I'm certain my choice was recorded and I know who to contact if I want t
 ## Acceptance Criteria
 
 1. **Given** успішний вибір теми,  
-   **When** студент потрапляє на `TopicConfirmedScreen`,  
+   **When** учень потрапляє на `TopicConfirmedScreen`,  
    **Then** екран показує checkmark (`#B436F0`), "Тему вибрано!", назву теми, "Якщо потрібна зміна — звернись до вчителя" без кнопок дії.
-2. **Given** студент закрив вкладку і повернувся,  
+2. **Given** учень закрив вкладку і повернувся,  
    **When** після логіну відкривається `/topics`,  
    **Then** `POST /auth/login` повертає `{ id, email, role, selectedTopic }`, і при `selectedTopic !== null` одразу рендериться `TopicConfirmedScreen`.
-3. **Given** студент з вибраною темою,  
+3. **Given** учень з вибраною темою,  
    **When** `GET /topics`,  
    **Then** його тема відсутня в списку (лише `selected_by: null` теми).
-4. **Given** студент викликає `POST /topics/:id/release`,  
+4. **Given** учень викликає `POST /topics/:id/release`,  
    **When** запит виконується,  
    **Then** відповідь `404` (endpoint не існує для student).
 
@@ -27,7 +27,7 @@ so that I'm certain my choice was recorded and I know who to contact if I want t
 
 - [x] Backend selected topic hydration at login (AC: 2)
   - [x] Додано `selectedTopic` у відповідь `POST /auth/login`
-  - [x] Додано mapping вибраної теми для студента
+  - [x] Додано mapping вибраної теми для учня
 - [x] Student UI confirmed state (AC: 1, 2)
   - [x] Додано `TopicConfirmedScreen` і рендер без action buttons
   - [x] Інтегровано в login flow: показ confirmed screen при `selectedTopic !== null`

@@ -68,7 +68,7 @@ The admin area was further aligned to `ux-design-directions` examples (Admin D1/
 
 - Sidebar navigation implemented as in direction examples:
   - `📊 Статус`
-  - `👥 Студенти`
+  - `👥 Учні`
   - `📋 Теми`
   - `📝 Журнал дій`
 - Admin UI switched to tabbed sections (single active panel) instead of rendering all sections in one long page.

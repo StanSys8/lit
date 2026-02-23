@@ -130,7 +130,7 @@ export const ResetPasswordModal = ({
     <div className="modal-like" role="dialog" aria-label="Нове значення пароля">
       <p>Новий пароль (показується один раз):</p>
       <code>{password}</code>
-      <p>Скопіюйте пароль та передайте студенту безпечно.</p>
+      <p>Скопіюйте пароль та передайте учню безпечно.</p>
       <button type="button" className="modal-btn-secondary" onClick={onClose}>
         Закрити
       </button>
@@ -152,7 +152,7 @@ export const ReleaseTopicModal = ({
   return (
     <div className="modal-like" role="dialog" aria-label="Підтвердження звільнення теми">
       <p>{`Звільнити тему "${topicTitle}"?`}</p>
-      <p>Після цього тема знову стане доступною для вибору студентом.</p>
+      <p>Після цього тема знову стане доступною для вибору учнем.</p>
       <div className="modal-actions">
         <button type="button" className="modal-btn-secondary" onClick={onCancel}>
           Скасувати
@@ -306,7 +306,7 @@ export const TopicConfirmedScreen = ({ topic, studentName, adminEmail }: { topic
       )}
       {studentName && (
         <>
-          <dt>Студент</dt>
+          <dt>Учень</dt>
           <dd>{studentName}</dd>
         </>
       )}
@@ -469,14 +469,14 @@ function App() {
         credentials: 'include',
       });
       if (!response.ok) {
-        setStudentsError('Не вдалося завантажити список студентів');
+        setStudentsError('Не вдалося завантажити список учнів');
         return;
       }
 
       const payload = (await response.json()) as StudentRow[];
       setStudents(payload);
     } catch {
-      setStudentsError('Не вдалося завантажити список студентів');
+      setStudentsError('Не вдалося завантажити список учнів');
     } finally {
       setStudentsLoading(false);
     }
@@ -732,7 +732,7 @@ function App() {
 
       const payload = (await response.json()) as CreateStudentResponse | { message?: string };
       if (!response.ok) {
-        setCreateError((payload as { message?: string }).message || 'Не вдалося додати студента');
+        setCreateError((payload as { message?: string }).message || 'Не вдалося додати учня');
         return;
       }
 
@@ -750,17 +750,17 @@ function App() {
       );
       setCreatePassword(created.newPassword);
       if (created.credentialEmailStatus === 'sent') {
-        setCreateNotice('Лист із доступом надіслано студентові на email.');
+        setCreateNotice('Лист із доступом надіслано учневі на email.');
       } else if (created.credentialEmailStatus === 'failed') {
-        setCreateNotice('Студента створено, але лист не вдалося надіслати. Передайте пароль вручну.');
+        setCreateNotice('Учня створено, але лист не вдалося надіслати. Передайте пароль вручну.');
       } else if (created.credentialEmailStatus === 'disabled') {
-        setCreateNotice('Студента створено. Email-розсилка наразі вимкнена.');
+        setCreateNotice('Учня створено. Email-розсилка наразі вимкнена.');
       }
       setNewStudentName('');
       setNewStudentEmail('');
       setNewStudentClass('');
     } catch {
-      setCreateError('Не вдалося додати студента');
+      setCreateError('Не вдалося додати учня');
     }
   };
 
@@ -779,13 +779,13 @@ function App() {
       }
 
       if (response.status === 404) {
-        setCreateError('Студента не знайдено');
+        setCreateError('Учня не знайдено');
         return;
       }
 
-      setCreateError('Не вдалося видалити студента');
+      setCreateError('Не вдалося видалити учня');
     } catch {
-      setCreateError('Не вдалося видалити студента');
+      setCreateError('Не вдалося видалити учня');
     }
   };
 
@@ -1287,7 +1287,7 @@ function App() {
               <div className="admin-stats">
                 <article className="admin-stat">
                   <p className="admin-stat-num">{selectedStudentsCount}</p>
-                  <p className="admin-stat-label">студентів вибрали</p>
+                  <p className="admin-stat-label">учнів вибрали</p>
                 </article>
                 <article className="admin-stat admin-stat-orange">
                   <p className="admin-stat-num">{remainingStudentsCount}</p>
@@ -1316,7 +1316,7 @@ function App() {
           {adminTab === 'students' && (
             <section className="admin-panel">
               <div className="admin-panel-header">
-                <h1 className="admin-title">Студенти</h1>
+                <h1 className="admin-title">Учні</h1>
                 <button type="button" className="admin-btn-muted admin-btn-logout" onClick={onLogout}>Вийти</button>
               </div>
               <form className="login-form" onSubmit={onCreateStudent}>
@@ -1347,11 +1347,11 @@ function App() {
                   required
                 />
 
-                <button type="submit">Додати студента</button>
+                <button type="submit">Додати учня</button>
               </form>
 
               <section className="bulk-box">
-                <h3>Масове завантаження студентів</h3>
+                <h3>Масове завантаження учнів</h3>
                 <input
                   key={studentsCsvInputKey}
                   type="file"
@@ -1424,7 +1424,7 @@ function App() {
               {studentsError && <p className="error">{studentsError}</p>}
 
               {studentsLoading ? (
-                <p>Завантаження студентів...</p>
+                <p>Завантаження учнів...</p>
               ) : (
                 <div className="admin-table">
                   <table className="students-table admin-students-table">
@@ -1679,7 +1679,7 @@ function App() {
                         </th>
                         <th>
                           <button type="button" className="table-sort-btn" onClick={() => setTopicsSort((prev) => nextSort(prev, 'student'))}>
-                            Студент
+                            Учень
                             <span aria-hidden="true">{sortGlyph(topicsSort.key === 'student', topicsSort.direction)}</span>
                           </button>
                         </th>

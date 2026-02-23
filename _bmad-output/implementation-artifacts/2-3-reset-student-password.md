@@ -1,4 +1,4 @@
-# Story 2.3: Скидання пароля студента
+# Story 2.3: Скидання пароля учня
 
 Status: review
 
@@ -10,11 +10,11 @@ so that I can help a student who has forgotten their credentials without deletin
 
 ## Acceptance Criteria
 
-1. **Given** існуючий студент,  
+1. **Given** існуючий учень,  
    **When** `POST /admin/users/:id/reset-password`,  
    **Then** відповідь `200` з `{ newPassword }` — новий пароль повернений один раз, зберігається тільки bcrypt hash.
 2. **Given** `AdminStudentsPage`,  
-   **When** адмін натискає \"Скинути пароль\" для студента,  
+   **When** адмін натискає \"Скинути пароль\" для учня,  
    **Then** новий пароль відображається у модалці один раз з підказкою скопіювати.
 3. **Given** скидання пароля,  
    **When** операція завершена,  
@@ -28,7 +28,7 @@ so that I can help a student who has forgotten their credentials without deletin
   - [x] Оновлювати тільки hash у storage
   - [x] Додавати audit log `RESET_PASSWORD` без plaintext пароля
 - [x] Frontend reset flow (AC: 2)
-  - [x] Кнопка `Скинути пароль` у таблиці студентів
+  - [x] Кнопка `Скинути пароль` у таблиці учнів
   - [x] Одноразове відображення нового пароля в модальному блоці
   - [x] Підказка скопіювати пароль
 - [x] Tests and validation

@@ -10,17 +10,17 @@ so that I can make an informed decision about which topic suits me before commit
 
 ## Acceptance Criteria
 
-1. **Given** автентифікований студент,  
+1. **Given** автентифікований учень,  
    **When** `GET /topics`,  
    **Then** відповідь `200` з масивом `[{ id, title, description, supervisor, department }]` тільки для вільних тем.
 2. **Given** `TopicsPage`,  
    **When** сторінка завантажується,  
    **Then** відображаються skeleton-рядки (4 шт.) до отримання відповіді.
 3. **Given** список тем завантажено,  
-   **When** студент натискає на назву теми,  
+   **When** учень натискає на назву теми,  
    **Then** `TopicAccordionItem` розкривається in-place з описом, керівником, кафедрою і кнопкою `Вибрати цю тему` з візуальним акцентом `border-l-4 border-[#B436F0]`.
 4. **Given** пошуковий рядок (debounce 300ms),  
-   **When** студент вводить текст,  
+   **When** учень вводить текст,  
    **Then** список фільтрується client-side за назвою.
 5. **Given** пошук без збігів,  
    **When** жодна тема не відповідає запиту,  

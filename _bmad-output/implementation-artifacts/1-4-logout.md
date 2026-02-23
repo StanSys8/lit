@@ -16,7 +16,7 @@ so that my session is cleared and no one else can use my account on this device.
 2. **Given** очищений cookie,  
    **When** будь-який захищений маршрут,  
    **Then** відповідь `401 Unauthorized`.
-3. **Given** кнопка виходу в UI (студент: header; адмін: sidebar),  
+3. **Given** кнопка виходу в UI (учень: header; адмін: sidebar),  
    **When** натиснута,  
    **Then** `POST /auth/logout` виконано і редірект на `/login`.
 4. **Given** вихід із системи,  
