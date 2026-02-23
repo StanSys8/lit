@@ -1686,7 +1686,7 @@ function App() {
                               </button>
                             </td>
                             <td>{topic.supervisor ? renderStackedName(topic.supervisor) : '—'}</td>
-                            <td>{topic.department || '—'}</td>
+                            <td>{topic.department ? renderStackedName(topic.department) : '—'}</td>
                             <td>
                               <span className={`badge ${topic.selectedBy ? 'badge-taken' : 'badge-free'}`}>
                                 {topic.selectedBy ? 'зайнята' : 'вільна'}
