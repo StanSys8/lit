@@ -96,10 +96,10 @@ export const StudentActions = ({
   onResetPassword: (studentId: string) => void;
 }) => (
   <>
-    <button type="button" onClick={() => onDelete(studentId)}>
+    <button type="button" className="table-action-btn table-action-btn-danger" onClick={() => onDelete(studentId)}>
       Видалити
     </button>
-    <button type="button" onClick={() => onResetPassword(studentId)}>
+    <button type="button" className="table-action-btn table-action-btn-soft" onClick={() => onResetPassword(studentId)}>
       Скинути пароль
     </button>
   </>
@@ -1684,11 +1684,11 @@ function App() {
                                 : '—'}
                             </td>
                             <td className="table-actions">
-                              <button type="button" onClick={() => onDeleteTopic(topic.id)}>
+                              <button type="button" className="table-action-btn table-action-btn-danger" onClick={() => onDeleteTopic(topic.id)}>
                                 Видалити
                               </button>
                               {topic.selectedBy && (
-                                <button type="button" onClick={() => onOpenReleaseTopicModal(topic)}>
+                                <button type="button" className="table-action-btn table-action-btn-soft" onClick={() => onOpenReleaseTopicModal(topic)}>
                                   Звільнити
                                 </button>
                               )}
