@@ -1700,12 +1700,12 @@ function App() {
                                 </span>
                               ) : '—'}
                             </td>
-                            <td className="topic-actions">
-                              <button type="button" className="topic-action-btn topic-action-btn-danger" onClick={() => onDeleteTopic(topic.id)}>
+                            <td className="table-actions">
+                              <button type="button" className="table-action-btn table-action-btn-danger" onClick={() => onDeleteTopic(topic.id)}>
                                 Видалити
                               </button>
                               {topic.selectedBy && (
-                                <button type="button" className="topic-action-btn topic-action-btn-soft" onClick={() => onOpenReleaseTopicModal(topic)}>
+                                <button type="button" className="table-action-btn table-action-btn-soft" onClick={() => onOpenReleaseTopicModal(topic)}>
                                   Звільнити
                                 </button>
                               )}
