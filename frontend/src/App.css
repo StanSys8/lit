@@ -963,7 +963,7 @@ button:disabled {
   gap: 6px;
 }
 
-.table-actions--topics {
+.topic-actions {
   display: grid;
   grid-auto-rows: max-content;
   gap: 6px;
@@ -996,10 +996,29 @@ button:disabled {
   box-shadow: none;
 }
 
-.admin-topics-table .table-actions--topics .table-action-btn {
+.admin-topics-table .topic-action-btn {
+  -webkit-appearance: none;
+  appearance: none;
   width: 100%;
+  min-height: 32px;
   border: 0 !important;
+  border-radius: 8px;
   box-shadow: none !important;
+  outline: 0;
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.admin-topics-table .topic-action-btn-danger {
+  background: #f24c0a;
+  color: #fff;
+}
+
+.admin-topics-table .topic-action-btn-soft {
+  background: #f5effb;
+  color: #471260;
 }
 
 .table-action-btn-danger {
@@ -1028,9 +1047,19 @@ button:disabled {
   transform: none;
 }
 
-.admin-topics-table .table-actions--topics .table-action-btn-danger:hover:enabled,
-.admin-topics-table .table-actions--topics .table-action-btn-soft:hover:enabled {
+.admin-topics-table .topic-action-btn-danger:hover:enabled,
+.admin-topics-table .topic-action-btn-soft:hover:enabled {
   box-shadow: none;
+}
+
+.admin-topics-table .topic-action-btn-danger:hover:enabled {
+  background: #d8440a;
+}
+
+.admin-topics-table .topic-action-btn-soft:hover:enabled {
+  background: #efe4f9;
+  color: #3a0f50;
+  transform: none;
 }
 
 .badge {
