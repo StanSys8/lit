@@ -860,7 +860,7 @@ button:disabled {
 
 .admin-topics-table th:nth-child(1) { min-width: 320px; }
 .admin-topics-table th:nth-child(2) { width: 130px; }
-.admin-topics-table th:nth-child(3) { width: 130px; }
+.admin-topics-table th:nth-child(3) { width: 117px; }
 .admin-topics-table th:nth-child(4) { width: 108px; }
 .admin-topics-table th:nth-child(5) { width: 145px; }
 .admin-topics-table th:nth-child(6) { width: 130px; }
@@ -923,7 +923,7 @@ button:disabled {
   letter-spacing: 0;
   text-transform: none;
   font-weight: 700;
-  border: 0;
+  border: 1px solid #ece4f3;
   padding: 6px 8px;
 }
 
@@ -954,6 +954,15 @@ button:disabled {
   box-shadow: none;
   background: none;
   color: #471260;
+}
+
+.students-table th .table-sort-btn {
+  min-height: 0;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  background: none;
+  box-shadow: none;
 }
 
 .table-actions {
