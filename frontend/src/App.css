@@ -855,15 +855,15 @@ button:disabled {
 
 .admin-topics-table {
   table-layout: auto;
-  min-width: 980px;
+  min-width: 920px;
 }
 
 .admin-topics-table th:nth-child(1) { min-width: 320px; }
 .admin-topics-table th:nth-child(2) { width: 130px; }
 .admin-topics-table th:nth-child(3) { width: 117px; }
-.admin-topics-table th:nth-child(4) { width: 108px; }
+.admin-topics-table th:nth-child(4) { width: 86px; }
 .admin-topics-table th:nth-child(5) { width: 145px; }
-.admin-topics-table th:nth-child(6) { width: 130px; }
+.admin-topics-table th:nth-child(6) { width: 111px; }
 
 .admin-topics-table td {
   white-space: normal;
@@ -997,6 +997,12 @@ button:disabled {
 .students-table .table-action-btn {
   border: 0;
   box-shadow: none;
+}
+
+.admin-topics-table .table-action-btn {
+  min-height: 28px;
+  padding: 0 8px;
+  font-size: 11px;
 }
 
 .table-action-btn-danger {
