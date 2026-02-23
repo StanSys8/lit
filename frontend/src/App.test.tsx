@@ -100,8 +100,10 @@ describe('Admin reset controls', () => {
       />,
     );
     expect(html).toContain('Distributed Systems');
-    expect(html).toContain('Науковий керівник: Dr. Smith');
-    expect(html).toContain('Кафедра: CS');
+    expect(html).toContain('<strong>Науковий керівник:</strong>');
+    expect(html).toContain('Dr. Smith');
+    expect(html).toContain('<strong>Кафедра:</strong>');
+    expect(html).toContain('CS');
     expect(html).toContain('Вибрати цю тему');
     expect(html).toContain('topic-accordion-item--open');
     expect(html).toContain('topic-select-btn');

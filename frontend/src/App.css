@@ -979,6 +979,30 @@ button:disabled {
   color: #888;
 }
 
+.admin-status-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 20px;
+  padding: 2px 8px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 11px;
+  line-height: 1.1;
+  font-weight: 600;
+}
+
+.admin-status-pill-success {
+  background: #edf8f1;
+  border-color: #cae8d6;
+  color: #14532d;
+}
+
+.admin-status-pill-failed {
+  background: #fff3ee;
+  border-color: #f4d5c8;
+  color: #b42800;
+}
+
 .students-table td button {
   min-height: 32px;
   padding: 0 10px;

@@ -184,8 +184,16 @@ export const TopicAccordionItem = ({
     {expanded && (
       <div className="topic-accordion-content">
         <p>{topic.description}</p>
-        <p>{`Науковий керівник: ${topic.supervisor}`}</p>
-        <p>{`Кафедра: ${topic.department}`}</p>
+        <p>
+          <strong>Науковий керівник:</strong>
+          {' '}
+          {topic.supervisor}
+        </p>
+        <p>
+          <strong>Кафедра:</strong>
+          {' '}
+          {topic.department}
+        </p>
         <button
           type="button"
           className="topic-select-btn"
@@ -1218,6 +1226,8 @@ function App() {
     return status === 'logged_in' ? 'Заходив' : 'Не заходив';
   };
 
+  const studentStatusToneClass = (isSuccess: boolean) => (isSuccess ? 'admin-status-pill-success' : 'admin-status-pill-failed');
+
   const selectedStudentsCount = useMemo(() => students.filter((student) => student.hasSelectedTopic).length, [students]);
   const totalStudentsCount = students.length;
   const selectionProgress = totalStudentsCount > 0 ? Math.round((selectedStudentsCount / totalStudentsCount) * 100) : 0;
@@ -1467,9 +1477,15 @@ function App() {
                           <td>{renderStackedName(student.name)}</td>
                           <td>{student.email}</td>
                           <td>{student.class}</td>
-                          <td>{student.hasSelectedTopic ? 'Так' : 'Ні'}</td>
                           <td>
-                            {studentLoginStatusLabel(student.loginStatus)}
+                            <span className={`admin-status-pill ${studentStatusToneClass(student.hasSelectedTopic)}`}>
+                              {student.hasSelectedTopic ? 'Так' : 'Ні'}
+                            </span>
+                          </td>
+                          <td>
+                            <span className={`admin-status-pill ${studentStatusToneClass(student.loginStatus === 'logged_in')}`}>
+                              {studentLoginStatusLabel(student.loginStatus)}
+                            </span>
                             {student.lastLoginAt && (
                               <span className="table-subtle">{new Date(student.lastLoginAt).toLocaleString('uk-UA')}</span>
                             )}
