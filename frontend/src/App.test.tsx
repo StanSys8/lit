@@ -51,7 +51,7 @@ describe('App routes', () => {
 
     expect(html).toContain('<aside');
     expect(html).toContain('📊 Статус');
-    expect(html).toContain('👥 Студенти');
+    expect(html).toContain('👥 Учні');
     expect(html).toContain('📋 Теми');
     expect(html).toContain('Журнал дій');
   });

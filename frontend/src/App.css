@@ -911,8 +911,8 @@ button:disabled {
 .students-table td {
   border: 1px solid #ece4f3;
   padding: 10px;
-  text-align: left;
-  vertical-align: top;
+  text-align: center;
+  vertical-align: middle;
   font-size: 14px;
 }
 
@@ -963,6 +963,15 @@ button:disabled {
   padding: 0;
   background: none;
   box-shadow: none;
+}
+
+.admin-students-table th:nth-child(1),
+.admin-students-table td:nth-child(1),
+.admin-topics-table th:nth-child(2),
+.admin-topics-table td:nth-child(2),
+.admin-topics-table th:nth-child(5),
+.admin-topics-table td:nth-child(5) {
+  text-align: left;
 }
 
 .table-actions {

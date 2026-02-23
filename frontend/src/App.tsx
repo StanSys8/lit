@@ -1255,7 +1255,7 @@ function App() {
               className={`admin-nav-item ${adminTab === 'students' ? 'active' : ''}`}
               onClick={() => setAdminTab('students')}
             >
-              👥 Студенти
+              👥 Учні
             </button>
             <button
               type="button"
