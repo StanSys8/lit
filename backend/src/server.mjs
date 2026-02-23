@@ -643,6 +643,53 @@ export const createApp = ({
       }
 
       const deleteTopicMatch = req.url?.match(/^\/admin\/topics\/([^/]+)$/);
+      const updateTopicMatch = req.url?.match(/^\/admin\/topics\/([^/]+)$/);
+      if (req.method === 'PUT' && updateTopicMatch) {
+        const session = await requireAuth(req, res);
+        if (!session) return;
+        if (!requireRole(session, 'admin', res)) return;
+
+        const targetId = updateTopicMatch[1];
+        const { topics } = await getDb();
+        const existing = await topics.findOne(idQuery(targetId));
+        if (!existing) {
+          return json(res, 404, { error: 'NOT_FOUND', message: 'Topic not found' });
+        }
+
+        const { title = '', description = '', supervisor = '', department = '' } = await readJsonBody(req);
+        const cleanTitle = String(title).trim();
+        const cleanDescription = String(description).trim();
+        const cleanSupervisor = String(supervisor).trim();
+        const cleanDepartment = String(department).trim();
+
+        if (!cleanTitle || !cleanDescription || !cleanSupervisor || !cleanDepartment) {
+          return json(res, 400, {
+            error: 'VALIDATION_ERROR',
+            message: 'title, description, supervisor and department are required',
+          });
+        }
+
+        await topics.updateOne(idQuery(targetId), {
+          $set: {
+            title: cleanTitle,
+            description: cleanDescription,
+            supervisor: cleanSupervisor,
+            department: cleanDepartment,
+          },
+        });
+        const updated = await topics.findOne(idQuery(targetId));
+
+        await logAudit({
+          actor: session.sub,
+          action: 'UPDATE_TOPIC',
+          ip: getIp(req),
+          result: 'success',
+          targetId,
+        });
+
+        return json(res, 200, { topic: await mapTopic(updated) });
+      }
+
       if (req.method === 'DELETE' && deleteTopicMatch) {
         const session = await requireAuth(req, res);
         if (!session) return;

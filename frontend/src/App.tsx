@@ -433,7 +433,13 @@ function App() {
   const [releaseTopicTargetId, setReleaseTopicTargetId] = useState('');
   const [releaseTopicTitle, setReleaseTopicTitle] = useState('');
   const [adminTab, setAdminTab] = useState<'status' | 'students' | 'topics' | 'audit'>('status');
+  const [showAddStudentForm, setShowAddStudentForm] = useState(false);
   const [showAddTopicForm, setShowAddTopicForm] = useState(false);
+  const [editTopicTargetId, setEditTopicTargetId] = useState('');
+  const [editTopicTitle, setEditTopicTitle] = useState('');
+  const [editTopicDescription, setEditTopicDescription] = useState('');
+  const [editTopicSupervisor, setEditTopicSupervisor] = useState('');
+  const [editTopicDepartment, setEditTopicDepartment] = useState('');
   const [expandedAdminTopicId, setExpandedAdminTopicId] = useState('');
   const topicCsvInputRef = useRef<HTMLInputElement>(null);
   const [showPassword, setShowPassword] = useState(false);
@@ -708,7 +714,13 @@ function App() {
       setReleaseTopicTitle('');
       setResetPasswordValue('');
       setAdminTab('status');
+      setShowAddStudentForm(false);
       setShowAddTopicForm(false);
+      setEditTopicTargetId('');
+      setEditTopicTitle('');
+      setEditTopicDescription('');
+      setEditTopicSupervisor('');
+      setEditTopicDepartment('');
       setExpandedAdminTopicId('');
       setStudentsSort({ key: 'name', direction: 'asc' });
       setTopicsSort({ key: 'title', direction: 'asc' });
@@ -716,7 +728,7 @@ function App() {
     }
   };
 
-  const onCreateStudent = async (event: FormEvent) => {
+  const onCreateStudent = async (event: FormEvent): Promise<boolean> => {
     event.preventDefault();
     setCreateError('');
     setCreateNotice('');
@@ -733,7 +745,7 @@ function App() {
       const payload = (await response.json()) as CreateStudentResponse | { message?: string };
       if (!response.ok) {
         setCreateError((payload as { message?: string }).message || 'Не вдалося додати учня');
-        return;
+        return false;
       }
 
       const created = payload as CreateStudentResponse;
@@ -759,9 +771,24 @@ function App() {
       setNewStudentName('');
       setNewStudentEmail('');
       setNewStudentClass('');
+      return true;
     } catch {
       setCreateError('Не вдалося додати учня');
+      return false;
     }
+  };
+
+  const onOpenAddStudentModal = () => {
+    setCreateError('');
+    setShowAddStudentForm(true);
+  };
+
+  const onCloseAddStudentModal = () => {
+    setShowAddStudentForm(false);
+    setCreateError('');
+    setNewStudentName('');
+    setNewStudentEmail('');
+    setNewStudentClass('');
   };
 
   const onDeleteStudent = async (studentId: string) => {
@@ -1045,6 +1072,57 @@ function App() {
     }
   };
 
+  const onOpenEditTopicModal = (topic: TopicRow) => {
+    setCreateTopicError('');
+    setEditTopicTargetId(topic.id);
+    setEditTopicTitle(topic.title);
+    setEditTopicDescription(topic.description);
+    setEditTopicSupervisor(topic.supervisor);
+    setEditTopicDepartment(topic.department);
+  };
+
+  const onCloseEditTopicModal = () => {
+    setEditTopicTargetId('');
+    setEditTopicTitle('');
+    setEditTopicDescription('');
+    setEditTopicSupervisor('');
+    setEditTopicDepartment('');
+    setCreateTopicError('');
+  };
+
+  const onUpdateTopic = async (event: FormEvent): Promise<boolean> => {
+    event.preventDefault();
+    if (!editTopicTargetId) return false;
+    setCreateTopicError('');
+
+    try {
+      const response = await authFetch(apiUrl(`/admin/topics/${editTopicTargetId}`), {
+        method: 'PUT',
+        credentials: 'include',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          title: editTopicTitle,
+          description: editTopicDescription,
+          supervisor: editTopicSupervisor,
+          department: editTopicDepartment,
+        }),
+      });
+
+      const payload = (await response.json()) as { topic?: TopicRow; message?: string };
+      if (!response.ok || !payload.topic) {
+        setCreateTopicError(payload.message || 'Не вдалося оновити тему');
+        return false;
+      }
+
+      setTopics((prev) => prev.map((topic) => (topic.id === payload.topic?.id ? payload.topic : topic)));
+      onCloseEditTopicModal();
+      return true;
+    } catch {
+      setCreateTopicError('Не вдалося оновити тему');
+      return false;
+    }
+  };
+
   const onOpenReleaseTopicModal = (topic: TopicRow) => {
     setCreateTopicError('');
     setReleaseTopicTargetId(topic.id);
@@ -1317,38 +1395,53 @@ function App() {
             <section className="admin-panel">
               <div className="admin-panel-header">
                 <h1 className="admin-title">Учні</h1>
-                <button type="button" className="admin-btn-muted admin-btn-logout" onClick={onLogout}>Вийти</button>
+                <div className="admin-panel-actions">
+                  <button type="button" className="admin-btn-muted admin-btn-logout" onClick={onLogout}>Вийти</button>
+                  <button type="button" className="admin-btn-add" onClick={onOpenAddStudentModal}>+ Додати учня</button>
+                </div>
               </div>
-              <form className="login-form" onSubmit={onCreateStudent}>
-                <label htmlFor="student-name">Ім'я</label>
-                <input
-                  id="student-name"
-                  type="text"
-                  value={newStudentName}
-                  onChange={(e) => setNewStudentName(e.target.value)}
-                  required
-                />
 
-                <label htmlFor="student-email">Email</label>
-                <input
-                  id="student-email"
-                  type="email"
-                  value={newStudentEmail}
-                  onChange={(e) => setNewStudentEmail(e.target.value)}
-                  required
-                />
+              {showAddStudentForm && (
+                <div className="topic-dialog-overlay">
+                  <form className="modal-like modal-form" onSubmit={async (e) => { if (await onCreateStudent(e)) setShowAddStudentForm(false); }}>
+                    <h3 className="modal-form-title">Додати учня</h3>
+                    <label htmlFor="student-name">Ім'я</label>
+                    <input
+                      id="student-name"
+                      type="text"
+                      value={newStudentName}
+                      onChange={(e) => setNewStudentName(e.target.value)}
+                      required
+                    />
 
-                <label htmlFor="student-class">Клас</label>
-                <input
-                  id="student-class"
-                  type="text"
-                  value={newStudentClass}
-                  onChange={(e) => setNewStudentClass(e.target.value)}
-                  required
-                />
+                    <label htmlFor="student-email">Email</label>
+                    <input
+                      id="student-email"
+                      type="email"
+                      value={newStudentEmail}
+                      onChange={(e) => setNewStudentEmail(e.target.value)}
+                      required
+                    />
 
-                <button type="submit">Додати учня</button>
-              </form>
+                    <label htmlFor="student-class">Клас</label>
+                    <input
+                      id="student-class"
+                      type="text"
+                      value={newStudentClass}
+                      onChange={(e) => setNewStudentClass(e.target.value)}
+                      required
+                    />
+
+                    {createError && <p className="error">{createError}</p>}
+                    <div className="modal-actions">
+                      <button type="button" className="modal-btn-secondary" onClick={onCloseAddStudentModal}>
+                        Скасувати
+                      </button>
+                      <button type="submit">Зберегти учня</button>
+                    </div>
+                  </form>
+                </div>
+              )}
 
               <section className="bulk-box">
                 <h3>Масове завантаження учнів</h3>
@@ -1622,6 +1715,57 @@ function App() {
               {createTopicError && <p className="error">{createTopicError}</p>}
               {topicsError && <p className="error">{topicsError}</p>}
 
+              {editTopicTargetId && (
+                <div className="topic-dialog-overlay">
+                  <form className="modal-like modal-form" onSubmit={onUpdateTopic}>
+                    <h3 className="modal-form-title">Редагувати тему</h3>
+                    <label htmlFor="edit-topic-title">Назва</label>
+                    <input
+                      id="edit-topic-title"
+                      type="text"
+                      value={editTopicTitle}
+                      onChange={(e) => setEditTopicTitle(e.target.value)}
+                      required
+                    />
+
+                    <label htmlFor="edit-topic-description">Опис</label>
+                    <input
+                      id="edit-topic-description"
+                      type="text"
+                      value={editTopicDescription}
+                      onChange={(e) => setEditTopicDescription(e.target.value)}
+                      required
+                    />
+
+                    <label htmlFor="edit-topic-supervisor">Керівник</label>
+                    <input
+                      id="edit-topic-supervisor"
+                      type="text"
+                      value={editTopicSupervisor}
+                      onChange={(e) => setEditTopicSupervisor(e.target.value)}
+                      required
+                    />
+
+                    <label htmlFor="edit-topic-department">Кафедра</label>
+                    <input
+                      id="edit-topic-department"
+                      type="text"
+                      value={editTopicDepartment}
+                      onChange={(e) => setEditTopicDepartment(e.target.value)}
+                      required
+                    />
+
+                    {createTopicError && <p className="error">{createTopicError}</p>}
+                    <div className="modal-actions">
+                      <button type="button" className="modal-btn-secondary" onClick={onCloseEditTopicModal}>
+                        Скасувати
+                      </button>
+                      <button type="submit">Зберегти зміни</button>
+                    </div>
+                  </form>
+                </div>
+              )}
+
               {releaseTopicTitle && (
                 <div className="topic-dialog-overlay">
                   <ReleaseTopicModal
@@ -1718,6 +1862,9 @@ function App() {
                             </td>
                             <td>
                               <div className="table-actions">
+                                <button type="button" className="table-action-btn table-action-btn-primary" onClick={() => onOpenEditTopicModal(topic)}>
+                                  Редагувати
+                                </button>
                                 <button type="button" className="table-action-btn table-action-btn-danger" onClick={() => onDeleteTopic(topic.id)}>
                                   Видалити
                                 </button>

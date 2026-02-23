@@ -391,6 +391,29 @@ button:disabled {
   gap: 10px;
 }
 
+.modal-form-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #471260;
+}
+
+.modal-form label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #471260;
+}
+
+.modal-form input {
+  min-height: 44px;
+  border-radius: 10px;
+  border: 1px solid #d8c4e7;
+  padding: 0 12px;
+  font-size: 14px;
+  font-weight: 500;
+  background: #fff;
+}
+
 .topic-dialog a {
   color: #b436f0;
   text-decoration: none;
@@ -1030,6 +1053,20 @@ button:disabled {
 .students-table .table-action-btn {
   border: 0;
   box-shadow: none;
+}
+
+.table-action-btn-primary {
+  background: #f5effb;
+  border-color: #d8c4e7;
+  color: #471260;
+}
+
+.table-action-btn-primary:hover:enabled {
+  background: #efe4f9;
+  border-color: #cdb2e0;
+  color: #3a0f50;
+  box-shadow: none;
+  transform: none;
 }
 
 .admin-topics-table .table-action-btn {

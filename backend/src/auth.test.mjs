@@ -431,7 +431,7 @@ test('admin users bulk create: partial success with duplicates and audit count',
   assert.equal(auditEntry.count, 2);
 });
 
-test('admin topics CRUD: list, create, delete free topic, reject delete used topic, and audit', async () => {
+test('admin topics CRUD: list, create, update, delete free topic, reject delete used topic, and audit', async () => {
   const app = createApp({ jwtSecret: 'test-secret' });
 
   const adminLogin = await login(app, 'admin@example.com', 'admin123');
@@ -477,6 +477,45 @@ test('admin topics CRUD: list, create, delete free topic, reject delete used top
   assert.equal(create.body.selectedBy, null);
   assert.equal(create.body.title, 'Graph Databases in Research Portals');
 
+  const update = await app.inject({
+    method: 'PUT',
+    url: `/admin/topics/${create.body.id}`,
+    headers: { cookie: adminCookie, 'content-type': 'application/json' },
+    body: {
+      title: 'Graph Databases for School Research',
+      description: 'Updated description',
+      supervisor: 'Dr. Lee Updated',
+      department: 'Applied Informatics',
+    },
+  });
+  assert.equal(update.status, 200);
+  assert.equal(update.body.topic.id, create.body.id);
+  assert.equal(update.body.topic.title, 'Graph Databases for School Research');
+  assert.equal(update.body.topic.description, 'Updated description');
+  assert.equal(update.body.topic.supervisor, 'Dr. Lee Updated');
+  assert.equal(update.body.topic.department, 'Applied Informatics');
+
+  const invalidUpdate = await app.inject({
+    method: 'PUT',
+    url: `/admin/topics/${create.body.id}`,
+    headers: { cookie: adminCookie, 'content-type': 'application/json' },
+    body: { title: '', description: '', supervisor: '', department: '' },
+  });
+  assert.equal(invalidUpdate.status, 400);
+
+  const missingUpdate = await app.inject({
+    method: 'PUT',
+    url: '/admin/topics/missing',
+    headers: { cookie: adminCookie, 'content-type': 'application/json' },
+    body: {
+      title: 'Missing',
+      description: 'Missing',
+      supervisor: 'Missing',
+      department: 'Missing',
+    },
+  });
+  assert.equal(missingUpdate.status, 404);
+
   const deleteFree = await app.inject({
     method: 'DELETE',
     url: `/admin/topics/${create.body.id}`,
@@ -511,8 +550,10 @@ test('admin topics CRUD: list, create, delete free topic, reject delete used top
 
   const log = app.getAuditLog();
   const createAudit = log.find((e) => e.action === 'CREATE_TOPIC' && e.targetId === create.body.id);
+  const updateAudit = log.find((e) => e.action === 'UPDATE_TOPIC' && e.targetId === create.body.id);
   const deleteAudit = log.find((e) => e.action === 'DELETE_TOPIC' && e.targetId === create.body.id);
   assert.ok(createAudit);
+  assert.ok(updateAudit);
   assert.ok(deleteAudit);
 });
 
