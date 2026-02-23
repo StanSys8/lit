@@ -963,6 +963,12 @@ button:disabled {
   gap: 6px;
 }
 
+.table-actions--topics {
+  display: grid;
+  grid-auto-rows: max-content;
+  gap: 6px;
+}
+
 .table-subtle {
   display: block;
   margin-top: 2px;
@@ -990,6 +996,12 @@ button:disabled {
   box-shadow: none;
 }
 
+.admin-topics-table .table-actions--topics .table-action-btn {
+  width: 100%;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
 .table-action-btn-danger {
   background: #f24c0a;
   border-color: #f24c0a;
@@ -1014,6 +1026,11 @@ button:disabled {
   color: #3a0f50;
   box-shadow: none;
   transform: none;
+}
+
+.admin-topics-table .table-actions--topics .table-action-btn-danger:hover:enabled,
+.admin-topics-table .table-actions--topics .table-action-btn-soft:hover:enabled {
+  box-shadow: none;
 }
 
 .badge {

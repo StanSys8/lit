@@ -1700,7 +1700,7 @@ function App() {
                                 </span>
                               ) : '—'}
                             </td>
-                            <td className="table-actions">
+                            <td className="table-actions table-actions--topics">
                               <button type="button" className="table-action-btn table-action-btn-danger" onClick={() => onDeleteTopic(topic.id)}>
                                 Видалити
                               </button>
