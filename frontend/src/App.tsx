@@ -81,6 +81,18 @@ const nextSort = <K extends string>(current: { key: K; direction: SortDirection 
   return { key, direction: current.direction === 'asc' ? 'desc' : 'asc' };
 };
 
+const renderStackedName = (fullName: string) => {
+  const parts = String(fullName).trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return '—';
+  return (
+    <span className="stacked-name">
+      {parts.map((part, index) => (
+        <span key={`${part}-${index}`}>{part}</span>
+      ))}
+    </span>
+  );
+};
+
 const normalizePath = (path: string) => {
   if (path === '/topics' || path === '/admin') return path;
   return '/login';
@@ -1404,74 +1416,76 @@ function App() {
               {studentsLoading ? (
                 <p>Завантаження студентів...</p>
               ) : (
-                <table className="students-table">
-                  <thead>
-                    <tr>
-                      <th>
-                        <button type="button" className="table-sort-btn" onClick={() => setStudentsSort((prev) => nextSort(prev, 'name'))}>
-                          Ім'я
-                          <span aria-hidden="true">{sortGlyph(studentsSort.key === 'name', studentsSort.direction)}</span>
-                        </button>
-                      </th>
-                      <th>
-                        <button type="button" className="table-sort-btn" onClick={() => setStudentsSort((prev) => nextSort(prev, 'email'))}>
-                          Email
-                          <span aria-hidden="true">{sortGlyph(studentsSort.key === 'email', studentsSort.direction)}</span>
-                        </button>
-                      </th>
-                      <th>
-                        <button type="button" className="table-sort-btn" onClick={() => setStudentsSort((prev) => nextSort(prev, 'class'))}>
-                          Клас
-                          <span aria-hidden="true">{sortGlyph(studentsSort.key === 'class', studentsSort.direction)}</span>
-                        </button>
-                      </th>
-                      <th>
-                        <button
-                          type="button"
-                          className="table-sort-btn"
-                          onClick={() => setStudentsSort((prev) => nextSort(prev, 'hasSelectedTopic'))}
-                        >
-                          Тему обрано
-                          <span aria-hidden="true">{sortGlyph(studentsSort.key === 'hasSelectedTopic', studentsSort.direction)}</span>
-                        </button>
-                      </th>
-                      <th>
-                        <button
-                          type="button"
-                          className="table-sort-btn"
-                          onClick={() => setStudentsSort((prev) => nextSort(prev, 'loginStatus'))}
-                        >
-                          Статус логіну
-                          <span aria-hidden="true">{sortGlyph(studentsSort.key === 'loginStatus', studentsSort.direction)}</span>
-                        </button>
-                      </th>
-                      <th>Дії</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {sortedStudents.map((student) => (
-                      <tr key={student.id}>
-                        <td>{student.name}</td>
-                        <td>{student.email}</td>
-                        <td>{student.class}</td>
-                        <td>{student.hasSelectedTopic ? 'Так' : 'Ні'}</td>
-                        <td>
-                          {studentLoginStatusLabel(student.loginStatus)}
-                          {student.lastLoginAt && (
-                            <span className="table-subtle">{new Date(student.lastLoginAt).toLocaleString('uk-UA')}</span>
-                          )}
-                        </td>
-                        <td className="table-actions">
-                          <StudentActions
-                            studentId={student.id}
-                            onDelete={onDeleteStudent}
-                            onResetPassword={onResetPassword}
-                          />
-                        </td>
+                <div className="admin-table">
+                  <table className="students-table admin-students-table">
+                    <thead>
+                      <tr>
+                        <th>
+                          <button type="button" className="table-sort-btn" onClick={() => setStudentsSort((prev) => nextSort(prev, 'name'))}>
+                            Ім'я
+                            <span aria-hidden="true">{sortGlyph(studentsSort.key === 'name', studentsSort.direction)}</span>
+                          </button>
+                        </th>
+                        <th>
+                          <button type="button" className="table-sort-btn" onClick={() => setStudentsSort((prev) => nextSort(prev, 'email'))}>
+                            Email
+                            <span aria-hidden="true">{sortGlyph(studentsSort.key === 'email', studentsSort.direction)}</span>
+                          </button>
+                        </th>
+                        <th>
+                          <button type="button" className="table-sort-btn" onClick={() => setStudentsSort((prev) => nextSort(prev, 'class'))}>
+                            Клас
+                            <span aria-hidden="true">{sortGlyph(studentsSort.key === 'class', studentsSort.direction)}</span>
+                          </button>
+                        </th>
+                        <th>
+                          <button
+                            type="button"
+                            className="table-sort-btn"
+                            onClick={() => setStudentsSort((prev) => nextSort(prev, 'hasSelectedTopic'))}
+                          >
+                            Тему обрано
+                            <span aria-hidden="true">{sortGlyph(studentsSort.key === 'hasSelectedTopic', studentsSort.direction)}</span>
+                          </button>
+                        </th>
+                        <th>
+                          <button
+                            type="button"
+                            className="table-sort-btn"
+                            onClick={() => setStudentsSort((prev) => nextSort(prev, 'loginStatus'))}
+                          >
+                            Статус логіну
+                            <span aria-hidden="true">{sortGlyph(studentsSort.key === 'loginStatus', studentsSort.direction)}</span>
+                          </button>
+                        </th>
+                        <th>Дії</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {sortedStudents.map((student) => (
+                        <tr key={student.id}>
+                          <td>{renderStackedName(student.name)}</td>
+                          <td>{student.email}</td>
+                          <td>{student.class}</td>
+                          <td>{student.hasSelectedTopic ? 'Так' : 'Ні'}</td>
+                          <td>
+                            {studentLoginStatusLabel(student.loginStatus)}
+                            {student.lastLoginAt && (
+                              <span className="table-subtle">{new Date(student.lastLoginAt).toLocaleString('uk-UA')}</span>
+                            )}
+                          </td>
+                          <td className="table-actions">
+                            <StudentActions
+                              studentId={student.id}
+                              onDelete={onDeleteStudent}
+                              onResetPassword={onResetPassword}
+                            />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
             </section>
           )}
@@ -1671,7 +1685,7 @@ function App() {
                                 {topic.title}
                               </button>
                             </td>
-                            <td>{topic.supervisor || '—'}</td>
+                            <td>{topic.supervisor ? renderStackedName(topic.supervisor) : '—'}</td>
                             <td>{topic.department || '—'}</td>
                             <td>
                               <span className={`badge ${topic.selectedBy ? 'badge-taken' : 'badge-free'}`}>
@@ -1679,9 +1693,12 @@ function App() {
                               </span>
                             </td>
                             <td>
-                              {topic.selectedBy
-                                ? `${topic.selectedBy.name}${topic.selectedBy.class ? ` (${topic.selectedBy.class})` : ''}`
-                                : '—'}
+                              {topic.selectedBy ? (
+                                <span className="student-cell">
+                                  {renderStackedName(topic.selectedBy.name)}
+                                  {topic.selectedBy.class && <span className="student-cell-class">{topic.selectedBy.class}</span>}
+                                </span>
+                              ) : '—'}
                             </td>
                             <td className="table-actions">
                               <button type="button" className="table-action-btn table-action-btn-danger" onClick={() => onDeleteTopic(topic.id)}>
