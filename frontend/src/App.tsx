@@ -1700,15 +1700,17 @@ function App() {
                                 </span>
                               ) : '—'}
                             </td>
-                            <td className="table-actions">
-                              <button type="button" className="table-action-btn table-action-btn-danger" onClick={() => onDeleteTopic(topic.id)}>
-                                Видалити
-                              </button>
-                              {topic.selectedBy && (
-                                <button type="button" className="table-action-btn table-action-btn-soft" onClick={() => onOpenReleaseTopicModal(topic)}>
-                                  Звільнити
+                            <td>
+                              <div className="table-actions">
+                                <button type="button" className="table-action-btn table-action-btn-danger" onClick={() => onDeleteTopic(topic.id)}>
+                                  Видалити
                                 </button>
-                              )}
+                                {topic.selectedBy && (
+                                  <button type="button" className="table-action-btn table-action-btn-soft" onClick={() => onOpenReleaseTopicModal(topic)}>
+                                    Звільнити
+                                  </button>
+                                )}
+                              </div>
                             </td>
                           </tr>
                           {expandedAdminTopicId === topic.id && (
