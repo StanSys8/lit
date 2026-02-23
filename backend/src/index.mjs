@@ -10,6 +10,8 @@ const app = createApp({
   emailFrom: process.env.EMAIL_FROM || '',
   appBaseUrl: process.env.APP_BASE_URL || process.env.ALLOWED_ORIGIN || '',
   emailRegion: process.env.EMAIL_REGION || process.env.AWS_REGION || process.env.AWS_DEFAULT_REGION || '',
+  credentialEmailsEnabled: ['1', 'true', 'yes']
+    .includes(String(process.env.CREDENTIAL_EMAILS_ENABLED || '').trim().toLowerCase()),
 });
 const server = createServer(app.handler);
 

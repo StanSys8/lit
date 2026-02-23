@@ -78,12 +78,13 @@ const BULK_CREATE_CHUNK_SIZE = 25;
 
 export const createApp = ({
   jwtSecret = 'dev-jwt-secret',
-  mongodbUri = '',
-  mongodbDbName = '',
+  mongodbUri = process.env.MONGODB_URI || '',
+  mongodbDbName = process.env.MONGODB_DB_NAME || '',
   allowedOrigin = '',
   emailFrom = '',
   appBaseUrl = '',
   emailRegion = '',
+  credentialEmailsEnabled = false,
   sendCredentialEmail = null,
 } = {}) => {
   if (!mongodbUri) {
@@ -146,13 +147,15 @@ export const createApp = ({
   };
 
   const credentialEmailSender =
-    typeof sendCredentialEmail === 'function'
-      ? sendCredentialEmail
-      : createCredentialEmailSender({
-        fromEmail: emailFrom,
-        appBaseUrl: resolvedAppBaseUrl,
-        emailRegion,
-      });
+    credentialEmailsEnabled
+      ? (typeof sendCredentialEmail === 'function'
+        ? sendCredentialEmail
+        : createCredentialEmailSender({
+          fromEmail: emailFrom,
+          appBaseUrl: resolvedAppBaseUrl,
+          emailRegion,
+        }))
+      : null;
 
   const authenticate = async (req) => {
     const authHeader = req.headers['authorization'] || '';
@@ -267,6 +270,7 @@ export const createApp = ({
       passwordHash: await hashPasswordAsync(newPassword),
       failedAttempts: 0,
       lockedUntilMs: null,
+      lastLoginAt: null,
     });
 
     return {
@@ -329,7 +333,13 @@ export const createApp = ({
       });
     }
 
-    await users.updateOne(idQuery(idFromDoc(user)), { $set: { failedAttempts: 0, lockedUntilMs: null } });
+    await users.updateOne(idQuery(idFromDoc(user)), {
+      $set: {
+        failedAttempts: 0,
+        lockedUntilMs: null,
+        lastLoginAt: nowIso(),
+      },
+    });
 
     const token = signToken(
       {
@@ -671,7 +681,7 @@ export const createApp = ({
         const { users } = await getDb();
         const students = await users
           .find({ role: 'student' })
-          .project({ id: 1, _id: 1, name: 1, email: 1, class: 1, selectedTopicId: 1 })
+          .project({ id: 1, _id: 1, name: 1, email: 1, class: 1, selectedTopicId: 1, lastLoginAt: 1 })
           .toArray();
         return json(
           res,
@@ -682,6 +692,8 @@ export const createApp = ({
             email: u.email,
             class: String(u.class ?? ''),
             hasSelectedTopic: Boolean(u.selectedTopicId),
+            loginStatus: u.lastLoginAt ? 'logged_in' : 'not_logged_in',
+            lastLoginAt: u.lastLoginAt || null,
           })),
         );
       }
@@ -850,6 +862,8 @@ export const createApp = ({
           email: created.data.email,
           class: created.data.class,
           newPassword: created.data.newPassword,
+          loginStatus: 'not_logged_in',
+          lastLoginAt: null,
           credentialEmailStatus,
         });
       }
@@ -922,6 +936,7 @@ export const createApp = ({
                     passwordHash,
                     failedAttempts: 0,
                     lockedUntilMs: null,
+                    lastLoginAt: null,
                   },
                   credential: {
                     name: entry.name,

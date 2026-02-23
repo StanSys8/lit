@@ -23,12 +23,14 @@ type CreateStudentResponse = {
   email: string;
   class: string;
   newPassword: string;
+  loginStatus: 'logged_in' | 'not_logged_in';
+  lastLoginAt: string | null;
   credentialEmailStatus?: 'sent' | 'failed' | 'disabled';
 };
 
 type BulkCreateResponse = {
   created: number;
-  users: Array<{ name: string; email: string; class: string; password: string }>;
+  users: Array<{ name: string; email: string; class: string; password: string; loginStatus?: string }>;
   errors: Array<{ row: number; message: string }>;
 };
 
@@ -68,6 +70,16 @@ type StudentSelectResponse = {
 };
 
 type CreateTopicResponse = TopicRow;
+type SortDirection = 'asc' | 'desc';
+type StudentsSortKey = 'name' | 'email' | 'class' | 'hasSelectedTopic' | 'loginStatus';
+type TopicsSortKey = 'title' | 'supervisor' | 'department' | 'status' | 'student';
+
+const compareText = (left: string, right: string) => left.localeCompare(right, 'uk', { sensitivity: 'base' });
+
+const nextSort = <K extends string>(current: { key: K; direction: SortDirection }, key: K): { key: K; direction: SortDirection } => {
+  if (current.key !== key) return { key, direction: 'asc' };
+  return { key, direction: current.direction === 'asc' ? 'desc' : 'asc' };
+};
 
 const normalizePath = (path: string) => {
   if (path === '/topics' || path === '/admin') return path;
@@ -370,7 +382,13 @@ function App() {
   const [csvErrors, setCsvErrors] = useState<CsvError[]>([]);
   const [bulkErrors, setBulkErrors] = useState<Array<{ row: number; message: string }>>([]);
   const [bulkCreated, setBulkCreated] = useState(0);
-  const [bulkCredentials, setBulkCredentials] = useState<Array<{ name: string; email: string; class: string; password: string }>>([]);
+  const [bulkCredentials, setBulkCredentials] = useState<Array<{
+    name: string;
+    email: string;
+    class: string;
+    password: string;
+    loginStatus: string;
+  }>>([]);
   const [studentsCsvInputKey, setStudentsCsvInputKey] = useState(0);
   const [resetPasswordValue, setResetPasswordValue] = useState('');
   const [topics, setTopics] = useState<TopicRow[]>([]);
@@ -399,6 +417,14 @@ function App() {
   const [expandedAdminTopicId, setExpandedAdminTopicId] = useState('');
   const topicCsvInputRef = useRef<HTMLInputElement>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [studentsSort, setStudentsSort] = useState<{ key: StudentsSortKey; direction: SortDirection }>({
+    key: 'name',
+    direction: 'asc',
+  });
+  const [topicsSort, setTopicsSort] = useState<{ key: TopicsSortKey; direction: SortDirection }>({
+    key: 'title',
+    direction: 'asc',
+  });
 
   const heading = useMemo(() => {
     if (route === '/topics') return 'Вибір теми';
@@ -664,6 +690,8 @@ function App() {
       setAdminTab('status');
       setShowAddTopicForm(false);
       setExpandedAdminTopicId('');
+      setStudentsSort({ key: 'name', direction: 'asc' });
+      setTopicsSort({ key: 'title', direction: 'asc' });
       navigate('/login');
     }
   };
@@ -696,6 +724,8 @@ function App() {
           email: created.email,
           class: created.class,
           hasSelectedTopic: false,
+          loginStatus: created.loginStatus ?? 'not_logged_in',
+          lastLoginAt: created.lastLoginAt ?? null,
         }),
       );
       setCreatePassword(created.newPassword);
@@ -798,9 +828,13 @@ function App() {
       }
 
       const payload = (await response.json()) as BulkCreateResponse;
+      const credentialsWithStatus = payload.users.map((item) => ({
+        ...item,
+        loginStatus: item.loginStatus ?? 'не заходив',
+      }));
       setBulkCreated(payload.created);
       setBulkErrors(payload.errors);
-      setBulkCredentials(payload.users);
+      setBulkCredentials(credentialsWithStatus);
 
       if (payload.users.length > 0) {
         // Show newly created students immediately, then sync from server.
@@ -814,10 +848,12 @@ function App() {
               email: item.email,
               class: item.class,
               hasSelectedTopic: false,
+              loginStatus: 'not_logged_in' as const,
+              lastLoginAt: null,
             }));
           return [...prev, ...appended];
         });
-        downloadCredentialsCsv(payload.users);
+        downloadCredentialsCsv(credentialsWithStatus);
         await loadStudents();
       }
     } catch {
@@ -825,7 +861,13 @@ function App() {
     }
   };
 
-  const downloadCredentialsCsv = (items: Array<{ name: string; email: string; class: string; password: string }>) => {
+  const downloadCredentialsCsv = (items: Array<{
+    name: string;
+    email: string;
+    class: string;
+    password: string;
+    loginStatus: string;
+  }>) => {
     if (items.length === 0) return;
     const csv = credentialsToCsv(items);
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
@@ -1114,6 +1156,56 @@ function App() {
     if (!query) return studentTopics;
     return studentTopics.filter((topic) => topic.title.toLowerCase().includes(query));
   }, [debouncedTopicSearch, studentTopics]);
+
+  const sortedStudents = useMemo(() => {
+    const ordered = [...students];
+    ordered.sort((left, right) => {
+      let result = 0;
+      if (studentsSort.key === 'name') result = compareText(left.name, right.name);
+      if (studentsSort.key === 'email') result = compareText(left.email, right.email);
+      if (studentsSort.key === 'class') result = compareText(left.class, right.class);
+      if (studentsSort.key === 'hasSelectedTopic') result = Number(left.hasSelectedTopic) - Number(right.hasSelectedTopic);
+      if (studentsSort.key === 'loginStatus') result = compareText(left.loginStatus, right.loginStatus);
+      return studentsSort.direction === 'asc' ? result : -result;
+    });
+    return ordered;
+  }, [students, studentsSort]);
+
+  const sortedTopics = useMemo(() => {
+    const ordered = [...topics];
+    ordered.sort((left, right) => {
+      let result = 0;
+      if (topicsSort.key === 'title') result = compareText(left.title, right.title);
+      if (topicsSort.key === 'supervisor') result = compareText(left.supervisor, right.supervisor);
+      if (topicsSort.key === 'department') result = compareText(left.department, right.department);
+      if (topicsSort.key === 'status') {
+        const leftStatus = left.selectedBy ? 'зайнята' : 'вільна';
+        const rightStatus = right.selectedBy ? 'зайнята' : 'вільна';
+        result = compareText(leftStatus, rightStatus);
+      }
+      if (topicsSort.key === 'student') {
+        const leftStudent = left.selectedBy
+          ? `${left.selectedBy.name}${left.selectedBy.class ? ` (${left.selectedBy.class})` : ''}`
+          : '';
+        const rightStudent = right.selectedBy
+          ? `${right.selectedBy.name}${right.selectedBy.class ? ` (${right.selectedBy.class})` : ''}`
+          : '';
+        result = compareText(leftStudent, rightStudent);
+      }
+      return topicsSort.direction === 'asc' ? result : -result;
+    });
+    return ordered;
+  }, [topics, topicsSort]);
+
+  const sortGlyph = (isActive: boolean, direction: SortDirection) => {
+    if (!isActive) return '↕';
+    return direction === 'asc' ? '↑' : '↓';
+  };
+
+  const studentLoginStatusLabel = (status: StudentRow['loginStatus']) => {
+    return status === 'logged_in' ? 'Заходив' : 'Не заходив';
+  };
+
   const selectedStudentsCount = useMemo(() => students.filter((student) => student.hasSelectedTopic).length, [students]);
   const totalStudentsCount = students.length;
   const selectionProgress = totalStudentsCount > 0 ? Math.round((selectedStudentsCount / totalStudentsCount) * 100) : 0;
@@ -1315,20 +1407,60 @@ function App() {
                 <table className="students-table">
                   <thead>
                     <tr>
-                      <th>Ім'я</th>
-                      <th>Email</th>
-                      <th>Клас</th>
-                      <th>Тему обрано</th>
+                      <th>
+                        <button type="button" className="table-sort-btn" onClick={() => setStudentsSort((prev) => nextSort(prev, 'name'))}>
+                          Ім'я
+                          <span aria-hidden="true">{sortGlyph(studentsSort.key === 'name', studentsSort.direction)}</span>
+                        </button>
+                      </th>
+                      <th>
+                        <button type="button" className="table-sort-btn" onClick={() => setStudentsSort((prev) => nextSort(prev, 'email'))}>
+                          Email
+                          <span aria-hidden="true">{sortGlyph(studentsSort.key === 'email', studentsSort.direction)}</span>
+                        </button>
+                      </th>
+                      <th>
+                        <button type="button" className="table-sort-btn" onClick={() => setStudentsSort((prev) => nextSort(prev, 'class'))}>
+                          Клас
+                          <span aria-hidden="true">{sortGlyph(studentsSort.key === 'class', studentsSort.direction)}</span>
+                        </button>
+                      </th>
+                      <th>
+                        <button
+                          type="button"
+                          className="table-sort-btn"
+                          onClick={() => setStudentsSort((prev) => nextSort(prev, 'hasSelectedTopic'))}
+                        >
+                          Тему обрано
+                          <span aria-hidden="true">{sortGlyph(studentsSort.key === 'hasSelectedTopic', studentsSort.direction)}</span>
+                        </button>
+                      </th>
+                      <th>
+                        <button
+                          type="button"
+                          className="table-sort-btn"
+                          onClick={() => setStudentsSort((prev) => nextSort(prev, 'loginStatus'))}
+                        >
+                          Статус логіну
+                          <span aria-hidden="true">{sortGlyph(studentsSort.key === 'loginStatus', studentsSort.direction)}</span>
+                        </button>
+                      </th>
                       <th>Дії</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {students.map((student) => (
+                    {sortedStudents.map((student) => (
                       <tr key={student.id}>
                         <td>{student.name}</td>
                         <td>{student.email}</td>
                         <td>{student.class}</td>
                         <td>{student.hasSelectedTopic ? 'Так' : 'Ні'}</td>
+                        <td>
+                          {studentLoginStatusLabel(student.loginStatus)}
+                          {student.lastLoginAt && (
+                            <span className="table-subtle">{new Date(student.lastLoginAt).toLocaleString('uk-UA')}</span>
+                          )}
+                        </td>
                         <td className="table-actions">
                           <StudentActions
                             studentId={student.id}
@@ -1483,14 +1615,49 @@ function App() {
                   <table className="students-table admin-topics-table">
                     <thead>
                       <tr>
-                        <th>Назва теми</th>
-                        <th>Статус</th>
-                        <th>Студент</th>
+                        <th>
+                          <button type="button" className="table-sort-btn" onClick={() => setTopicsSort((prev) => nextSort(prev, 'title'))}>
+                            Назва теми
+                            <span aria-hidden="true">{sortGlyph(topicsSort.key === 'title', topicsSort.direction)}</span>
+                          </button>
+                        </th>
+                        <th>
+                          <button
+                            type="button"
+                            className="table-sort-btn"
+                            onClick={() => setTopicsSort((prev) => nextSort(prev, 'supervisor'))}
+                          >
+                            Викладач
+                            <span aria-hidden="true">{sortGlyph(topicsSort.key === 'supervisor', topicsSort.direction)}</span>
+                          </button>
+                        </th>
+                        <th>
+                          <button
+                            type="button"
+                            className="table-sort-btn"
+                            onClick={() => setTopicsSort((prev) => nextSort(prev, 'department'))}
+                          >
+                            Кафедра
+                            <span aria-hidden="true">{sortGlyph(topicsSort.key === 'department', topicsSort.direction)}</span>
+                          </button>
+                        </th>
+                        <th>
+                          <button type="button" className="table-sort-btn" onClick={() => setTopicsSort((prev) => nextSort(prev, 'status'))}>
+                            Статус
+                            <span aria-hidden="true">{sortGlyph(topicsSort.key === 'status', topicsSort.direction)}</span>
+                          </button>
+                        </th>
+                        <th>
+                          <button type="button" className="table-sort-btn" onClick={() => setTopicsSort((prev) => nextSort(prev, 'student'))}>
+                            Студент
+                            <span aria-hidden="true">{sortGlyph(topicsSort.key === 'student', topicsSort.direction)}</span>
+                          </button>
+                        </th>
                         <th>Дії</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {topics.map((topic) => (
+                      {sortedTopics.map((topic) => (
                         <Fragment key={topic.id}>
                           <tr>
                             <td>
@@ -1504,6 +1671,8 @@ function App() {
                                 {topic.title}
                               </button>
                             </td>
+                            <td>{topic.supervisor || '—'}</td>
+                            <td>{topic.department || '—'}</td>
                             <td>
                               <span className={`badge ${topic.selectedBy ? 'badge-taken' : 'badge-free'}`}>
                                 {topic.selectedBy ? 'зайнята' : 'вільна'}
@@ -1527,24 +1696,12 @@ function App() {
                           </tr>
                           {expandedAdminTopicId === topic.id && (
                             <tr className="admin-topic-details-row">
-                              <td colSpan={4}>
+                              <td colSpan={6}>
                                 <dl className="admin-topic-details">
                                   {topic.description && (
                                     <>
                                       <dt>Опис</dt>
                                       <dd>{topic.description}</dd>
-                                    </>
-                                  )}
-                                  {topic.supervisor && (
-                                    <>
-                                      <dt>Керівник</dt>
-                                      <dd>{topic.supervisor}</dd>
-                                    </>
-                                  )}
-                                  {topic.department && (
-                                    <>
-                                      <dt>Кафедра</dt>
-                                      <dd>{topic.department}</dd>
                                     </>
                                   )}
                                 </dl>

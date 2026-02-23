@@ -345,6 +345,7 @@ test('admin users CRUD: list, create, duplicate, delete, not found, auth guards,
   assert.equal(createResponse.body.class, '9-A');
   assert.equal(typeof createResponse.body.newPassword, 'string');
   assert.ok(createResponse.body.newPassword.length > 0);
+  assert.equal(createResponse.body.credentialEmailStatus, 'disabled');
 
   const duplicate = await app.inject({
     method: 'POST',
@@ -367,6 +368,13 @@ test('admin users CRUD: list, create, duplicate, delete, not found, auth guards,
   assert.equal(createdInList.name, 'New Student');
   assert.equal(createdInList.class, '9-A');
   assert.equal(typeof createdInList.hasSelectedTopic, 'boolean');
+  assert.equal(createdInList.loginStatus, 'not_logged_in');
+  assert.equal(createdInList.lastLoginAt, null);
+
+  const existingLoggedIn = listAfter.body.find((u) => u.email === 'student@example.com');
+  assert.ok(existingLoggedIn);
+  assert.equal(existingLoggedIn.loginStatus, 'logged_in');
+  assert.equal(typeof existingLoggedIn.lastLoginAt, 'string');
 
   const deleteResponse = await app.inject({
     method: 'DELETE',

@@ -4,7 +4,15 @@ import { addStudentToList, removeStudentFromList, type StudentRow } from './admi
 describe('admin students helpers', () => {
   it('adds student to list', () => {
     const initial: StudentRow[] = [
-      { id: '1', name: 'A', email: 'a@example.com', class: '9-A', hasSelectedTopic: false },
+      {
+        id: '1',
+        name: 'A',
+        email: 'a@example.com',
+        class: '9-A',
+        hasSelectedTopic: false,
+        loginStatus: 'not_logged_in',
+        lastLoginAt: null,
+      },
     ];
     const result = addStudentToList(initial, {
       id: '2',
@@ -12,6 +20,8 @@ describe('admin students helpers', () => {
       email: 'b@example.com',
       class: '9-B',
       hasSelectedTopic: true,
+      loginStatus: 'logged_in',
+      lastLoginAt: '2026-02-23T08:00:00.000Z',
     });
 
     expect(result).toHaveLength(2);
@@ -20,8 +30,24 @@ describe('admin students helpers', () => {
 
   it('removes student by id', () => {
     const initial: StudentRow[] = [
-      { id: '1', name: 'A', email: 'a@example.com', class: '9-A', hasSelectedTopic: false },
-      { id: '2', name: 'B', email: 'b@example.com', class: '9-B', hasSelectedTopic: false },
+      {
+        id: '1',
+        name: 'A',
+        email: 'a@example.com',
+        class: '9-A',
+        hasSelectedTopic: false,
+        loginStatus: 'not_logged_in',
+        lastLoginAt: null,
+      },
+      {
+        id: '2',
+        name: 'B',
+        email: 'b@example.com',
+        class: '9-B',
+        hasSelectedTopic: false,
+        loginStatus: 'not_logged_in',
+        lastLoginAt: null,
+      },
     ];
 
     const result = removeStudentFromList(initial, '1');

@@ -48,8 +48,20 @@ export const parseStudentsCsv = (text: string): { rows: CsvStudent[]; errors: Cs
   return { rows, errors };
 };
 
-export const credentialsToCsv = (items: Array<{ name: string; email: string; class: string; password: string }>): string => {
-  return Papa.unparse(items, {
-    columns: ['name', 'email', 'class', 'password'],
-  });
+export const credentialsToCsv = (items: Array<{
+  name: string;
+  email: string;
+  class: string;
+  password: string;
+  loginStatus?: string;
+}>): string => {
+  return Papa.unparse(
+    items.map((item) => ({
+      ...item,
+      loginStatus: item.loginStatus ?? 'не заходив',
+    })),
+    {
+      columns: ['name', 'email', 'class', 'password', 'loginStatus'],
+    },
+  );
 };

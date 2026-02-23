@@ -20,9 +20,10 @@ describe('studentsCsv helpers', () => {
 
   it('generates credentials CSV', () => {
     const csv = credentialsToCsv([{ name: 'A', email: 'a@example.com', class: '9-A', password: 'p1' }]);
-    expect(csv).toContain('name,email,class,password');
+    expect(csv).toContain('name,email,class,password,loginStatus');
     expect(csv).toContain('a@example.com');
     expect(csv).toContain('9-A');
+    expect(csv).toContain('не заходив');
   });
 
   it('parses quoted values via Papa.parse', () => {

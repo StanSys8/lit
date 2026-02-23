@@ -4,6 +4,8 @@ export type StudentRow = {
   email: string;
   class: string;
   hasSelectedTopic: boolean;
+  loginStatus: 'logged_in' | 'not_logged_in';
+  lastLoginAt: string | null;
 };
 
 export const addStudentToList = (list: StudentRow[], student: StudentRow): StudentRow[] => {
